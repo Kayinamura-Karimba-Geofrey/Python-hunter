@@ -6,6 +6,7 @@ from typing import NoReturn
 
 from python_hunter import __version__
 from python_hunter.infrastructure.config.settings import Settings
+from python_hunter.interfaces.cli.commands.discover import run_discover_command
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -25,6 +26,13 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Command: config
     subparsers.add_parser("config", help="Validate and print current application configuration")
+
+    # Command: discover
+    disc_parser = subparsers.add_parser("discover", help="Discover and classify local Python project structure")
+    disc_parser.add_argument("target", nargs="?", default=".", help="Target directory or Python file to discover")
+    disc_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
+    )
 
     # Future subcommands (stubs marking development roadmap)
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
@@ -67,6 +75,9 @@ def run_cli(args: list[str] | None = None) -> int:
         except Exception as e:
             sys.stderr.write(f"Error loading configuration: {e}\n")
             return 1
+
+    if parsed_args.command == "discover":
+        return run_discover_command(parsed_args.target, output_format=parsed_args.format)
 
     if parsed_args.command in (
         "scan",
