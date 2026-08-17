@@ -21,6 +21,10 @@ from python_hunter.interfaces.cli.commands.git import (
     register_git_subcommand,
     run_git_command,
 )
+from python_hunter.interfaces.cli.commands.taint import (
+    register_taint_subcommand,
+    run_taint_command,
+)
 from python_hunter.interfaces.cli.commands.vulnerabilities import (
     register_vulnerabilities_subcommand,
     run_vulnerabilities_command,
@@ -94,6 +98,9 @@ def create_parser() -> argparse.ArgumentParser:
     # Command: git
     register_git_subcommand(subparsers)
 
+    # Command: taint
+    register_taint_subcommand(subparsers)
+
     # Future subcommands (stubs marking development roadmap)
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
@@ -162,6 +169,9 @@ def run_cli(args: list[str] | None = None) -> int:
 
     if parsed_args.command == "git":
         return run_git_command(parsed_args)
+
+    if parsed_args.command == "taint":
+        return run_taint_command(parsed_args)
 
     if parsed_args.command == "rules":
         if parsed_args.rules_action == "list" or not parsed_args.rules_action:
