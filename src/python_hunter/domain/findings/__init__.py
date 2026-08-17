@@ -1,1 +1,5 @@
-"""Finding entity, severity levels, and lifecycle state transitions."""
+"""Finding domain entity."""
+
+from python_hunter.domain.findings.finding import Finding
+
+__all__ = ["Finding"]

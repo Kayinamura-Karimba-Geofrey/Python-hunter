@@ -1,0 +1,100 @@
+"""CLI Bootstrap Interface for Python Hunter."""
+
+import argparse
+import sys
+from typing import NoReturn
+
+from python_hunter import __version__
+from python_hunter.infrastructure.config.settings import Settings
+
+
+def create_parser() -> argparse.ArgumentParser:
+    """Construct the main CLI command-line argument parser."""
+    parser = argparse.ArgumentParser(
+        prog="python-hunter",
+        description="Python Hunter — Enterprise Security & Code Intelligence Platform",
+    )
+    parser.add_argument(
+        "-v", "--version", action="store_true", help="Show Python Hunter version and exit"
+    )
+
+    subparsers = parser.add_subparsers(dest="command", help="Available subcommands")
+
+    # Command: version
+    subparsers.add_parser("version", help="Show Python Hunter system version details")
+
+    # Command: config
+    subparsers.add_parser("config", help="Validate and print current application configuration")
+
+    # Future subcommands (stubs marking development roadmap)
+    scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
+    scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
+
+    subparsers.add_parser("project", help="Manage project records (Milestone 10/11)")
+    subparsers.add_parser("dependencies", help="Scan dependency manifests (Step 6 / Milestone 6)")
+    subparsers.add_parser("secrets", help="Scan for secret leaks (Step 5 / Milestone 5)")
+    subparsers.add_parser("git", help="Scan Git repository history (Step 7 / Milestone 7)")
+    subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM (Milestone 13)")
+    subparsers.add_parser("report", help="Generate security reports (Milestone 13)")
+    subparsers.add_parser("rules", help="Manage security rules taxonomy (Step 4 / Milestone 4)")
+    subparsers.add_parser("plugins", help="Manage third-party plugins (Milestone 17)")
+
+    return parser
+
+
+def run_cli(args: list[str] | None = None) -> int:
+    """Run CLI execution flow."""
+    parser = create_parser()
+    try:
+        parsed_args = parser.parse_args(args)
+    except SystemExit as e:
+        return int(e.code) if isinstance(e.code, int) else 0
+
+    if parsed_args.version or parsed_args.command == "version":
+        sys.stdout.write(f"Python Hunter version {__version__} (Python {sys.version.split()[0]})\n")
+        return 0
+
+    if parsed_args.command == "config":
+        try:
+            settings = Settings.load_from_env()
+            sys.stdout.write("--- Python Hunter Configuration ---\n")
+            sys.stdout.write(f"Environment: {settings.app.env}\n")
+            sys.stdout.write(f"Log Level: {settings.log.level} (Format: {settings.log.format})\n")
+            sys.stdout.write(f"Max Scan File Size: {settings.scan.max_file_size_mb} MB\n")
+            sys.stdout.write(f"Scan Timeout: {settings.scan.timeout_seconds} s\n")
+            sys.stdout.write(f"Min Severity Threshold: {settings.scan.min_severity}\n")
+            return 0
+        except Exception as e:
+            sys.stderr.write(f"Error loading configuration: {e}\n")
+            return 1
+
+    if parsed_args.command in (
+        "scan",
+        "project",
+        "dependencies",
+        "secrets",
+        "git",
+        "sbom",
+        "report",
+        "rules",
+        "plugins",
+    ):
+        sys.stdout.write(
+            f"Notice: Command '{parsed_args.command}' is registered. Functionality will be implemented in subsequent development steps.\n"
+        )
+        return 0
+
+    if not parsed_args.command:
+        parser.print_help()
+        return 0
+
+    return 0
+
+
+def cli() -> NoReturn:
+    """Entry point wrapper for script invocation."""
+    sys.exit(run_cli())
+
+
+if __name__ == "__main__":
+    cli()
