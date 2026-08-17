@@ -1,0 +1,6 @@
+# Docker Compose multi-container orchestration for Python Hunter
+# Services: API, Worker, Redis, PostgreSQL
+# Configuration will be completed during Docker Architecture phase.
+version: "3.8"
+
+services: {}
