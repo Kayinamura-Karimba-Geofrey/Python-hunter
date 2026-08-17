@@ -18,6 +18,9 @@ from python_hunter.application.use_cases.analyze_git import AnalyzeGitUseCase
 from python_hunter.application.use_cases.analyze_secrets import AnalyzeSecretsUseCase
 from python_hunter.application.use_cases.analyze_taint import AnalyzeTaintUseCase
 from python_hunter.application.use_cases.analyze_vulnerabilities import AnalyzeVulnerabilitiesUseCase
+from python_hunter.domain.correlation.correlator import FindingCorrelator
+from python_hunter.domain.correlation.risk_engine import RiskEngine
+from python_hunter.domain.policy.engine import SecurityPolicyEngine
 
 
 class AnalyzeSecurityUseCase:
@@ -83,13 +86,37 @@ class AnalyzeSecurityUseCase:
         callgraph_result = self.callgraph_use_case.execute(target_path)
         callgraph_findings: list[Finding] = callgraph_result.get("findings", [])
 
-        # Deduplicate combined findings
-        combined: list[Finding] = []
-        seen_fingerprints: set[str] = set()
+        raw_findings = (
+            ast_findings
+            + secret_findings
+            + dep_findings
+            + vuln_findings
+            + git_findings
+            + taint_findings
+            + callgraph_findings
+        )
 
-        for f in ast_findings + secret_findings + dep_findings + vuln_findings + git_findings + taint_findings + callgraph_findings:
-            if f.fingerprint not in seen_fingerprints:
-                seen_fingerprints.add(f.fingerprint)
-                combined.append(f)
+        # 1. Correlate and deduplicate findings across engines
+        correlator = FindingCorrelator()
+        deduped_findings, attack_paths = correlator.correlate(
+            raw_findings=raw_findings,
+            callgraph_data=callgraph_result,
+            taint_flows=taint_result.get("flows"),
+            git_history=git_result.get("commits"),
+        )
 
-        return combined, ast_summary, rule_results
+        # 2. Assign 0-100 Risk Scores
+        risk_engine = RiskEngine()
+        risk_engine.score_findings(deduped_findings)
+
+        # 3. Evaluate Security Policy & Gate
+        policy_engine = SecurityPolicyEngine.from_config_file(
+            f"{target_path}/pyh_policy.yml" if target_path.endswith("/") else f"{target_path}/pyh_policy.yml"
+        )
+
+        posture = risk_engine.calculate_posture(deduped_findings, attack_paths)
+        policy_passed, violations = policy_engine.evaluate(deduped_findings, posture.project_risk_score)
+        posture.policy_passed = policy_passed
+        posture.policy_violations = violations
+
+        return deduped_findings, ast_summary, rule_results

@@ -72,14 +72,109 @@ class FindingStatus(str, Enum):
 class Category(str, Enum):
     """Security finding categories."""
 
+    CODE_SECURITY = "CODE_SECURITY"
+    SECRET = "SECRET"
+    DEPENDENCY = "DEPENDENCY"
+    SUPPLY_CHAIN = "SUPPLY_CHAIN"
+    TAINT = "TAINT"
+    INJECTION = "INJECTION"
+    CONFIGURATION = "CONFIGURATION"
+    AUTHORIZATION = "AUTHORIZATION"
+    CRYPTOGRAPHY = "CRYPTOGRAPHY"
+    GIT_HISTORY = "GIT_HISTORY"
+    SECURITY_POLICY = "SECURITY_POLICY"
+    INFORMATIONAL = "INFORMATIONAL"
     CODE_INJECTION = "CODE_INJECTION"
     SECRET_LEAK = "SECRET_LEAK"
     VULNERABLE_DEPENDENCY = "VULNERABLE_DEPENDENCY"
-    SUPPLY_CHAIN = "SUPPLY_CHAIN"
     GIT_RISK = "GIT_RISK"
     PATH_TRAVERSAL = "PATH_TRAVERSAL"
     UNSAFE_DESERIALIZATION = "UNSAFE_DESERIALIZATION"
-    TAINT = "TAINT"
     DATAFLOW = "DATAFLOW"
-    INJECTION = "INJECTION"
     OTHER = "OTHER"
+
+
+class ExposureType(str, Enum):
+    """Attack surface exposure level."""
+
+    INTERNET_FACING = "INTERNET_FACING"
+    AUTHENTICATED = "AUTHENTICATED"
+    INTERNAL = "INTERNAL"
+    LOCAL = "LOCAL"
+    UNKNOWN = "UNKNOWN"
+
+
+class ReachabilityType(str, Enum):
+    """Static reachability status of finding."""
+
+    REACHABLE = "REACHABLE"
+    UNREACHABLE = "UNREACHABLE"
+    STATIC_REACHABILITY = "STATIC_REACHABILITY"
+    UNKNOWN = "UNKNOWN"
+
+
+class FindingLifecycleState(str, Enum):
+    """Finding baseline and tracking lifecycle states."""
+
+    NEW = "NEW"
+    OPEN = "OPEN"
+    EXISTING = "EXISTING"
+    SUPPRESSED = "SUPPRESSED"
+    ACCEPTED = "ACCEPTED"
+    RESOLVED = "RESOLVED"
+    REOPENED = "REOPENED"
+
+
+class AttackPathType(str, Enum):
+    """Correlated attack path category."""
+
+    REMOTE_CODE_EXECUTION = "REMOTE_CODE_EXECUTION"
+    SQL_INJECTION = "SQL_INJECTION"
+    COMMAND_INJECTION = "COMMAND_INJECTION"
+    PATH_TRAVERSAL = "PATH_TRAVERSAL"
+    SSRF = "SSRF"
+    AUTHORIZATION_BYPASS = "AUTHORIZATION_BYPASS"
+    SECRET_EXPOSURE = "SECRET_EXPOSURE"
+    SUPPLY_CHAIN = "SUPPLY_CHAIN"
+    DATA_EXFILTRATION = "DATA_EXFILTRATION"
+
+
+class FindingRelationType(str, Enum):
+    """Relationship between security findings."""
+
+    DUPLICATE = "DUPLICATE"
+    RELATED = "RELATED"
+    SUPPORTING_EVIDENCE = "SUPPORTING_EVIDENCE"
+    CAUSED_BY = "CAUSED_BY"
+    DEPENDS_ON = "DEPENDS_ON"
+    ESCALATES = "ESCALATES"
+    ATTACK_PATH_COMPONENT = "ATTACK_PATH_COMPONENT"
+
+
+class AssetCriticality(str, Enum):
+    """Asset or path criticality level."""
+
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+    CRITICAL = "CRITICAL"
+    UNKNOWN = "UNKNOWN"
+
+
+class DataSensitivity(str, Enum):
+    """Sensitivity of processed data."""
+
+    PUBLIC = "PUBLIC"
+    INTERNAL = "INTERNAL"
+    CONFIDENTIAL = "CONFIDENTIAL"
+    SENSITIVE = "SENSITIVE"
+    UNKNOWN = "UNKNOWN"
+
+
+class SecretStatus(str, Enum):
+    """Secret revocation and exposure state."""
+
+    SECRET_EXPOSED = "SECRET_EXPOSED"
+    SECRET_REVOKED = "SECRET_REVOKED"
+    SECRET_UNKNOWN_STATUS = "SECRET_UNKNOWN_STATUS"
+

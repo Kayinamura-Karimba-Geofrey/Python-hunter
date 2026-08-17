@@ -71,8 +71,24 @@ def create_parser() -> argparse.ArgumentParser:
     sec_parser = subparsers.add_parser("analyze", help="Execute AST security analysis and rule evaluation on target project")
     sec_parser.add_argument("target", nargs="?", default=".", help="Target directory or Python file to analyze")
     sec_parser.add_argument(
-        "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
+        "--format", choices=["text", "json", "sarif"], default="text", help="Output display format (text, json, or sarif)"
     )
+
+    # Command: gate
+    gate_p = subparsers.add_parser("gate", help="Evaluate CI/CD security gate policy")
+    gate_p.add_argument("target", nargs="?", default=".", help="Target directory to evaluate")
+
+    # Command: baseline
+    base_p = subparsers.add_parser("baseline", help="Manage baseline finding snapshots")
+    base_sub = base_p.add_subparsers(dest="baseline_action", help="Baseline actions")
+    create_b = base_sub.add_parser("create", help="Create baseline snapshot")
+    create_b.add_argument("target", nargs="?", default=".", help="Target path")
+    create_b.add_argument("--output", default="pyh_baseline.json", help="Output baseline file path")
+
+    # Command: diff
+    diff_p = subparsers.add_parser("diff", help="Diff two scan output JSON files")
+    diff_p.add_argument("old_scan", help="Path to previous scan JSON file")
+    diff_p.add_argument("new_scan", help="Path to current scan JSON file")
 
     # Command: rules
     rules_parser = subparsers.add_parser("rules", help="Manage security rules taxonomy")
@@ -182,6 +198,18 @@ def run_cli(args: list[str] | None = None) -> int:
 
     if parsed_args.command == "callgraph":
         return run_callgraph_command(parsed_args)
+
+    if parsed_args.command == "gate":
+        from python_hunter.interfaces.cli.commands.gate import run_gate_command
+        return run_gate_command(parsed_args)
+
+    if parsed_args.command == "baseline":
+        from python_hunter.interfaces.cli.commands.baseline import run_baseline_command
+        return run_baseline_command(parsed_args)
+
+    if parsed_args.command == "diff":
+        from python_hunter.interfaces.cli.commands.baseline import run_diff_command
+        return run_diff_command(parsed_args)
 
     if parsed_args.command == "rules":
         if parsed_args.rules_action == "list" or not parsed_args.rules_action:
