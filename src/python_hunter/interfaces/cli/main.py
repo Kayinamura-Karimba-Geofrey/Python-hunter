@@ -6,6 +6,7 @@ from typing import NoReturn
 
 from python_hunter import __version__
 from python_hunter.infrastructure.config.settings import Settings
+from python_hunter.interfaces.cli.commands.analyze_ast import run_analyze_ast_command
 from python_hunter.interfaces.cli.commands.discover import run_discover_command
 
 
@@ -31,6 +32,13 @@ def create_parser() -> argparse.ArgumentParser:
     disc_parser = subparsers.add_parser("discover", help="Discover and classify local Python project structure")
     disc_parser.add_argument("target", nargs="?", default=".", help="Target directory or Python file to discover")
     disc_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
+    )
+
+    # Command: analyze-ast
+    ast_parser = subparsers.add_parser("analyze-ast", help="Execute AST parsing and structural analysis on target project")
+    ast_parser.add_argument("target", nargs="?", default=".", help="Target directory or Python file to analyze")
+    ast_parser.add_argument(
         "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
     )
 
@@ -78,6 +86,9 @@ def run_cli(args: list[str] | None = None) -> int:
 
     if parsed_args.command == "discover":
         return run_discover_command(parsed_args.target, output_format=parsed_args.format)
+
+    if parsed_args.command == "analyze-ast":
+        return run_analyze_ast_command(parsed_args.target, output_format=parsed_args.format)
 
     if parsed_args.command in (
         "scan",
