@@ -6,8 +6,13 @@ from typing import NoReturn
 
 from python_hunter import __version__
 from python_hunter.infrastructure.config.settings import Settings
+from python_hunter.interfaces.cli.commands.analyze import run_analyze_command
 from python_hunter.interfaces.cli.commands.analyze_ast import run_analyze_ast_command
 from python_hunter.interfaces.cli.commands.discover import run_discover_command
+from python_hunter.interfaces.cli.commands.rules import (
+    run_rules_info_command,
+    run_rules_list_command,
+)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -42,6 +47,20 @@ def create_parser() -> argparse.ArgumentParser:
         "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
     )
 
+    # Command: analyze
+    sec_parser = subparsers.add_parser("analyze", help="Execute AST security analysis and rule evaluation on target project")
+    sec_parser.add_argument("target", nargs="?", default=".", help="Target directory or Python file to analyze")
+    sec_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
+    )
+
+    # Command: rules
+    rules_parser = subparsers.add_parser("rules", help="Manage security rules taxonomy")
+    rules_sub = rules_parser.add_subparsers(dest="rules_action", help="Rule actions")
+    rules_sub.add_parser("list", help="List all registered security rules")
+    rules_info_p = rules_sub.add_parser("info", help="View details of a specific security rule")
+    rules_info_p.add_argument("rule_id", help="Security rule ID (e.g. PYH-AST-001)")
+
     # Future subcommands (stubs marking development roadmap)
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
@@ -52,7 +71,6 @@ def create_parser() -> argparse.ArgumentParser:
     subparsers.add_parser("git", help="Scan Git repository history (Step 7 / Milestone 7)")
     subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM (Milestone 13)")
     subparsers.add_parser("report", help="Generate security reports (Milestone 13)")
-    subparsers.add_parser("rules", help="Manage security rules taxonomy (Step 4 / Milestone 4)")
     subparsers.add_parser("plugins", help="Manage third-party plugins (Milestone 17)")
 
     return parser
@@ -90,6 +108,15 @@ def run_cli(args: list[str] | None = None) -> int:
     if parsed_args.command == "analyze-ast":
         return run_analyze_ast_command(parsed_args.target, output_format=parsed_args.format)
 
+    if parsed_args.command == "analyze":
+        return run_analyze_command(parsed_args.target, output_format=parsed_args.format)
+
+    if parsed_args.command == "rules":
+        if parsed_args.rules_action == "list" or not parsed_args.rules_action:
+            return run_rules_list_command()
+        elif parsed_args.rules_action == "info":
+            return run_rules_info_command(parsed_args.rule_id)
+
     if parsed_args.command in (
         "scan",
         "project",
@@ -98,7 +125,6 @@ def run_cli(args: list[str] | None = None) -> int:
         "git",
         "sbom",
         "report",
-        "rules",
         "plugins",
     ):
         sys.stdout.write(

@@ -195,7 +195,15 @@ class ComprehensiveASTVisitor(ast.NodeVisitor, ASTVisitorInterface):
             resolved = raw_name.replace(first_part, target, 1)
 
         qual_name = resolved or raw_name
-        kw_args = [kw.arg for kw in node.keywords if kw.arg]
+        kw_args: dict[str, str] = {}
+        for kw in node.keywords:
+            if kw.arg:
+                if isinstance(kw.value, ast.Constant):
+                    kw_args[kw.arg] = str(kw.value.value)
+                elif isinstance(kw.value, ast.Name):
+                    kw_args[kw.arg] = kw.value.id
+                else:
+                    kw_args[kw.arg] = "<expression>"
 
         self.calls.append(
             CallInfo(

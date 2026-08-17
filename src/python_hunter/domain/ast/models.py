@@ -39,7 +39,7 @@ class CallInfo:
     qualified_name: str
     resolved_alias: str | None = None
     arguments_count: int = 0
-    keyword_arguments: list[str] = field(default_factory=list)
+    keyword_arguments: dict[str, str] = field(default_factory=dict)
     location: ASTLocation | None = None
 
 
