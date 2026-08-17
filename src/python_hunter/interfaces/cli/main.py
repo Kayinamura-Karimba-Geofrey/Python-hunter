@@ -17,6 +17,10 @@ from python_hunter.interfaces.cli.commands.rules import (
 
 from python_hunter.interfaces.cli.commands.dependencies import run_dependencies_command
 from python_hunter.interfaces.cli.commands.secrets import run_secrets_command
+from python_hunter.interfaces.cli.commands.vulnerabilities import (
+    register_vulnerabilities_subcommand,
+    run_vulnerabilities_command,
+)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -80,12 +84,15 @@ def create_parser() -> argparse.ArgumentParser:
         "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
     )
 
+    # Command: vulnerabilities
+    register_vulnerabilities_subcommand(subparsers)
+
     # Future subcommands (stubs marking development roadmap)
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
 
     subparsers.add_parser("project", help="Manage project records (Milestone 10/11)")
-    subparsers.add_parser("git", help="Scan Git repository history (Step 7 / Milestone 7)")
+    subparsers.add_parser("git", help="Scan Git repository history (Step 8)")
     subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM (Milestone 13)")
     subparsers.add_parser("report", help="Generate security reports (Milestone 13)")
     subparsers.add_parser("plugins", help="Manage third-party plugins (Milestone 17)")
@@ -136,6 +143,16 @@ def run_cli(args: list[str] | None = None) -> int:
         if getattr(parsed_args, "tree", False):
             cmd_args.append("--tree")
         return run_dependencies_command(cmd_args)
+
+    if parsed_args.command == "vulnerabilities":
+        v_args = [parsed_args.target, "--format", parsed_args.format]
+        if getattr(parsed_args, "details", False):
+            v_args.append("--details")
+        if getattr(parsed_args, "offline", False):
+            v_args.append("--offline")
+        if getattr(parsed_args, "fail_on", None):
+            v_args.extend(["--fail-on", parsed_args.fail_on])
+        return run_vulnerabilities_command(v_args)
 
     if parsed_args.command == "rules":
         if parsed_args.rules_action == "list" or not parsed_args.rules_action:

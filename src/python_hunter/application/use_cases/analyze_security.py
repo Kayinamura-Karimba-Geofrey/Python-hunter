@@ -14,10 +14,11 @@ from python_hunter.rules.ast import get_default_registry
 
 from python_hunter.application.use_cases.analyze_dependencies import AnalyzeDependenciesUseCase
 from python_hunter.application.use_cases.analyze_secrets import AnalyzeSecretsUseCase
+from python_hunter.application.use_cases.analyze_vulnerabilities import AnalyzeVulnerabilitiesUseCase
 
 
 class AnalyzeSecurityUseCase:
-    """Orchestrates Project Discovery -> AST Analysis -> Security Rule Engine -> Secret Detection -> Dependency Analysis."""
+    """Orchestrates Project Discovery -> AST Analysis -> Security Rule Engine -> Secret Detection -> Dependency Analysis -> Vulnerability Intelligence."""
 
     def __init__(
         self,
@@ -26,12 +27,14 @@ class AnalyzeSecurityUseCase:
         rule_engine: SecurityRuleEngine | None = None,
         secrets_use_case: AnalyzeSecretsUseCase | None = None,
         dependencies_use_case: AnalyzeDependenciesUseCase | None = None,
+        vulnerabilities_use_case: AnalyzeVulnerabilitiesUseCase | None = None,
     ) -> None:
         self.discovery = discovery_use_case or DiscoverProjectUseCase()
         self.ast_use_case = ast_use_case or AnalyzeASTUseCase()
         self.rule_engine = rule_engine or SecurityRuleEngine(registry=get_default_registry())
         self.secrets_use_case = secrets_use_case or AnalyzeSecretsUseCase()
         self.dependencies_use_case = dependencies_use_case or AnalyzeDependenciesUseCase()
+        self.vulnerabilities_use_case = vulnerabilities_use_case or AnalyzeVulnerabilitiesUseCase(offline=True)
 
     def execute(self, target_path: str) -> tuple[list[Finding], ASTAnalysisSummary, list[RuleResult]]:
         """Execute full security analysis flow on target path."""
@@ -55,11 +58,15 @@ class AnalyzeSecurityUseCase:
         dep_result = self.dependencies_use_case.execute(target_path)
         dep_findings: list[Finding] = dep_result.get("findings", [])
 
+        # Run vulnerability intelligence scan
+        vuln_result = self.vulnerabilities_use_case.execute(target_path)
+        vuln_findings: list[Finding] = vuln_result.get("findings", [])
+
         # Deduplicate combined findings
         combined: list[Finding] = []
         seen_fingerprints: set[str] = set()
 
-        for f in ast_findings + secret_findings + dep_findings:
+        for f in ast_findings + secret_findings + dep_findings + vuln_findings:
             if f.fingerprint not in seen_fingerprints:
                 seen_fingerprints.add(f.fingerprint)
                 combined.append(f)

@@ -128,6 +128,36 @@ class DependencyGraph:
         norm = normalize_package_name(name)
         return self.nodes.get(norm)
 
+    def get_paths_to(self, target_name: str) -> list[list[str]]:
+        """Find dependency paths from root dependencies to target_name."""
+        norm_target = normalize_package_name(target_name)
+        paths: list[list[str]] = []
+
+        def _dfs(current: str, current_path: list[str], visited: set[str]) -> None:
+            if current == norm_target:
+                paths.append(list(current_path))
+                return
+
+            node = self.nodes.get(current)
+            if not node:
+                return
+
+            for child in node.dependencies:
+                if child not in visited:
+                    visited.add(child)
+                    current_path.append(child)
+                    _dfs(child, current_path, visited)
+                    current_path.pop()
+                    visited.remove(child)
+
+        for root in self.root_dependencies:
+            if root == norm_target:
+                paths.append([root])
+            else:
+                _dfs(root, [root], {root})
+
+        return paths or [[norm_target]]
+
     def to_tree_str(self) -> str:
         """Render readable ascii dependency tree."""
         lines: list[str] = []
