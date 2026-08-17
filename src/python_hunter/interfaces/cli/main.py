@@ -15,6 +15,10 @@ from python_hunter.interfaces.cli.commands.rules import (
 )
 
 
+from python_hunter.interfaces.cli.commands.dependencies import run_dependencies_command
+from python_hunter.interfaces.cli.commands.secrets import run_secrets_command
+
+
 def create_parser() -> argparse.ArgumentParser:
     """Construct the main CLI command-line argument parser."""
     parser = argparse.ArgumentParser(
@@ -61,13 +65,26 @@ def create_parser() -> argparse.ArgumentParser:
     rules_info_p = rules_sub.add_parser("info", help="View details of a specific security rule")
     rules_info_p.add_argument("rule_id", help="Security rule ID (e.g. PYH-AST-001)")
 
+    # Command: secrets
+    sec_secrets_parser = subparsers.add_parser("secrets", help="Scan for exposed secrets and credentials")
+    sec_secrets_parser.add_argument("target", nargs="?", default=".", help="Target directory or file to scan for secrets")
+    sec_secrets_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
+    )
+
+    # Command: dependencies
+    dep_cmd_parser = subparsers.add_parser("dependencies", help="Analyze project dependencies and supply-chain security")
+    dep_cmd_parser.add_argument("target", nargs="?", default=".", help="Target directory or manifest file to analyze")
+    dep_cmd_parser.add_argument("--tree", action="store_true", help="Display ascii dependency tree")
+    dep_cmd_parser.add_argument(
+        "--format", choices=["text", "json"], default="text", help="Output display format (text or json)"
+    )
+
     # Future subcommands (stubs marking development roadmap)
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
 
     subparsers.add_parser("project", help="Manage project records (Milestone 10/11)")
-    subparsers.add_parser("dependencies", help="Scan dependency manifests (Step 6 / Milestone 6)")
-    subparsers.add_parser("secrets", help="Scan for secret leaks (Step 5 / Milestone 5)")
     subparsers.add_parser("git", help="Scan Git repository history (Step 7 / Milestone 7)")
     subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM (Milestone 13)")
     subparsers.add_parser("report", help="Generate security reports (Milestone 13)")
@@ -110,6 +127,15 @@ def run_cli(args: list[str] | None = None) -> int:
 
     if parsed_args.command == "analyze":
         return run_analyze_command(parsed_args.target, output_format=parsed_args.format)
+
+    if parsed_args.command == "secrets":
+        return run_secrets_command([parsed_args.target, "--format", parsed_args.format])
+
+    if parsed_args.command == "dependencies":
+        cmd_args = [parsed_args.target, "--format", parsed_args.format]
+        if getattr(parsed_args, "tree", False):
+            cmd_args.append("--tree")
+        return run_dependencies_command(cmd_args)
 
     if parsed_args.command == "rules":
         if parsed_args.rules_action == "list" or not parsed_args.rules_action:

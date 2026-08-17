@@ -1,0 +1,5 @@
+requests
+flask>=2.0.0
+django>=1
+https://example.com/untrusted.tar.gz
+git+https://github.com/example/lib.git@main#egg=example-lib

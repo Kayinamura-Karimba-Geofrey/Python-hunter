@@ -1,0 +1,18 @@
+[[package]]
+name = "fastapi"
+version = "0.110.0"
+category = "main"
+
+[package.dependencies]
+starlette = "0.36.3"
+pydantic = "2.6.4"
+
+[[package]]
+name = "starlette"
+version = "0.36.3"
+category = "main"
+
+[[package]]
+name = "pydantic"
+version = "2.6.4"
+category = "main"

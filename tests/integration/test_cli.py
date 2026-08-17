@@ -22,9 +22,7 @@ class TestCLIIntegration(unittest.TestCase):
         code = run_cli(["config"])
         self.assertEqual(code, 0)
 
-    def test_cli_subcommands_notice(self) -> None:
-        """Verify future subcommands display registration notices and exit 0."""
-        for cmd in ["scan", "rules", "dependencies", "secrets", "git"]:
+        for cmd in ["scan", "rules", "dependencies", "git"]:
             code = run_cli([cmd])
             self.assertEqual(code, 0)
 
