@@ -17,6 +17,10 @@ from python_hunter.interfaces.cli.commands.rules import (
 
 from python_hunter.interfaces.cli.commands.dependencies import run_dependencies_command
 from python_hunter.interfaces.cli.commands.secrets import run_secrets_command
+from python_hunter.interfaces.cli.commands.callgraph import (
+    register_callgraph_subcommand,
+    run_callgraph_command,
+)
 from python_hunter.interfaces.cli.commands.git import (
     register_git_subcommand,
     run_git_command,
@@ -101,6 +105,9 @@ def create_parser() -> argparse.ArgumentParser:
     # Command: taint
     register_taint_subcommand(subparsers)
 
+    # Command: callgraph
+    register_callgraph_subcommand(subparsers)
+
     # Future subcommands (stubs marking development roadmap)
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
@@ -172,6 +179,9 @@ def run_cli(args: list[str] | None = None) -> int:
 
     if parsed_args.command == "taint":
         return run_taint_command(parsed_args)
+
+    if parsed_args.command == "callgraph":
+        return run_callgraph_command(parsed_args)
 
     if parsed_args.command == "rules":
         if parsed_args.rules_action == "list" or not parsed_args.rules_action:

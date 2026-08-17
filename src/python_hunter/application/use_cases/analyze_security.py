@@ -12,6 +12,7 @@ from python_hunter.domain.rules.models import RuleResult
 from python_hunter.rules.ast import get_default_registry
 
 
+from python_hunter.application.use_cases.analyze_callgraph import AnalyzeCallGraphUseCase
 from python_hunter.application.use_cases.analyze_dependencies import AnalyzeDependenciesUseCase
 from python_hunter.application.use_cases.analyze_git import AnalyzeGitUseCase
 from python_hunter.application.use_cases.analyze_secrets import AnalyzeSecretsUseCase
@@ -20,7 +21,7 @@ from python_hunter.application.use_cases.analyze_vulnerabilities import AnalyzeV
 
 
 class AnalyzeSecurityUseCase:
-    """Orchestrates Project Discovery -> AST Analysis -> Security Rule Engine -> Secret Detection -> Dependency Analysis -> Vulnerability Intelligence -> Git Analysis -> Taint Analysis."""
+    """Orchestrates Project Discovery -> AST Analysis -> Security Rule Engine -> Secret Detection -> Dependency Analysis -> Vulnerability Intelligence -> Git Analysis -> Taint Analysis -> Call Graph Analysis."""
 
     def __init__(
         self,
@@ -32,6 +33,7 @@ class AnalyzeSecurityUseCase:
         vulnerabilities_use_case: AnalyzeVulnerabilitiesUseCase | None = None,
         git_use_case: AnalyzeGitUseCase | None = None,
         taint_use_case: AnalyzeTaintUseCase | None = None,
+        callgraph_use_case: AnalyzeCallGraphUseCase | None = None,
     ) -> None:
         self.discovery = discovery_use_case or DiscoverProjectUseCase()
         self.ast_use_case = ast_use_case or AnalyzeASTUseCase()
@@ -41,6 +43,7 @@ class AnalyzeSecurityUseCase:
         self.vulnerabilities_use_case = vulnerabilities_use_case or AnalyzeVulnerabilitiesUseCase(offline=True)
         self.git_use_case = git_use_case or AnalyzeGitUseCase()
         self.taint_use_case = taint_use_case or AnalyzeTaintUseCase()
+        self.callgraph_use_case = callgraph_use_case or AnalyzeCallGraphUseCase()
 
     def execute(self, target_path: str) -> tuple[list[Finding], ASTAnalysisSummary, list[RuleResult]]:
         """Execute full security analysis flow on target path."""
@@ -76,11 +79,15 @@ class AnalyzeSecurityUseCase:
         taint_result = self.taint_use_case.execute(target_path)
         taint_findings: list[Finding] = taint_result.get("findings", [])
 
+        # Run interprocedural call graph & reachability scan
+        callgraph_result = self.callgraph_use_case.execute(target_path)
+        callgraph_findings: list[Finding] = callgraph_result.get("findings", [])
+
         # Deduplicate combined findings
         combined: list[Finding] = []
         seen_fingerprints: set[str] = set()
 
-        for f in ast_findings + secret_findings + dep_findings + vuln_findings + git_findings + taint_findings:
+        for f in ast_findings + secret_findings + dep_findings + vuln_findings + git_findings + taint_findings + callgraph_findings:
             if f.fingerprint not in seen_fingerprints:
                 seen_fingerprints.add(f.fingerprint)
                 combined.append(f)
