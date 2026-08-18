@@ -40,6 +40,9 @@ class VariableTaintRecord:
         self.confidence = confidence
 
 
+from python_hunter.domain.taint.advanced_engine import AdvancedDataflowEngine
+
+
 class TaintAnalysisEngine:
     """Static AST dataflow analysis engine tracking taint propagation from sources to sinks."""
 
@@ -47,6 +50,7 @@ class TaintAnalysisEngine:
         self.config = config or TaintConfig()
         self.function_summaries: dict[str, FunctionSummary] = {}
         self.visited_functions: set[str] = set()
+        self.advanced_engine = AdvancedDataflowEngine(config=self.config)
 
     def analyze_document(
         self, doc: ASTDocument, raw_ast: ast.AST | None = None
@@ -65,7 +69,25 @@ class TaintAnalysisEngine:
             visited_functions=self.visited_functions,
         )
         visitor.visit(raw_ast)
-        return visitor.discovered_flows
+        flows = list(visitor.discovered_flows)
+
+        # Advanced Dataflow Engine integration
+        adv_res = self.advanced_engine.analyze_documents([doc])
+        adv_flows = adv_res.get("flows", [])
+        
+        # Attach proofs to existing flows or append new advanced flows
+        for af in adv_flows:
+            matched = False
+            for f in flows:
+                if f.sink_category == af.sink_category:
+                    if not f.proof and af.proof:
+                        f.proof = af.proof
+                    matched = True
+                    break
+            if not matched:
+                flows.append(af)
+
+        return flows
 
 
 class ModuleTaintVisitor(ast.NodeVisitor):

@@ -147,6 +147,11 @@ def create_parser() -> argparse.ArgumentParser:
     # Command: callgraph
     register_callgraph_subcommand(subparsers)
 
+    # Command: explain
+    explain_p = subparsers.add_parser("explain", help="Explain step-by-step security dataflow evidence and exploitability proof for a finding")
+    explain_p.add_argument("finding_id", nargs="?", default=None, help="Finding ID or vulnerability type to explain")
+    explain_p.add_argument("--target", default=".", help="Target project path")
+
     # Future subcommands (stubs marking development roadmap)
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
@@ -236,6 +241,10 @@ def run_cli(args: list[str] | None = None) -> int:
     if parsed_args.command == "diff":
         from python_hunter.interfaces.cli.commands.baseline import run_diff_command
         return run_diff_command(parsed_args)
+
+    if parsed_args.command == "explain":
+        from python_hunter.interfaces.cli.commands.explain import run_explain_command
+        return run_explain_command(parsed_args)
 
     if parsed_args.command == "rules":
         if parsed_args.rules_action == "list" or not parsed_args.rules_action:
