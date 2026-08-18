@@ -14,17 +14,21 @@ from python_hunter.rules.ast import get_default_registry
 
 from python_hunter.application.use_cases.analyze_callgraph import AnalyzeCallGraphUseCase
 from python_hunter.application.use_cases.analyze_dependencies import AnalyzeDependenciesUseCase
+from python_hunter.application.use_cases.analyze_dynamic import AnalyzeDynamicUseCase
 from python_hunter.application.use_cases.analyze_git import AnalyzeGitUseCase
 from python_hunter.application.use_cases.analyze_secrets import AnalyzeSecretsUseCase
 from python_hunter.application.use_cases.analyze_taint import AnalyzeTaintUseCase
 from python_hunter.application.use_cases.analyze_vulnerabilities import AnalyzeVulnerabilitiesUseCase
 from python_hunter.domain.correlation.correlator import FindingCorrelator
 from python_hunter.domain.correlation.risk_engine import RiskEngine
+from python_hunter.domain.frameworks.detector import FrameworkDetector
+from python_hunter.domain.frameworks.registry import FrameworkRegistry
 from python_hunter.domain.policy.engine import SecurityPolicyEngine
+import python_hunter.infrastructure.frameworks  # Ensures default framework adapters are registered
 
 
 class AnalyzeSecurityUseCase:
-    """Orchestrates Project Discovery -> AST Analysis -> Security Rule Engine -> Secret Detection -> Dependency Analysis -> Vulnerability Intelligence -> Git Analysis -> Taint Analysis -> Call Graph Analysis."""
+    """Orchestrates Project Discovery -> AST Analysis -> Framework Intelligence -> Security Rules -> Taint -> Call Graph."""
 
     def __init__(
         self,
@@ -37,6 +41,7 @@ class AnalyzeSecurityUseCase:
         git_use_case: AnalyzeGitUseCase | None = None,
         taint_use_case: AnalyzeTaintUseCase | None = None,
         callgraph_use_case: AnalyzeCallGraphUseCase | None = None,
+        dynamic_use_case: AnalyzeDynamicUseCase | None = None,
     ) -> None:
         self.discovery = discovery_use_case or DiscoverProjectUseCase()
         self.ast_use_case = ast_use_case or AnalyzeASTUseCase()
@@ -47,6 +52,8 @@ class AnalyzeSecurityUseCase:
         self.git_use_case = git_use_case or AnalyzeGitUseCase()
         self.taint_use_case = taint_use_case or AnalyzeTaintUseCase()
         self.callgraph_use_case = callgraph_use_case or AnalyzeCallGraphUseCase()
+        self.dynamic_use_case = dynamic_use_case or AnalyzeDynamicUseCase()
+        self.framework_detector = FrameworkDetector()
 
     def execute(self, target_path: str) -> tuple[list[Finding], ASTAnalysisSummary, list[RuleResult]]:
         """Execute full security analysis flow on target path."""
@@ -59,6 +66,22 @@ class AnalyzeSecurityUseCase:
             project=project,
             target_files=[],
         )
+
+        # Framework Detection & Augmentation
+        framework_profile = self.framework_detector.analyze(ast_summary.documents)
+        context.metadata["framework_profile"] = framework_profile
+
+        # Augment Taint Engine sources/sinks from detected framework adapters
+        framework_findings: list[Finding] = []
+        for adapter in FrameworkRegistry.list_adapters():
+            extra_srcs = adapter.discover_sources(ast_summary.documents)
+            extra_snks = adapter.discover_sinks(ast_summary.documents)
+            self.taint_use_case.engine.config.sources.update(extra_srcs)
+            self.taint_use_case.engine.config.sinks.update(extra_snks)
+            rts = adapter.discover_routes(ast_summary.documents)
+            framework_profile.routes.extend(rts)
+            pattern_findings = adapter.analyze_framework_patterns(ast_summary.documents, framework_profile)
+            framework_findings.extend(pattern_findings)
 
         ast_findings, rule_results = self.rule_engine.evaluate_rules(ast_summary, context)
 
@@ -78,6 +101,11 @@ class AnalyzeSecurityUseCase:
         git_result = self.git_use_case.execute(target_path)
         git_findings: list[Finding] = git_result.get("findings", [])
 
+        # Run dynamic behavior analysis scan
+        dynamic_behaviors, dynamic_summary = self.dynamic_use_case.execute(target_path)
+        context.metadata["dynamic_summary"] = dynamic_summary
+        self.callgraph_use_case.engine.add_dynamic_behaviors(dynamic_behaviors)
+
         # Run static taint dataflow analysis scan
         taint_result = self.taint_use_case.execute(target_path)
         taint_findings: list[Finding] = taint_result.get("findings", [])
@@ -88,6 +116,7 @@ class AnalyzeSecurityUseCase:
 
         raw_findings = (
             ast_findings
+            + framework_findings
             + secret_findings
             + dep_findings
             + vuln_findings

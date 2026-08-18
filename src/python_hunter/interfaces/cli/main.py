@@ -8,23 +8,22 @@ from python_hunter import __version__
 from python_hunter.infrastructure.config.settings import Settings
 from python_hunter.interfaces.cli.commands.analyze import run_analyze_command
 from python_hunter.interfaces.cli.commands.analyze_ast import run_analyze_ast_command
-from python_hunter.interfaces.cli.commands.discover import run_discover_command
-from python_hunter.interfaces.cli.commands.rules import (
-    run_rules_info_command,
-    run_rules_list_command,
-)
-
-
-from python_hunter.interfaces.cli.commands.dependencies import run_dependencies_command
-from python_hunter.interfaces.cli.commands.secrets import run_secrets_command
 from python_hunter.interfaces.cli.commands.callgraph import (
     register_callgraph_subcommand,
     run_callgraph_command,
 )
+from python_hunter.interfaces.cli.commands.ci import run_ci_command
+from python_hunter.interfaces.cli.commands.dependencies import run_dependencies_command
+from python_hunter.interfaces.cli.commands.discover import run_discover_command
 from python_hunter.interfaces.cli.commands.git import (
     register_git_subcommand,
     run_git_command,
 )
+from python_hunter.interfaces.cli.commands.rules import (
+    run_rules_info_command,
+    run_rules_list_command,
+)
+from python_hunter.interfaces.cli.commands.secrets import run_secrets_command
 from python_hunter.interfaces.cli.commands.taint import (
     register_taint_subcommand,
     run_taint_command,
@@ -68,11 +67,35 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     # Command: analyze
-    sec_parser = subparsers.add_parser("analyze", help="Execute AST security analysis and rule evaluation on target project")
+    sec_parser = subparsers.add_parser("analyze", help="Execute unified security analysis, risk scoring, and report generation")
     sec_parser.add_argument("target", nargs="?", default=".", help="Target directory or Python file to analyze")
     sec_parser.add_argument(
-        "--format", choices=["text", "json", "sarif"], default="text", help="Output display format (text, json, or sarif)"
+        "--format",
+        choices=["text", "terminal", "json", "sarif", "markdown", "md", "html", "csv"],
+        default="terminal",
+        help="Output format (terminal, json, sarif, markdown, html, csv)",
     )
+    sec_parser.add_argument("--severity", help="Filter findings by minimum severity (CRITICAL, HIGH, MEDIUM, LOW, INFO)")
+    sec_parser.add_argument("--category", help="Filter findings by security category")
+    sec_parser.add_argument("--component", help="Filter findings by component/module name")
+    sec_parser.add_argument("--status", help="Filter findings by lifecycle state (NEW, EXISTING, RESOLVED, REOPENED, SUPPRESSED)")
+    sec_parser.add_argument("--confidence", help="Filter findings by confidence level (HIGH, MEDIUM, LOW)")
+    sec_parser.add_argument("--sort", choices=["risk", "severity", "confidence", "file"], default="risk", help="Sort findings by field")
+    sec_parser.add_argument("--limit", type=int, help="Limit maximum returned findings")
+    sec_parser.add_argument("-o", "--output", help="Write report output to specified file path")
+    sec_parser.add_argument("--details", action="store_true", help="Display full evidence, attack paths, and remediation details")
+    sec_parser.add_argument("--quiet", action="store_true", help="Output concise status summary only")
+    sec_parser.add_argument("--verbose", action="store_true", help="Display analyzer timing and health execution metrics")
+    sec_parser.add_argument("--no-redact", action="store_true", help="Disable automatic secret redaction")
+
+    # Command: ci
+    ci_p = subparsers.add_parser("ci", help="Run CI pipeline security analysis, baseline evaluation, and artifact generation")
+    ci_p.add_argument("target", nargs="?", default=".", help="Target directory to analyze")
+    ci_p.add_argument("--output-dir", default=".", help="Directory to save report artifacts (report.json, report.sarif, report.md)")
+    ci_p.add_argument("--no-artifacts", action="store_true", help="Disable report artifact files export")
+    ci_p.add_argument("--quiet", action="store_true", help="Output concise status summary only")
+    ci_p.add_argument("--verbose", action="store_true", help="Display execution timing and health metrics")
+    ci_p.add_argument("--no-redact", action="store_true", help="Disable secret redaction")
 
     # Command: gate
     gate_p = subparsers.add_parser("gate", help="Evaluate CI/CD security gate policy")
@@ -128,10 +151,10 @@ def create_parser() -> argparse.ArgumentParser:
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
 
-    subparsers.add_parser("project", help="Manage project records (Milestone 10/11)")
-    subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM (Milestone 13)")
-    subparsers.add_parser("report", help="Generate security reports (Milestone 13)")
-    subparsers.add_parser("plugins", help="Manage third-party plugins (Milestone 17)")
+    subparsers.add_parser("project", help="Manage project records")
+    subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM")
+    subparsers.add_parser("report", help="Generate security reports")
+    subparsers.add_parser("plugins", help="Manage third-party plugins")
 
     return parser
 
@@ -169,7 +192,10 @@ def run_cli(args: list[str] | None = None) -> int:
         return run_analyze_ast_command(parsed_args.target, output_format=parsed_args.format)
 
     if parsed_args.command == "analyze":
-        return run_analyze_command(parsed_args.target, output_format=parsed_args.format)
+        return run_analyze_command(parsed_args)
+
+    if parsed_args.command == "ci":
+        return run_ci_command(parsed_args)
 
     if parsed_args.command == "secrets":
         return run_secrets_command([parsed_args.target, "--format", parsed_args.format])

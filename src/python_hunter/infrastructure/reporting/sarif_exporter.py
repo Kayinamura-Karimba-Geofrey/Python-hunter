@@ -6,6 +6,9 @@ from typing import Any
 from python_hunter import __version__
 from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.findings.finding import Finding
+from python_hunter.domain.reporting.models import SecurityReport
+from python_hunter.infrastructure.reporting.base import BaseReporter, ReporterRegistry
+from python_hunter.infrastructure.reporting.redaction import SecretRedactor
 
 
 class SARIFExporter:
@@ -42,7 +45,9 @@ class SARIFExporter:
                 sarif_level = "warning"
 
             line_start = f.location.line_start if f.location else 1
+            line_end = f.location.line_end if f.location else line_start
             col_start = f.location.column_start if f.location else 1
+            col_end = f.location.column_end if f.location else col_start
 
             res = {
                 "ruleId": f.rule_id,
@@ -55,7 +60,9 @@ class SARIFExporter:
                             "artifactLocation": {"uri": f.file_path},
                             "region": {
                                 "startLine": line_start,
+                                "endLine": line_end,
                                 "startColumn": col_start,
+                                "endColumn": col_end,
                             },
                         }
                     }
@@ -95,3 +102,18 @@ class SARIFExporter:
     def export_json(cls, findings: list[Finding], indent: int = 2) -> str:
         """Export SARIF formatted string JSON."""
         return json.dumps(cls.export(findings), indent=indent)
+
+
+class SarifReporter(BaseReporter):
+    """SARIF 2.1.0 Reporter implementing BaseReporter interface."""
+
+    def render(self, report: SecurityReport, options: dict[str, Any] | None = None) -> str:
+        """Render SecurityReport findings into SARIF 2.1.0 JSON format."""
+        opts = options or {}
+        redact = opts.get("redact_secrets", True)
+        indent = opts.get("indent", 2)
+        findings = SecretRedactor.redact_findings(report.findings, enabled=redact)
+        return SARIFExporter.export_json(findings, indent=indent)
+
+
+ReporterRegistry.register("sarif", SarifReporter)

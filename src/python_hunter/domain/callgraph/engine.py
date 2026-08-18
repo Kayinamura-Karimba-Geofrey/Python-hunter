@@ -72,6 +72,30 @@ class CallGraphEngine:
             "sccs": sccs,
         }
 
+    def add_dynamic_behaviors(self, behaviors: list[Any]) -> None:
+        """Integrate resolved dynamic behavior targets into the call graph."""
+        for b in behaviors:
+            edge_type = CallEdgeType.DYNAMIC
+            if getattr(b, "behavior_type", None) == "REFLECTION":
+                edge_type = CallEdgeType.REFLECTION
+            elif getattr(b, "behavior_type", None) == "DYNAMIC_IMPORT":
+                edge_type = CallEdgeType.DYNAMIC_IMPORT
+            elif getattr(b, "behavior_type", None) == "PLUGIN_LOADING":
+                edge_type = CallEdgeType.PLUGIN
+
+            caller = getattr(b, "file_path", "unknown_module")
+            targets = getattr(b, "resolved_targets", []) or ([getattr(b, "target")] if getattr(b, "target", None) else [])
+            for tgt in targets:
+                if tgt and isinstance(tgt, str):
+                    self.call_edges.append(
+                        CallEdge(
+                            caller_qualified_name=caller,
+                            callee_qualified_name=tgt,
+                            edge_type=edge_type,
+                            confidence=getattr(b, "confidence", Confidence.MEDIUM),
+                        )
+                    )
+
     def _reset(self) -> None:
         self.symbols.clear()
         self.imports.clear()
