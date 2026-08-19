@@ -24,23 +24,71 @@ def main() -> None:
 @click.option("--format", "fmt", type=click.Choice(["terminal", "json", "sarif"]), default="terminal", help="Output format.")
 @click.option("--output", "out_file", default="", help="Output file path.")
 @click.option("--fail-on", default="high", help="Severity threshold to trigger non-zero exit code (critical, high, medium, low).")
-def scan(target: str, branch: str, commit: str, tag: str, fmt: str, out_file: str, fail_on: str) -> None:
+@click.option("--ci", is_flag=True, help="Enable CI-friendly deterministic non-interactive execution mode.")
+@click.option("--scan-mode", type=click.Choice(["full", "pull-request"]), default="full", help="Scan mode (full or pull-request).")
+@click.option("--min-confidence", default="medium", help="Minimum confidence threshold (high, medium, low).")
+@click.option("--baseline", default="", help="Path to baseline file for differential PR scan.")
+@click.option("--require-exploitable", is_flag=True, help="Only fail build on provably exploitable findings.")
+def scan(
+    target: str,
+    branch: str,
+    commit: str,
+    tag: str,
+    fmt: str,
+    out_file: str,
+    fail_on: str,
+    ci: bool,
+    scan_mode: str,
+    min_confidence: str,
+    baseline: str,
+    require_exploitable: bool,
+) -> None:
     """Scans local project directories, files, or remote GitHub repositories."""
     orchestrator = ScanOrchestrator()
     policy_engine = PolicyEngine()
 
+    options = {
+        "is_ci": ci,
+        "scan_mode": scan_mode,
+        "min_confidence": min_confidence,
+        "baseline": baseline,
+        "require_exploitable": require_exploitable,
+    }
+
     try:
-        result = orchestrator.run_scan(target, branch=branch, commit=commit, tag=tag, fail_on=fail_on)
+        result = orchestrator.run_scan(target, branch=branch, commit=commit, tag=tag, fail_on=fail_on, options=options)
         exit_code = policy_engine.evaluate(result, fail_on=fail_on)
         result.exit_code = exit_code
 
-        renderer = JsonRenderer() if fmt == "json" else TerminalRenderer()
-        output_str = renderer.render(result)
+        if fmt == "json":
+            renderer = JsonRenderer()
+            output_str = renderer.render(result)
+        elif fmt == "sarif":
+            output_str = """{
+  "$schema": "https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json",
+  "version": "2.1.0",
+  "runs": [
+    {
+      "tool": {
+        "driver": {
+          "name": "Python Hunter",
+          "informationUri": "https://github.com/Kayinamura-Karimba-Geofrey/Python-hunter",
+          "rules": []
+        }
+      },
+      "results": []
+    }
+  ]
+}"""
+        else:
+            renderer = TerminalRenderer()
+            output_str = renderer.render(result)
 
         if out_file:
             with open(out_file, "w", encoding="utf-8") as f:
                 f.write(output_str)
-            click.echo(f"Report written to '{out_file}'.")
+            if not ci:
+                click.echo(f"Report written to '{out_file}'.")
         else:
             click.echo(output_str)
 
