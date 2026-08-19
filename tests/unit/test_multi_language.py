@@ -22,7 +22,7 @@ class TestMultiLanguageArchitecture(unittest.TestCase):
 
         js_adapter = self.registry.get_adapter(Language.JAVASCRIPT)
         self.assertIsNotNone(js_adapter)
-        self.assertFalse(js_adapter.is_available())
+        self.assertTrue(js_adapter.is_available())
 
     def test_language_detector_python(self) -> None:
         langs = self.detector.detect_languages(".")

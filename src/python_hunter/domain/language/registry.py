@@ -1,8 +1,9 @@
 """LanguageRegistry for registering and discovering language adapters."""
 
 from python_hunter.domain.language.adapter import LanguageAdapter
+from python_hunter.domain.language.javascript_adapter import JavaScriptLanguageAdapter, TypeScriptLanguageAdapter
 from python_hunter.domain.language.models import Language
-from python_hunter.domain.language.python_adapter import PlaceholderJavaScriptLanguageAdapter, PythonLanguageAdapter
+from python_hunter.domain.language.python_adapter import PythonLanguageAdapter
 
 
 class LanguageRegistry:
@@ -11,7 +12,8 @@ class LanguageRegistry:
     def __init__(self) -> None:
         self._adapters: dict[Language, LanguageAdapter] = {}
         self.register_adapter(PythonLanguageAdapter())
-        self.register_adapter(PlaceholderJavaScriptLanguageAdapter())
+        self.register_adapter(JavaScriptLanguageAdapter())
+        self.register_adapter(TypeScriptLanguageAdapter())
 
     def register_adapter(self, adapter: LanguageAdapter) -> None:
         self._adapters[adapter.language] = adapter

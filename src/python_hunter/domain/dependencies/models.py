@@ -29,13 +29,14 @@ class DependencyType(str, Enum):
 
 
 class PackageManager(str, Enum):
-    """Supported Python packaging tools."""
+    """Supported packaging tools."""
 
     PIP = "pip"
     POETRY = "poetry"
     PIPENV = "pipenv"
     UV = "uv"
     SETUPTOOLS = "setuptools"
+    NPM = "npm"
     UNKNOWN = "unknown"
 
 
