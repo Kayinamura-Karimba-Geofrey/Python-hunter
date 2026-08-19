@@ -21,11 +21,13 @@ class TerminalRenderer(OutputRenderer):
         risk_str = "HIGH" if risk_score >= 70.0 else ("MEDIUM" if risk_score >= 40.0 else "LOW")
         paths_count = len(result.attack_paths)
 
+        langs = ", ".join(result.context.options.get("detected_languages", ["python"]))
         lines = [
             "──────────────────────────────────────────────",
             "          PYTHON HUNTER SECURITY SCAN         ",
             "──────────────────────────────────────────────",
             f" Target:       {target_name}",
+            f" Languages:    {langs}",
             f" Scan ID:      {result.context.scan_id}",
             f" Attack Paths: {paths_count}",
             f" Project Risk: {risk_str} ({risk_score:.1f}/100)",
