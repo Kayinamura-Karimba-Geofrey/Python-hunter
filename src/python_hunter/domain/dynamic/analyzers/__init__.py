@@ -5,14 +5,17 @@ from python_hunter.domain.dynamic.analyzers.decorators import DecoratorAnalyzer
 from python_hunter.domain.dynamic.analyzers.deserialization import DeserializationAnalyzer
 from python_hunter.domain.dynamic.analyzers.dispatch import DynamicDispatchAnalyzer
 from python_hunter.domain.dynamic.analyzers.dynamic_import import DynamicImportAnalyzer
+from python_hunter.domain.dynamic.analyzers.dynamic_resolver import DynamicResolver
 from python_hunter.domain.dynamic.analyzers.eval_exec import EvalExecAnalyzer
 from python_hunter.domain.dynamic.analyzers.metaclass import MetaclassAnalyzer
 from python_hunter.domain.dynamic.analyzers.monkey_patch import MonkeyPatchAnalyzer
 from python_hunter.domain.dynamic.analyzers.plugin import PluginLoaderAnalyzer
 from python_hunter.domain.dynamic.analyzers.reflection import ReflectionAnalyzer
+from python_hunter.domain.dynamic.analyzers.runtime_registration import RuntimeRegistrationAnalyzer
 
 __all__ = [
     "BaseDynamicAnalyzer",
+    "DynamicResolver",
     "ReflectionAnalyzer",
     "DynamicImportAnalyzer",
     "EvalExecAnalyzer",
@@ -22,4 +25,6 @@ __all__ = [
     "MonkeyPatchAnalyzer",
     "DynamicDispatchAnalyzer",
     "PluginLoaderAnalyzer",
+    "RuntimeRegistrationAnalyzer",
 ]
+

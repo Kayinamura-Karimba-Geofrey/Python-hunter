@@ -13,7 +13,9 @@ from python_hunter.domain.dynamic.analyzers import (
     MonkeyPatchAnalyzer,
     PluginLoaderAnalyzer,
     ReflectionAnalyzer,
+    RuntimeRegistrationAnalyzer,
 )
+
 from python_hunter.domain.dynamic.models import (
     DynamicBehavior,
     DynamicBehaviorSummary,
@@ -40,6 +42,7 @@ class DynamicBehaviorEngine:
             MonkeyPatchAnalyzer(),
             DynamicDispatchAnalyzer(),
             PluginLoaderAnalyzer(),
+            RuntimeRegistrationAnalyzer(),
         ]
 
     def analyze(self, documents: list[ASTDocument]) -> tuple[list[DynamicBehavior], DynamicBehaviorSummary]:
@@ -84,9 +87,12 @@ class DynamicBehaviorEngine:
                 summary.monkey_patch_count += 1
             elif b.behavior_type == DynamicBehaviorType.PLUGIN_LOADING:
                 summary.plugin_loading_count += 1
+            elif b.behavior_type == DynamicBehaviorType.RUNTIME_REGISTRATION:
+                summary.runtime_registration_count += 1
 
             if b.resolution_state == ResolutionState.UNKNOWN:
                 summary.unresolved_calls_count += 1
 
         summary.by_resolution_state = by_res
         return summary
+

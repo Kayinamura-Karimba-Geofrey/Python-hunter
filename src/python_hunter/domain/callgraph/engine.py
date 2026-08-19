@@ -76,12 +76,19 @@ class CallGraphEngine:
         """Integrate resolved dynamic behavior targets into the call graph."""
         for b in behaviors:
             edge_type = CallEdgeType.DYNAMIC
-            if getattr(b, "behavior_type", None) == "REFLECTION":
+            b_type = getattr(b, "behavior_type", None)
+            if b_type == "REFLECTION":
                 edge_type = CallEdgeType.REFLECTION
-            elif getattr(b, "behavior_type", None) == "DYNAMIC_IMPORT":
+            elif b_type == "DYNAMIC_IMPORT":
                 edge_type = CallEdgeType.DYNAMIC_IMPORT
-            elif getattr(b, "behavior_type", None) == "PLUGIN_LOADING":
+            elif b_type == "PLUGIN_LOADING":
                 edge_type = CallEdgeType.PLUGIN
+            elif b_type == "DYNAMIC_DISPATCH":
+                edge_type = CallEdgeType.REGISTRY
+            elif b_type == "DECORATOR":
+                edge_type = CallEdgeType.DECORATED
+            elif b_type in ("MONKEY_PATCH", "METACLASS", "RUNTIME_REGISTRATION"):
+                edge_type = CallEdgeType.DYNAMIC
 
             caller = getattr(b, "file_path", "unknown_module")
             targets = getattr(b, "resolved_targets", []) or ([getattr(b, "target")] if getattr(b, "target", None) else [])
@@ -95,6 +102,7 @@ class CallGraphEngine:
                             confidence=getattr(b, "confidence", Confidence.MEDIUM),
                         )
                     )
+
 
     def _reset(self) -> None:
         self.symbols.clear()

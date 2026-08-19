@@ -46,6 +46,9 @@ class DynamicBehavior:
     resolved_targets: list[str] = field(default_factory=list)
     unresolved_targets: list[str] = field(default_factory=list)
     evidence: str = ""
+    is_tainted: bool = False
+    security_impact: str | None = None
+    remediation: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
@@ -64,4 +67,6 @@ class DynamicBehaviorSummary:
     metaclass_count: int = 0
     monkey_patch_count: int = 0
     plugin_loading_count: int = 0
+    runtime_registration_count: int = 0
     by_resolution_state: dict[str, int] = field(default_factory=dict)
+

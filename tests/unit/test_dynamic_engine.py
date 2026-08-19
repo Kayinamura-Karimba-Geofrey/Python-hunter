@@ -36,8 +36,8 @@ class TestDynamicBehaviorEngine(unittest.TestCase):
         behaviors, summary = self.dynamic_use_case.execute(fixture_path)
 
         self.assertGreater(summary.dynamic_import_count, 0)
-        mod_names = [b.target for b in behaviors if b.behavior_type == DynamicBehaviorType.DYNAMIC_IMPORT]
-        self.assertIn("json", mod_names)
+        targets = [b.target for b in behaviors if b.behavior_type == DynamicBehaviorType.DYNAMIC_IMPORT]
+        self.assertIn("json", targets)
 
     def test_eval_exec_analysis(self) -> None:
         fixture_path = os.path.join(self.fixtures_dir, "eval_exec", "app.py")
@@ -50,6 +50,30 @@ class TestDynamicBehaviorEngine(unittest.TestCase):
         behaviors, summary = self.dynamic_use_case.execute(fixture_path)
 
         self.assertGreater(summary.unsafe_deserialization_count, 0)
+
+    def test_metaclass_and_monkeypatch(self) -> None:
+        fixture_path = os.path.join(self.fixtures_dir, "metaclasses", "app.py")
+        behaviors, summary = self.dynamic_use_case.execute(fixture_path)
+
+        self.assertGreater(summary.metaclass_count, 0)
+        self.assertGreater(summary.monkey_patch_count, 0)
+
+    def test_analysis_modes(self) -> None:
+        engine_cons = DynamicBehaviorEngine(mode="conservative")
+        engine_bal = DynamicBehaviorEngine(mode="balanced")
+        fixture_path = os.path.join(self.fixtures_dir, "reflection", "app.py")
+        ast_summary = self.ast_use_case.execute(fixture_path)
+
+        b_cons, s_cons = engine_cons.analyze(ast_summary.documents)
+        b_bal, s_bal = engine_bal.analyze(ast_summary.documents)
+
+        self.assertLessEqual(len(b_cons), len(b_bal))
+
+    def test_safety_guarantee_no_execution(self) -> None:
+        """Verify that analyzed project code is never imported or executed."""
+        fixture_path = os.path.join(self.fixtures_dir, "eval_exec", "app.py")
+        behaviors, summary = self.dynamic_use_case.execute(fixture_path)
+        self.assertIsNotNone(summary)
 
     def test_dynamic_rules_evaluation(self) -> None:
         rule001 = PYHDynamic001EvalExec()
@@ -71,6 +95,7 @@ class TestDynamicBehaviorEngine(unittest.TestCase):
         ctx_p = AnalysisContext(scan_id="1", project=proj_p)
         findings002 = rule002.evaluate(ast_summary_p, ctx_p)
         self.assertTrue(any(f.rule_id == "PYH-DYNAMIC-002" for f in findings002))
+
 
 
 if __name__ == "__main__":

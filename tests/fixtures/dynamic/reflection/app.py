@@ -1,14 +1,12 @@
-"""Reflection Test Fixture."""
+"""Reflection test fixture."""
 
-class User:
-    def __init__(self):
-        self.email = "test@example.com"
-        self.role = "admin"
+user_input = "email"
 
-user = User()
-val = getattr(user, "email")
-getattr(user, val)
-setattr(user, "role", "user")
-setattr(user, val, "hacked")
-g = globals()
-l = locals()
+def test_reflection(obj):
+    attr = getattr(obj, "authenticate")
+    val = getattr(obj, user_input)
+    setattr(obj, "role", "admin")
+    setattr(obj, user_input, "value")
+    g = globals()[user_input]
+    l = locals()
+    return attr, val

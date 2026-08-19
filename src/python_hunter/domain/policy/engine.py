@@ -22,10 +22,15 @@ class SecurityPolicy:
     severity_overrides: dict[str, Severity] = field(default_factory=dict)
     ignored_paths: list[str] = field(default_factory=lambda: ["tests/", "examples/", "fixtures/", "vendor/"])
     suppressions: list[dict[str, Any]] = field(default_factory=list)
+    forbidden_dynamic_execution: bool = False
+    forbidden_pickle: bool = False
+    forbidden_dynamic_import: bool = False
+    restricted_reflection: bool = False
     fail_on: Severity = Severity.HIGH
     max_critical: int = 0
     max_high: int = 5
     max_risk_score: float = 75.0
+
 
 
 class SecurityPolicyEngine:

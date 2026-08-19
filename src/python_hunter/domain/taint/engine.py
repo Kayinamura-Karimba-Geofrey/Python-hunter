@@ -403,6 +403,13 @@ class ModuleTaintVisitor(ast.NodeVisitor):
         elif isinstance(node, ast.Call):
             call_name = self._get_call_name(node.func)
 
+            # Dynamic reflection taint propagation: getattr(obj, tainted_var)
+            if call_name in ("getattr", "setattr") and len(node.args) >= 2:
+                attr_t = self._evaluate_expression_taint(node.args[1])
+                obj_t = self._evaluate_expression_taint(node.args[0])
+                if attr_t or obj_t:
+                    return attr_t or obj_t
+
             # Check if source call (e.g. input(), os.getenv("X"), request.args.get("X"))
             for src_pattern, cat in self.config.sources.items():
                 if call_name == src_pattern or call_name.startswith(src_pattern):
@@ -415,6 +422,7 @@ class ModuleTaintVisitor(ast.NodeVisitor):
                 t = self._evaluate_expression_taint(arg)
                 if t and t.state in (TaintStateEnum.TAINTED, TaintStateEnum.MAYBE_TAINTED):
                     return t
+
 
         # 6. Container literals ([a, b], {k: v})
         elif isinstance(node, (ast.List, ast.Tuple, ast.Set)):

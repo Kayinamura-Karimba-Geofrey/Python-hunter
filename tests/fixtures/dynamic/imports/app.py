@@ -1,8 +1,9 @@
-"""Dynamic Import Test Fixture."""
+"""Dynamic imports test fixture."""
 
 import importlib
 
-json_mod = importlib.import_module("json")
-mod_name = "sys"
-dyn_mod = importlib.import_module(mod_name)
-old_imp = __import__("math")
+def test_imports(user_mod):
+    m1 = importlib.import_module("json")
+    m2 = importlib.import_module(user_mod)
+    m3 = __import__("sys")
+    return m1, m2, m3
