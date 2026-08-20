@@ -945,3 +945,87 @@ class SecurityApplicationService:
             },
             "dependency_tree": graph.to_tree_str(),
         }
+
+    def execute_secrets_scan(
+        self, workspace_path: str, scan_history: bool = False, options: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        """Scans workspace source code, configuration files, and optionally Git history for credential leaks."""
+        import os
+        from python_hunter.domain.analysis.context import AnalysisContext
+        from python_hunter.domain.secrets.engine import SecretDetectionEngine
+        from python_hunter.domain.secrets.git_history_engine import GitHistorySecretScanner
+        from python_hunter.domain.secrets.attack_path_secrets import AttackPathSecretMapper
+
+        from python_hunter.domain.projects.project import Project
+        sec_engine = SecretDetectionEngine()
+        context = AnalysisContext(scan_id="scan_sec", project=Project(name="workspace", root_path=workspace_path))
+        all_findings = []
+
+        # 1. Active workspace scanning
+        for root, _, files in os.walk(workspace_path):
+            if ".git" in root:
+                continue
+            for file in files:
+                full_p = os.path.join(root, file)
+                if sec_engine.is_eligible_file(full_p):
+                    try:
+                        with open(full_p, "r", encoding="utf-8", errors="ignore") as f:
+                            content = f.read()
+                        file_findings = sec_engine.scan_file(full_p, content, context)
+                        all_findings.extend(file_findings)
+                    except Exception:
+                        continue
+
+        # 2. Historical Git commit scanning
+        historical_findings = []
+        if scan_history:
+            git_scanner = GitHistorySecretScanner(sec_engine)
+            historical_findings = git_scanner.scan_git_history(workspace_path)
+
+        # 3. Attack path generation
+        attack_paths = AttackPathSecretMapper.generate_attack_paths(all_findings)
+
+        formatted_findings = []
+        for f in all_findings:
+            formatted_findings.append({
+                "rule_id": f.rule_id,
+                "title": f.title,
+                "severity": f.severity.value,
+                "confidence": f.confidence.value,
+                "file_path": f.file_path,
+                "line": f.location.line_start,
+                "fingerprint": f.fingerprint,
+                "evidence": f.evidence,
+                "remediation": f.remediation,
+            })
+
+        return {
+            "status": "COMPLETED",
+            "workspace_path": workspace_path,
+            "active_secrets_count": len(formatted_findings),
+            "active_secrets": formatted_findings,
+            "historical_secrets_count": len(historical_findings),
+            "historical_secrets": [
+                {
+                    "fingerprint": h.fingerprint,
+                    "secret_type": h.secret_type,
+                    "detector_id": h.detector_id,
+                    "first_seen_commit": h.first_seen_commit,
+                    "first_seen_author": h.first_seen_author,
+                    "first_seen_date": h.first_seen_date,
+                    "file_path": h.file_path,
+                    "current_status": h.current_status,
+                }
+                for h in historical_findings
+            ],
+            "attack_paths": [
+                {
+                    "path_id": ap.path_id,
+                    "title": ap.title,
+                    "severity": ap.severity,
+                    "steps": ap.steps,
+                }
+                for ap in attack_paths
+            ],
+        }
+

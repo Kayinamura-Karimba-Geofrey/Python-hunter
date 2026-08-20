@@ -7,18 +7,26 @@ from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.findings.finding import Finding
+from python_hunter.domain.secrets.context_analyzer import SecretContextAnalyzer
 from python_hunter.domain.secrets.entropy import EntropyCalculator
-from python_hunter.domain.secrets.models import SecretCandidate, SecretDetector
+from python_hunter.domain.secrets.models import (
+    ExposureType,
+    SecretCandidate,
+    SecretDetector,
+    SecretExposure,
+    compute_secret_fingerprint,
+)
 from python_hunter.domain.secrets.placeholders import PlaceholderFilter
 from python_hunter.domain.secrets.redaction import Redactor
 from python_hunter.domain.secrets.registry import SecretDetectorRegistry
+from python_hunter.domain.secrets.validation import SecretValidator
 
 
 class SecretDetectionEngine:
-    """Orchestrates candidate extraction, entropy analysis, placeholder filtering, redaction, and finding creation."""
+    """Orchestrates candidate extraction, context analysis, validation, fingerprinting, redaction, and finding creation."""
 
     SCANNABLE_EXTENSIONS = {
-        ".py", ".pyi", ".js", ".ts", ".jsx", ".tsx",
+        ".py", ".pyi", ".js", ".ts", ".jsx", ".tsx", ".java", ".go", ".rs", ".c", ".cpp", ".php", ".rb",
         ".json", ".yaml", ".yml", ".toml", ".ini", ".cfg",
         ".env", ".txt", ".md", ".xml", ".conf", ".pem", ".key"
     }
@@ -28,7 +36,8 @@ class SecretDetectionEngine:
     ]
 
     def __init__(self, registry: SecretDetectorRegistry | None = None) -> None:
-        self.registry = registry or SecretDetectorRegistry()
+        from python_hunter.detectors.secrets import create_default_secret_registry
+        self.registry = registry or create_default_secret_registry()
 
     @classmethod
     def is_eligible_file(cls, file_path: str) -> bool:
@@ -40,6 +49,9 @@ class SecretDetectionEngine:
         ext = os.path.splitext(file_path)[1].lower()
         if ext and ext not in cls.SCANNABLE_EXTENSIONS:
             return False
+
+        if not os.path.exists(file_path):
+            return True
 
         # Binary check by reading header bytes
         try:
@@ -62,7 +74,7 @@ class SecretDetectionEngine:
         self, file_path: str, content: str, context: AnalysisContext
     ) -> list[Finding]:
         """Scan file content text and return redacted security findings."""
-        if not content:
+        if not content or not self.is_eligible_file(file_path):
             return []
 
         raw_candidates: list[SecretCandidate] = []
@@ -77,21 +89,43 @@ class SecretDetectionEngine:
         seen_fingerprints: set[str] = set()
 
         for cand in raw_candidates:
+            raw_secret_str = cand.value
+
             # 1. Placeholder check
-            if PlaceholderFilter.is_placeholder(cand.value):
+            if PlaceholderFilter.is_placeholder(raw_secret_str):
+                cand.is_placeholder = True
                 continue
 
-            # 2. Entropy calculation
-            cand.entropy = EntropyCalculator.calculate(cand.value)
+            # 2. Offline Structural Validation
+            is_valid_format = SecretValidator.validate_structurally(cand)
+            if not is_valid_format:
+                continue
 
-            # 3. Detector metadata lookup
+            # 3. Entropy calculation
+            cand.entropy = EntropyCalculator.calculate(raw_secret_str)
+
+            # 4. Context & Environment Analysis
+            cand.is_test_file = SecretContextAnalyzer.is_test_file(file_path)
+            env = SecretContextAnalyzer.infer_environment(file_path, cand.evidence_snippet)
+            priv = SecretContextAnalyzer.infer_privilege(cand.secret_type, cand.evidence_snippet)
+            eval_conf, is_test_match = SecretContextAnalyzer.evaluate_context_confidence(
+                raw_secret_str, cand.context_key, file_path
+            )
+
             detector = self.registry.get(cand.detector_id)
             severity = detector.severity if detector else Severity.HIGH
-            confidence = detector.confidence if detector else Confidence.HIGH
+            confidence = eval_conf if detector else Confidence.HIGH
 
-            # 4. Immediate Redaction (Zero Raw Secret Leakage Guarantee)
-            redacted_preview = Redactor.redact_value(cand.value)
-            sanitized_evidence = Redactor.sanitize_evidence(cand.evidence_snippet, cand.value)
+            # If in test file or mock, lower severity to MEDIUM/LOW
+            if is_test_match or cand.is_test_file:
+                severity = Severity.MEDIUM if severity in (Severity.CRITICAL, Severity.HIGH) else Severity.LOW
+
+            # 5. Non-reversible Secret Fingerprint
+            fp = cand.fingerprint or compute_secret_fingerprint(raw_secret_str)
+
+            # 6. Immediate Redaction (Zero Raw Secret Leakage Guarantee)
+            redacted_preview = Redactor.redact_value(raw_secret_str)
+            sanitized_evidence = Redactor.sanitize_evidence(cand.evidence_snippet, raw_secret_str)
 
             loc = Location(
                 line_start=cand.line,
@@ -103,7 +137,7 @@ class SecretDetectionEngine:
             title = f"Exposed {cand.secret_type.value.replace('_', ' ').title()} Secret Detected"
             description = (
                 f"Potentially exposed credential of type '{cand.secret_type.value}' detected "
-                f"by detector '{cand.detector_id}' (Shannon entropy: {cand.entropy})."
+                f"by detector '{cand.detector_id}' (Fingerprint: {fp}, Entropy: {cand.entropy}, Env: {env.value}, Priv: {priv.value})."
             )
 
             finding = Finding(
@@ -122,10 +156,23 @@ class SecretDetectionEngine:
                     "3. Store credentials in environment variables or secret managers (e.g. HashiCorp Vault, AWS Secrets Manager)."
                 ),
             )
+            # Override finding fingerprint with non-reversible secret fingerprint
+            finding.fingerprint = fp
 
-            # 5. Deduplication
-            if finding.fingerprint not in seen_fingerprints:
-                seen_fingerprints.add(finding.fingerprint)
+            # Deduplication by secret fingerprint with specificity preference
+            existing_idx = None
+            for idx, existing in enumerate(findings):
+                if existing.fingerprint == fp:
+                    existing_idx = idx
+                    break
+
+            if existing_idx is None:
                 findings.append(finding)
+            else:
+                # Upgrade existing generic finding if new finding is provider-specific
+                existing_finding = findings[existing_idx]
+                generic_ids = ("PYH-SECRET-010", "PYH-SECRET-001", "PYH-SECRET-008", "PYH-SECRET-002")
+                if existing_finding.rule_id in generic_ids and finding.rule_id not in generic_ids:
+                    findings[existing_idx] = finding
 
         return findings

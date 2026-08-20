@@ -228,7 +228,28 @@ def run_cli(args: list[str] | None = None) -> int:
         return run_ci_command(parsed_args)
 
     if parsed_args.command == "secrets":
-        return run_secrets_command([parsed_args.target, "--format", parsed_args.format])
+        service = SecurityApplicationService()
+        scan_res = service.execute_secrets_scan(parsed_args.target, scan_history=True)
+        if parsed_args.format == "json":
+            import json
+            sys.stdout.write(json.dumps(scan_res, indent=2) + "\n")
+        else:
+            sys.stdout.write("==========================================================\n")
+            sys.stdout.write(" Python Hunter Credential Exposure Intelligence\n")
+            sys.stdout.write("==========================================================\n")
+            sys.stdout.write(f"Target Path            : {scan_res['workspace_path']}\n")
+            sys.stdout.write(f"Active Exposures       : {scan_res['active_secrets_count']}\n")
+            sys.stdout.write(f"Historical Exposures   : {scan_res['historical_secrets_count']}\n")
+            sys.stdout.write("==========================================================\n\n")
+
+            for s in scan_res["active_secrets"]:
+                sys.stdout.write(f"[!] {s['severity']} SECRET DETECTED ({s['rule_id']})\n")
+                sys.stdout.write(f"    Title       : {s['title']}\n")
+                sys.stdout.write(f"    File/Line   : {s['file_path']}:{s['line']}\n")
+                sys.stdout.write(f"    Fingerprint : {s['fingerprint']}\n")
+                sys.stdout.write(f"    Evidence    : {s['evidence']}\n")
+                sys.stdout.write("----------------------------------------------------------\n")
+        return 0 if scan_res["active_secrets_count"] == 0 else 1
 
     if parsed_args.command == "dependencies":
         cmd_args = [parsed_args.target, "--format", parsed_args.format]

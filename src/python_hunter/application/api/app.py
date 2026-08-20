@@ -267,3 +267,15 @@ def sca_scan(req: PolyglotScanRequest):
     )
 
 
+@app.post("/api/v1/secrets/scan")
+@app.get("/api/v1/secrets")
+@app.get("/api/v1/secrets/history")
+@app.get("/api/v1/secrets/exposures")
+def secrets_scan(req: PolyglotScanRequest):
+    return app_service.execute_secrets_scan(
+        workspace_path=req.workspace_path,
+        scan_history=True,
+    )
+
+
+
