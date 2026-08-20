@@ -64,7 +64,13 @@ class PolicyEngine:
 
             # Check severity count
             if pol.condition.severity:
-                sev_count = sum(1 for f in findings if f.severity == pol.condition.severity)
+                sev_count = 0
+                for f in findings:
+                    f_sev = f.severity if hasattr(f, "severity") else f.get("severity")
+                    if hasattr(f_sev, "value"):
+                        f_sev = f_sev.value
+                    if str(f_sev).upper() == str(pol.condition.severity.value).upper():
+                        sev_count += 1
                 if sev_count >= pol.condition.min_count:
                     violated = True
                     violations.append(f"{pol.name}: Detected {sev_count} {pol.condition.severity.value} finding(s).")

@@ -1,0 +1,125 @@
+/* Python Hunter - High Contrast Dark Mode Security Styling System */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  --bg-primary: #090d16;
+  --bg-secondary: #111827;
+  --bg-card: rgba(17, 24, 39, 0.75);
+  --bg-card-hover: rgba(31, 41, 55, 0.85);
+  --bg-accent: #1f2937;
+
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-color-hover: rgba(255, 255, 255, 0.18);
+
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+
+  --color-critical: #ef4444;
+  --color-critical-bg: rgba(239, 68, 68, 0.15);
+  --color-high: #f97316;
+  --color-high-bg: rgba(249, 115, 22, 0.15);
+  --color-medium: #eab308;
+  --color-medium-bg: rgba(234, 179, 8, 0.15);
+  --color-low: #3b82f6;
+  --color-low-bg: rgba(59, 130, 246, 0.15);
+  --color-info: #64748b;
+  --color-info-bg: rgba(100, 116, 139, 0.15);
+
+  --color-pass: #10b981;
+  --color-pass-bg: rgba(16, 185, 129, 0.15);
+  --color-warn: #f59e0b;
+  --color-warn-bg: rgba(245, 158, 11, 0.15);
+  --color-fail: #ef4444;
+  --color-fail-bg: rgba(239, 68, 68, 0.15);
+
+  --color-accent-teal: #14b8a6;
+  --color-accent-indigo: #6366f1;
+  --color-accent-purple: #a855f7;
+
+  --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.15);
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* Glassmorphism card container */
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 1.25rem;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  border-color: var(--border-color-hover);
+}
+
+.glass-card-interactive:hover {
+  cursor: pointer;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Flex & Grid Utilities */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.gap-1 { gap: 0.25rem; }
+.gap-2 { gap: 0.5rem; }
+.gap-3 { gap: 0.75rem; }
+.gap-4 { gap: 1rem; }
+.gap-6 { gap: 1.5rem; }
+.grid { display: grid; }
+.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+@media (max-width: 1024px) {
+  .grid-cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .grid-cols-2 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}

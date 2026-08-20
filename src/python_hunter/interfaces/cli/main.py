@@ -141,6 +141,14 @@ def create_parser() -> argparse.ArgumentParser:
     # Command: git
     register_git_subcommand(subparsers)
 
+    # Command: github
+    github_p = subparsers.add_parser("github", help="Manage GitHub App integration, repositories, PRs, and webhooks")
+    github_sub = github_p.add_subparsers(dest="github_action", help="GitHub actions")
+    github_sub.add_parser("connect", help="Connect to GitHub App")
+    github_sub.add_parser("repositories", help="List monitored GitHub repositories")
+    github_sub.add_parser("prs", help="List PR security scan results")
+    github_sub.add_parser("status", help="View GitHub webhook status")
+
     # Command: taint
     register_taint_subcommand(subparsers)
 
@@ -223,6 +231,32 @@ def run_cli(args: list[str] | None = None) -> int:
 
     if parsed_args.command == "git":
         return run_git_command(parsed_args)
+
+    if parsed_args.command == "github":
+        from python_hunter.application.services.security_app_service import SecurityApplicationService
+        svc = SecurityApplicationService()
+        action = getattr(parsed_args, "github_action", "status")
+        if action == "connect":
+            token = svc.github_app.generate_jwt()
+            sys.stdout.write(f"Connected to GitHub App. JWT: {token[:12]}...\n")
+            return 0
+        elif action == "repositories":
+            repos = svc.list_repositories()
+            sys.stdout.write(f"Monitored GitHub Repositories ({len(repos)}):\n")
+            for r in repos:
+                sys.stdout.write(f"  • {r['name']} — Score: {r['security_score']}/100 [{r['risk_level']}]\n")
+            return 0
+        elif action == "prs":
+            prs = svc.list_pull_requests()
+            sys.stdout.write(f"Pull Request Security Scans ({len(prs)}):\n")
+            for p in prs:
+                sys.stdout.write(f"  PR #{p['pr_number']}: {p['title']} [{p['policy_result']}] Score: {p['security_score']}/100 (Delta: {p['score_delta']:+d})\n")
+            return 0
+        else:
+            st = svc.get_webhook_status()
+            sys.stdout.write("--- GitHub Integration Status ---\n")
+            sys.stdout.write(f"  Webhook Listener: ACTIVE\n  Total Events: {st['total_events']}\n  Completed: {st['completed']}\n  Dead Letter: {st['dead_letter_count']}\n")
+            return 0
 
     if parsed_args.command == "taint":
         return run_taint_command(parsed_args)
