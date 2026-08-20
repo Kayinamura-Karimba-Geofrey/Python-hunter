@@ -12,10 +12,16 @@ from python_hunter.domain.github.webhook_handler import GitHubWebhookHandler
 from python_hunter.domain.github.webhook_queue import GitHubWebhookEventQueue
 from python_hunter.domain.github.pr_security_engine import PullRequestSecurityEngine
 from python_hunter.domain.github.github_checks_service import GitHubChecksService, GitHubCommentService
+from python_hunter.domain.language.registry import LanguageRegistry
+from python_hunter.domain.language.detector import LanguageDetector, LanguageProfile
+from python_hunter.domain.language.models import Language
+from python_hunter.domain.frameworks.framework_registry import FrameworkRegistry
+from python_hunter.domain.dependencies.polyglot_dependency_adapter import PolyglotDependencyAdapter
+from python_hunter.domain.rules.polyglot_rule_registry import PolyglotRuleRegistry
 
 
 class SecurityApplicationService:
-    """Unified application service wrapping scanning, policy evaluation, history tracking, and reporting."""
+    """Unified application service wrapping scanning, policy evaluation, history tracking, multi-language engine, and reporting."""
 
     def __init__(self) -> None:
         self.orchestrator = ScanOrchestrator()
@@ -28,13 +34,18 @@ class SecurityApplicationService:
         self.pr_engine = PullRequestSecurityEngine()
         self.checks_service = GitHubChecksService()
         self.comment_service = GitHubCommentService()
+        self.language_registry = LanguageRegistry()
+        self.language_detector = LanguageDetector()
+        self.framework_registry = FrameworkRegistry()
+        self.rule_registry = PolyglotRuleRegistry()
+        self.dependency_adapter = PolyglotDependencyAdapter()
 
     def get_system_info(self) -> dict[str, Any]:
         return {
             "name": "Python Hunter Security Platform",
             "version": "1.0.0",
-            "supported_languages": ["Python", "JavaScript", "TypeScript"],
-            "supported_frameworks": ["Django", "Flask", "FastAPI", "Express", "NestJS"],
+            "supported_languages": [m.display_name for m in self.language_registry.list_metadata()],
+            "supported_frameworks": [f.name for f in self.framework_registry.list_frameworks()],
             "status": "OPERATIONAL",
         }
 
@@ -608,5 +619,99 @@ class SecurityApplicationService:
             "summary": summary,
             "check_run": check_run,
             "comment": pr_comment,
+        }
+
+    def list_languages(self, language_filter: str | None = None) -> list[dict[str, Any]]:
+        metadatas = self.language_registry.list_metadata()
+        if language_filter:
+            metadatas = [m for m in metadatas if m.language.value.lower() == language_filter.lower() or language_filter.lower() in m.aliases]
+        return [
+            {
+                "language": m.language.value,
+                "display_name": m.display_name,
+                "aliases": m.aliases,
+                "file_extensions": m.file_extensions,
+                "parser": m.parser,
+                "analyzer": m.analyzer,
+                "framework_adapters": m.framework_adapters,
+                "dependency_ecosystem": m.dependency_ecosystem,
+                "capabilities": m.capabilities.to_dict(),
+                "version": m.version,
+            }
+            for m in metadatas
+        ]
+
+    def list_frameworks(self, language_filter: str | None = None) -> list[dict[str, Any]]:
+        lang_enum = None
+        if language_filter:
+            try:
+                lang_enum = Language(language_filter.lower())
+            except ValueError:
+                pass
+        frameworks = self.framework_registry.list_frameworks(lang_enum)
+        return [
+            {
+                "name": fw.name,
+                "display_name": fw.display_name,
+                "language": fw.language.value,
+                "category": fw.category,
+                "description": fw.description,
+                "version": fw.version,
+            }
+            for fw in frameworks
+        ]
+
+    def get_repository_language_profile(self, workspace_path: str) -> dict[str, Any]:
+        profile = self.language_detector.detect_workspace_languages(workspace_path)
+        return {
+            "total_files": profile.total_files,
+            "total_lines": profile.total_lines,
+            "percentage_by_files": profile.percentage_by_files,
+            "percentage_by_lines": profile.percentage_by_lines,
+            "detected_manifests": profile.detected_manifests,
+        }
+
+    def scan_polyglot_workspace(
+        self,
+        workspace_path: str,
+        selected_languages: list[str] | None = None,
+        selected_frameworks: list[str] | None = None,
+    ) -> dict[str, Any]:
+        profile = self.language_detector.detect_workspace_languages(workspace_path)
+        active_adapters = self.language_registry.discover_active_adapters(workspace_path)
+
+        if selected_languages:
+            filter_set = {s.lower() for s in selected_languages}
+            active_adapters = [a for a in active_adapters if a.language.value in filter_set or any(alias in filter_set for alias in a.metadata.aliases)]
+
+        all_findings = []
+        for adapter in active_adapters:
+            findings = adapter.analyze(workspace_path)
+            all_findings.extend(findings)
+
+        dependencies = self.dependency_adapter.parse_workspace_dependencies(workspace_path)
+        dep_dicts = [
+            {
+                "package_name": d.package_name,
+                "version": d.version,
+                "ecosystem": d.ecosystem,
+                "language": d.language.value,
+                "vulnerability_status": d.vulnerability_status,
+            }
+            for d in dependencies
+        ]
+
+        return {
+            "workspace_path": workspace_path,
+            "profile": {
+                "total_files": profile.total_files,
+                "total_lines": profile.total_lines,
+                "percentage_by_lines": profile.percentage_by_lines,
+            },
+            "active_languages": [a.language.value for a in active_adapters],
+            "total_findings": len(all_findings),
+            "findings": all_findings,
+            "dependencies_count": len(dep_dicts),
+            "dependencies": dep_dicts,
         }
 

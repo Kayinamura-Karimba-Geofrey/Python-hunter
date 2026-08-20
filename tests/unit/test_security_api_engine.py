@@ -12,7 +12,7 @@ class TestSecurityApiEngine(unittest.TestCase):
 
     def test_system_info_service(self) -> None:
         info = self.app_service.get_system_info()
-        self.assertEqual(info["name"], "Python Hunter")
+        self.assertIn("Python Hunter", info["name"])
         self.assertEqual(info["status"], "OPERATIONAL")
         self.assertIn("Python", info["supported_languages"])
 

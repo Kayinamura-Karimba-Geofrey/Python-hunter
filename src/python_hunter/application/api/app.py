@@ -27,6 +27,10 @@ from python_hunter.application.api.api_models import (
     ServiceModel,
     SystemInfoResponse,
     WebhookStatusModel,
+    LanguageMetadataModel,
+    FrameworkMetadataModel,
+    PolyglotScanRequest,
+    PolyglotScanResponse,
 )
 from python_hunter.application.services.security_app_service import SecurityApplicationService
 
@@ -208,4 +212,39 @@ def list_pull_requests():
 @app.get("/api/v1/github/pull-requests/{pr_id}")
 def get_pull_request_detail(pr_id: str):
     return app_service.get_pull_request_detail(pr_id)
+
+
+@app.get("/api/v1/languages", response_model=list[LanguageMetadataModel])
+def list_languages(language: Optional[str] = Query(None, description="Filter by language identifier or alias")):
+    return app_service.list_languages(language)
+
+
+@app.get("/api/v1/languages/{language}", response_model=LanguageMetadataModel)
+def get_language(language: str):
+    langs = app_service.list_languages(language)
+    if not langs:
+        raise HTTPException(status_code=404, detail=f"Language '{language}' not supported")
+    return langs[0]
+
+
+@app.get("/api/v1/frameworks", response_model=list[FrameworkMetadataModel])
+def list_frameworks(language: Optional[str] = Query(None, description="Filter frameworks by language")):
+    return app_service.list_frameworks(language)
+
+
+@app.get("/api/v1/frameworks/{framework}", response_model=FrameworkMetadataModel)
+def get_framework(framework: str):
+    fws = [f for f in app_service.list_frameworks() if f["name"].lower() == framework.lower()]
+    if not fws:
+        raise HTTPException(status_code=404, detail=f"Framework '{framework}' not found")
+    return fws[0]
+
+
+@app.post("/api/v1/languages/polyglot-scan", response_model=PolyglotScanResponse)
+def polyglot_scan(req: PolyglotScanRequest):
+    return app_service.scan_polyglot_workspace(
+        workspace_path=req.workspace_path,
+        selected_languages=req.selected_languages,
+        selected_frameworks=req.selected_frameworks,
+    )
 

@@ -283,3 +283,49 @@ class WebhookStatusModel(BaseModel):
     dead_letter_count: int
     webhook_active: bool
 
+
+class LanguageMetadataModel(BaseModel):
+    language: str
+    display_name: str
+    aliases: list[str]
+    file_extensions: list[str]
+    parser: str
+    analyzer: str
+    framework_adapters: list[str]
+    dependency_ecosystem: str
+    capabilities: dict[str, bool]
+    version: str
+
+
+class FrameworkMetadataModel(BaseModel):
+    name: str
+    display_name: str
+    language: str
+    category: str
+    description: str
+    version: str
+
+
+class LanguageProfileModel(BaseModel):
+    total_files: int
+    total_lines: int
+    percentage_by_files: dict[str, float]
+    percentage_by_lines: dict[str, float]
+    detected_manifests: list[str]
+
+
+class PolyglotScanRequest(BaseModel):
+    workspace_path: str
+    selected_languages: Optional[list[str]] = None
+    selected_frameworks: Optional[list[str]] = None
+
+
+class PolyglotScanResponse(BaseModel):
+    workspace_path: str
+    profile: dict[str, Any]
+    active_languages: list[str]
+    total_findings: int
+    findings: list[dict[str, Any]]
+    dependencies_count: int
+    dependencies: list[dict[str, Any]]
+

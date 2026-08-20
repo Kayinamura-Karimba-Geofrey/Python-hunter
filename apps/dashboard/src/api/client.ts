@@ -158,6 +158,23 @@ class ApiClient {
   public async getWebhookStatus(): Promise<any> {
     return this.request<any>('/api/v1/github/webhooks/status');
   }
+
+  public async getLanguages(language?: string): Promise<any[]> {
+    const q = language ? `?language=${encodeURIComponent(language)}` : '';
+    return this.request<any[]>(`/api/v1/languages${q}`);
+  }
+
+  public async getFrameworks(language?: string): Promise<any[]> {
+    const q = language ? `?language=${encodeURIComponent(language)}` : '';
+    return this.request<any[]>(`/api/v1/frameworks${q}`);
+  }
+
+  public async polyglotScan(workspacePath: string, languages?: string[]): Promise<any> {
+    return this.request<any>('/api/v1/languages/polyglot-scan', {
+      method: 'POST',
+      body: JSON.stringify({ workspace_path: workspacePath, selected_languages: languages }),
+    });
+  }
 }
 
 export const api = new ApiClient();

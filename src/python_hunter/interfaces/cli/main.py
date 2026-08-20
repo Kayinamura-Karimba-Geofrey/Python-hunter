@@ -32,6 +32,10 @@ from python_hunter.interfaces.cli.commands.vulnerabilities import (
     register_vulnerabilities_subcommand,
     run_vulnerabilities_command,
 )
+from python_hunter.interfaces.cli.commands.languages import (
+    register_languages_command,
+    handle_languages_command,
+)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -155,14 +159,19 @@ def create_parser() -> argparse.ArgumentParser:
     # Command: callgraph
     register_callgraph_subcommand(subparsers)
 
+    # Command: languages
+    register_languages_command(subparsers)
+
     # Command: explain
     explain_p = subparsers.add_parser("explain", help="Explain step-by-step security dataflow evidence and exploitability proof for a finding")
     explain_p.add_argument("finding_id", nargs="?", default=None, help="Finding ID or vulnerability type to explain")
     explain_p.add_argument("--target", default=".", help="Target project path")
 
-    # Future subcommands (stubs marking development roadmap)
+    # Command: scan
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
+    scan_parser.add_argument("--language", action="append", help="Target language filter (e.g. java, go, rust)")
+    scan_parser.add_argument("--framework", action="append", help="Target framework filter (e.g. spring, django)")
 
     subparsers.add_parser("project", help="Manage project records")
     subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM")
@@ -263,6 +272,10 @@ def run_cli(args: list[str] | None = None) -> int:
 
     if parsed_args.command == "callgraph":
         return run_callgraph_command(parsed_args)
+
+    if parsed_args.command == "languages":
+        handle_languages_command(parsed_args)
+        return 0
 
     if parsed_args.command == "gate":
         from python_hunter.interfaces.cli.commands.gate import run_gate_command
