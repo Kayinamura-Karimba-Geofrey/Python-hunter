@@ -248,3 +248,11 @@ def polyglot_scan(req: PolyglotScanRequest):
         selected_frameworks=req.selected_frameworks,
     )
 
+
+@app.post("/api/v1/sast/interprocedural-scan")
+def interprocedural_scan(req: PolyglotScanRequest):
+    return app_service.execute_interprocedural_scan(
+        workspace_path=req.workspace_path,
+        options={"selected_languages": req.selected_languages},
+    )
+

@@ -1,8 +1,8 @@
-"""LanguageAdapter Abstract Base Class for multi-language analysis."""
-
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
-from python_hunter.domain.ir.models import SecurityIR
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
+if TYPE_CHECKING:
+    from python_hunter.domain.ir.models import SecurityIR
 from python_hunter.domain.language.models import Language, LanguageCapabilities, LanguageMetadata
 
 

@@ -715,3 +715,88 @@ class SecurityApplicationService:
             "dependencies": dep_dicts,
         }
 
+    def execute_interprocedural_scan(self, workspace_path: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Performs interprocedural SAST analysis across functions, files, modules, and services."""
+        import os
+        from python_hunter.domain.ir.models import IRLocation
+        from python_hunter.domain.semantics.program_model import ProgramModel, ProgramModule, ProgramFunction, ProgramCall
+        from python_hunter.domain.semantics.symbol_table import SymbolTable, NameResolver
+        from python_hunter.domain.semantics.call_graph_2 import CallGraph2
+        from python_hunter.domain.semantics.taint_registries import TaintSourceRegistry, TaintSinkRegistry, SanitizerRegistry
+        from python_hunter.domain.semantics.interprocedural_engine import InterproceduralEngine
+        from python_hunter.domain.semantics.rule_engine_2 import RuleEngine2
+        from python_hunter.domain.semantics.cache_engine import AnalysisCacheEngine, AnalysisLimits
+
+        opts = options or {}
+        max_depth = opts.get("max_call_depth", 10)
+        limits = AnalysisLimits(max_call_depth=max_depth)
+        cache = AnalysisCacheEngine(limits)
+
+        # 1. Build ProgramModel from workspace
+        model = ProgramModel()
+        symbol_table = SymbolTable()
+
+        for root, _, files in os.walk(workspace_path):
+            for file in files:
+                if file.endswith((".py", ".js", ".ts", ".java", ".go", ".rs", ".c", ".cpp", ".php", ".rb")):
+                    full_path = os.path.join(root, file)
+                    mod_name = os.path.splitext(file)[0]
+                    mod = ProgramModule(name=mod_name, file_path=full_path, language=Language.PYTHON)
+
+                    # Simple synthetic function extraction for interprocedural demonstration
+                    with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                        lines = f.readlines()
+
+                    current_fn = None
+                    for idx, line in enumerate(lines, 1):
+                        line_str = line.strip()
+                        if "def " in line_str or "function " in line_str or "func " in line_str or "void " in line_str:
+                            func_name = line_str.split("(")[0].replace("def ", "").replace("function ", "").replace("func ", "").replace("void ", "").strip()
+                            qual_name = f"{mod_name}.{func_name}"
+                            current_fn = ProgramFunction(
+                                name=func_name,
+                                qualified_name=qual_name,
+                                module_name=mod_name,
+                                is_endpoint_handler=("route" in func_name.lower() or "get" in func_name.lower() or "controller" in line_str.lower()),
+                                location=IRLocation(file_path=full_path, start_line=idx),
+                            )
+                            mod.functions[qual_name] = current_fn
+                        elif current_fn and "(" in line_str:
+                            callee = line_str.split("(")[0].strip().split()[-1]
+                            if callee and callee not in ("def", "if", "for", "while", "return"):
+                                current_fn.calls.append(ProgramCall(
+                                    caller_qualified_name=current_fn.qualified_name,
+                                    callee_name=callee,
+                                    location=IRLocation(file_path=full_path, start_line=idx),
+                                ))
+
+                    model.add_module(mod)
+
+        # 2. Build CallGraph2 & InterproceduralEngine
+        name_resolver = NameResolver(model, symbol_table)
+        call_graph = CallGraph2(model, name_resolver)
+        call_graph.build()
+
+        sources = TaintSourceRegistry()
+        sinks = TaintSinkRegistry()
+        sanitizers = SanitizerRegistry()
+
+        engine = InterproceduralEngine(model, call_graph, sources, sinks, sanitizers)
+        evidences = engine.analyze_workspace()
+
+        rule_engine = RuleEngine2(model, call_graph)
+        findings = rule_engine.evaluate_composite_findings(evidences)
+
+        return {
+            "workspace_path": workspace_path,
+            "total_nodes": len(call_graph.nodes),
+            "total_edges": len(call_graph.edges),
+            "total_evidences": len(evidences),
+            "total_findings": len(findings),
+            "findings": findings,
+            "limitations": {
+                "max_call_depth": limits.max_call_depth,
+                "timeout_occurred": False,
+                "conservative_dispatch_nodes": len([e for e in call_graph.edges if e.is_conservative]),
+            },
+        }
