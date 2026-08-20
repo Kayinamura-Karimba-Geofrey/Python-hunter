@@ -256,3 +256,14 @@ def interprocedural_scan(req: PolyglotScanRequest):
         options={"selected_languages": req.selected_languages},
     )
 
+
+@app.post("/api/v1/sca/scan")
+@app.get("/api/v1/dependencies")
+@app.get("/api/v1/dependencies/vulnerabilities")
+def sca_scan(req: PolyglotScanRequest):
+    return app_service.execute_sca_scan(
+        workspace_path=req.workspace_path,
+        options={"selected_languages": req.selected_languages},
+    )
+
+

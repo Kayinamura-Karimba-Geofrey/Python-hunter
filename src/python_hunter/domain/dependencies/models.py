@@ -1,8 +1,8 @@
-"""Dependency Domain Entities, Value Objects, and Graph Representations."""
+"""Dependency Domain Entities, Value Objects, and Universal SCA Representations."""
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
+from typing import Any, List, Dict, Optional, Set
 
 from python_hunter.domain.dependencies.normalization import normalize_package_name
 
@@ -10,8 +10,14 @@ from python_hunter.domain.dependencies.normalization import normalize_package_na
 class Ecosystem(str, Enum):
     """Supported dependency ecosystems."""
 
-    PYTHON = "python"
-    JAVASCRIPT = "javascript"
+    PYTHON = "pypi"
+    JAVASCRIPT = "npm"
+    MAVEN = "maven"
+    GRADLE = "gradle"
+    GO_MODULES = "go"
+    CRATES_IO = "crates"
+    COMPOSER = "composer"
+    RUBYGEMS = "rubygems"
     GENERIC = "generic"
 
 
@@ -37,11 +43,19 @@ class PackageManager(str, Enum):
     UV = "uv"
     SETUPTOOLS = "setuptools"
     NPM = "npm"
+    YARN = "yarn"
+    PNPM = "pnpm"
+    MAVEN = "maven"
+    GRADLE = "gradle"
+    GO = "go"
+    CARGO = "cargo"
+    COMPOSER = "composer"
+    BUNDLER = "bundler"
     UNKNOWN = "unknown"
 
 
 class ManifestType(str, Enum):
-    """Supported dependency manifest file types."""
+    """Supported dependency manifest and lockfile types."""
 
     REQUIREMENTS_TXT = "requirements.txt"
     PYPROJECT_TOML = "pyproject.toml"
@@ -50,16 +64,34 @@ class ManifestType(str, Enum):
     POETRY_LOCK = "poetry.lock"
     UV_LOCK = "uv.lock"
     SETUP_PY = "setup.py"
-    SETUP_CFG = "setup.cfg"
+    PACKAGE_JSON = "package.json"
+    PACKAGE_LOCK_JSON = "package-lock.json"
+    YARN_LOCK = "yarn.lock"
+    PNPM_LOCK = "pnpm-lock.yaml"
+    POM_XML = "pom.xml"
+    BUILD_GRADLE = "build.gradle"
+    GRADLE_LOCKFILE = "gradle.lockfile"
+    GO_MOD = "go.mod"
+    GO_SUM = "go.sum"
+    CARGO_TOML = "Cargo.toml"
+    CARGO_LOCK = "Cargo.lock"
+    COMPOSER_JSON = "composer.json"
+    COMPOSER_LOCK = "composer.lock"
+    GEMFILE = "Gemfile"
+    GEMFILE_LOCK = "Gemfile.lock"
 
 
 class SourceType(str, Enum):
     """Source origin of a dependency package."""
 
+    REGISTRY = "registry"
     PYPI = "pypi"
+    NPM = "npm"
     VCS = "vcs"
+    GIT = "git"
     URL = "url"
     LOCAL = "local"
+    WORKSPACE = "workspace"
     UNKNOWN = "unknown"
 
 
@@ -67,7 +99,7 @@ class SourceType(str, Enum):
 class DependencySource:
     """Detailed source origin and integrity hashes of a package."""
 
-    source_type: SourceType = SourceType.PYPI
+    source_type: SourceType = SourceType.REGISTRY
     url: str = ""
     vcs_repo: str = ""
     vcs_ref: str = ""
@@ -76,13 +108,14 @@ class DependencySource:
 
 @dataclass
 class Dependency:
-    """Normalized domain entity representing a single third-party dependency."""
+    """Universal domain entity representing a single third-party or internal dependency."""
 
     name: str
     normalized_name: str = ""
     ecosystem: Ecosystem = Ecosystem.PYTHON
     version: str = ""
     version_constraint: str = ""
+    package_manager: PackageManager = PackageManager.UNKNOWN
     dependency_types: set[DependencyType] = field(default_factory=lambda: {DependencyType.RUNTIME})
     source: DependencySource = field(default_factory=DependencySource)
     manifest_path: str = ""
@@ -90,6 +123,10 @@ class Dependency:
     is_transitive: bool = False
     is_optional: bool = False
     is_development: bool = False
+    is_internal: bool = False
+    integrity_hash: str = ""
+    license: str = "UNKNOWN"
+    dependency_path: list[str] = field(default_factory=list)  # app -> pkg A -> pkg B
     platform_marker: str = ""
     extra: str = ""
     yanked: bool = False
@@ -106,12 +143,12 @@ class DependencyGraphNode:
     """Node representation in dependency graph."""
 
     dependency: Dependency
-    dependencies: list[str] = field(default_factory=list)  # List of normalized names
+    dependencies: list[str] = field(default_factory=list)  # List of normalized child names
 
 
 @dataclass
 class DependencyGraph:
-    """Directed Acyclic Graph (DAG) representing project dependency trees."""
+    """Directed Acyclic Graph (DAG) representing project dependency trees across ecosystems."""
 
     nodes: dict[str, DependencyGraphNode] = field(default_factory=dict)
     root_dependencies: list[str] = field(default_factory=list)
@@ -130,7 +167,7 @@ class DependencyGraph:
         return self.nodes.get(norm)
 
     def get_paths_to(self, target_name: str) -> list[list[str]]:
-        """Find dependency paths from root dependencies to target_name."""
+        """Find all dependency paths from root dependencies to target_name."""
         norm_target = normalize_package_name(target_name)
         paths: list[list[str]] = []
 
@@ -172,7 +209,7 @@ class DependencyGraph:
             dep = node.dependency
             ver = dep.version or dep.version_constraint or "unpinned"
             connector = "└── " if is_last else "├── "
-            lines.append(f"{prefix}{connector}{dep.name}=={ver}")
+            lines.append(f"{prefix}{connector}{dep.name}=={ver} [{dep.ecosystem.value}]")
 
             if norm_name in visited:
                 return

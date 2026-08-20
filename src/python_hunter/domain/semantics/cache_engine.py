@@ -96,3 +96,10 @@ class AnalysisCacheEngine:
         if self.start_time <= 0:
             return False
         return (time.time() - self.start_time) > self.limits.max_analysis_time_seconds
+
+    def get_stats(self) -> Dict[str, Any]:
+        return {
+            "total_cached_entries": len(self._cache),
+            "max_call_depth": self.limits.max_call_depth,
+            "max_paths": self.limits.max_paths,
+        }

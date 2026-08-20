@@ -788,15 +788,160 @@ class SecurityApplicationService:
         findings = rule_engine.evaluate_composite_findings(evidences)
 
         return {
+            "status": "COMPLETED",
             "workspace_path": workspace_path,
             "total_nodes": len(call_graph.nodes),
-            "total_edges": len(call_graph.edges),
+            "total_modules": len(model.modules),
+            "total_functions": len(model.all_functions()),
+            "total_call_edges": len(call_graph.edges),
             "total_evidences": len(evidences),
-            "total_findings": len(findings),
+            "evidence_count": len(evidences),
+            "findings_count": len(findings),
             "findings": findings,
-            "limitations": {
-                "max_call_depth": limits.max_call_depth,
-                "timeout_occurred": False,
-                "conservative_dispatch_nodes": len([e for e in call_graph.edges if e.is_conservative]),
+            "cache_stats": cache.get_stats(),
+        }
+
+    def execute_sca_scan(self, workspace_path: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
+        """Performs Software Composition Analysis (SCA), Dependency Graphing, Reachability, and License Policy checks."""
+        import os
+        from python_hunter.domain.dependencies.lockfile_parsers import UniversalLockfileParser
+        from python_hunter.domain.dependencies.models import DependencyGraph, DependencyInventory
+        from python_hunter.domain.dependencies.dependency_graph_engine import DependencyGraphEngine
+        from python_hunter.domain.dependencies.advisory_db import AdvisoryDatabase
+        from python_hunter.domain.dependencies.vulnerability_intel import VulnerabilityIntelligence
+        from python_hunter.domain.dependencies.reachability_engine import ReachabilityEngine
+        from python_hunter.domain.dependencies.license_policy import LicensePolicyEngine
+        from python_hunter.domain.dependencies.remediation_engine import RemediationEngine
+
+        db = AdvisoryDatabase()
+        intel = VulnerabilityIntelligence([db])
+        lic_engine = LicensePolicyEngine()
+
+        # Build ProgramModel for function-level reachability analysis
+        from python_hunter.domain.ir.models import IRLocation
+        from python_hunter.domain.semantics.program_model import ProgramModel, ProgramModule, ProgramFunction, ProgramCall
+        from python_hunter.domain.language.models import Language
+
+        model = ProgramModel()
+        for root, _, files in os.walk(workspace_path):
+            for file in files:
+                if file.endswith((".py", ".js", ".ts", ".java", ".go", ".rs", ".c", ".cpp", ".php", ".rb")):
+                    full_path = os.path.join(root, file)
+                    mod_name = os.path.splitext(file)[0]
+                    mod = ProgramModule(name=mod_name, file_path=full_path, language=Language.PYTHON)
+
+                    with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                        lines = f.readlines()
+
+                    current_fn = None
+                    for idx, line in enumerate(lines, 1):
+                        line_str = line.strip()
+                        if "def " in line_str or "function " in line_str or "func " in line_str:
+                            func_name = line_str.split("(")[0].replace("def ", "").replace("function ", "").replace("func ", "").strip()
+                            qual_name = f"{mod_name}.{func_name}"
+                            current_fn = ProgramFunction(
+                                name=func_name,
+                                qualified_name=qual_name,
+                                module_name=mod_name,
+                                is_endpoint_handler=("route" in func_name.lower() or "get" in func_name.lower() or "handler" in line_str.lower() or "request" in line_str.lower()),
+                                location=IRLocation(file_path=full_path, start_line=idx),
+                            )
+                            mod.functions[qual_name] = current_fn
+                        elif current_fn and "(" in line_str:
+                            callee = line_str.split("(")[0].strip().split()[-1]
+                            if callee and callee not in ("def", "if", "for", "while", "return"):
+                                current_fn.calls.append(ProgramCall(
+                                    caller_qualified_name=current_fn.qualified_name,
+                                    callee_name=callee,
+                                    location=IRLocation(file_path=full_path, start_line=idx),
+                                ))
+
+                    model.add_module(mod)
+
+        reach_engine = ReachabilityEngine(model)
+
+        all_deps = []
+        manifests = []
+        graph = DependencyGraph()
+
+        for root, _, files in os.walk(workspace_path):
+            for file in files:
+                if file in ("requirements.txt", "package.json", "package-lock.json", "poetry.lock", "Pipfile.lock", "pom.xml", "build.gradle", "go.mod", "go.sum", "Cargo.lock", "composer.lock", "Gemfile.lock"):
+                    full_p = os.path.join(root, file)
+                    manifests.append(full_p)
+                    parsed = UniversalLockfileParser.parse_file(full_p)
+                    all_deps.extend(parsed)
+                    for dep in parsed:
+                        graph.add_dependency(dep)
+
+        analytics = DependencyGraphEngine.analyze_graph(graph)
+        vuln_findings = []
+
+        for dep in all_deps:
+            advs = intel.match_advisories(dep.name, dep.version or "0.0.0", dep.ecosystem)
+            for adv in advs:
+                reach = reach_engine.evaluate_reachability(dep, adv, graph)
+                remed = RemediationEngine.generate_recommendation(dep, adv)
+                lic_eval = lic_engine.evaluate_dependency(dep)
+
+                paths = graph.get_paths_to(dep.name)
+                dep_path = " -> ".join(paths[0]) if paths else dep.name
+
+                vuln_findings.append({
+                    "package": dep.name,
+                    "version": dep.version or "unpinned",
+                    "ecosystem": dep.ecosystem.value,
+                    "advisory": adv.identifier,
+                    "cve": adv.cve_id,
+                    "severity": adv.severity,
+                    "cvss": adv.cvss,
+                    "affected_versions": adv.affected_versions,
+                    "patched_version": adv.patched_versions,
+                    "dependency_path": dep_path,
+                    "is_direct": dep.is_direct,
+                    "reachability": {
+                        "is_reachable": reach.is_reachable,
+                        "confidence": reach.confidence.value,
+                        "evidence": reach.evidence_summary,
+                        "call_trace": reach.call_trace,
+                    },
+                    "license": {
+                        "name": lic_eval.license,
+                        "policy_action": lic_eval.action.value,
+                        "reason": lic_eval.reason,
+                    },
+                    "remediation": {
+                        "action": remed.action,
+                        "recommended_version": remed.recommended_version,
+                        "breaking_risk": remed.breaking_change_risk,
+                        "reason": remed.reason,
+                        "guidance": remed.mitigation_guidance,
+                    },
+                })
+
+        freshness = db.get_freshness_info()
+
+        return {
+            "status": "COMPLETED",
+            "workspace_path": workspace_path,
+            "manifests": manifests,
+            "dependency_inventory": {
+                "total_dependencies": analytics.total_nodes,
+                "direct_count": analytics.direct_count,
+                "transitive_count": analytics.transitive_count,
+                "max_depth": analytics.max_depth,
+                "average_depth": analytics.average_depth,
+                "bloat_factor": analytics.bloat_factor,
+                "single_points_of_failure": analytics.single_points_of_failure,
             },
+            "vulnerability_findings_count": len(vuln_findings),
+            "vulnerability_findings": vuln_findings,
+            "database_metadata": {
+                "version": freshness.database_version,
+                "last_update": freshness.last_update,
+                "source": freshness.source,
+                "total_advisories": freshness.total_advisories,
+                "is_stale": freshness.is_stale,
+            },
+            "dependency_tree": graph.to_tree_str(),
         }
