@@ -214,3 +214,40 @@ class SecretStatus(str, Enum):
     SECRET_REVOKED = "SECRET_REVOKED"
     SECRET_UNKNOWN_STATUS = "SECRET_UNKNOWN_STATUS"
 
+
+class VerificationStatus(str, Enum):
+    """Exploitability verification outcome status."""
+
+    VERIFIED = "VERIFIED"
+    LIKELY_EXPLOITABLE = "LIKELY_EXPLOITABLE"
+    NOT_VERIFIED = "NOT_VERIFIED"
+    NOT_EXPLOITABLE = "NOT_EXPLOITABLE"
+    INCONCLUSIVE = "INCONCLUSIVE"
+    TEST_ERROR = "TEST_ERROR"
+    NOT_TESTED = "NOT_TESTED"
+
+
+class VerificationConfidence(str, Enum):
+    """Confidence level of verification proof."""
+
+    VERIFIED = "VERIFIED"
+    HIGH = "HIGH"
+    MEDIUM = "MEDIUM"
+    LOW = "LOW"
+
+
+class VerificationMode(str, Enum):
+    """Verification mode (passive static analysis vs active sandboxed execution)."""
+
+    PASSIVE = "PASSIVE"
+    ACTIVE = "ACTIVE"
+
+
+class TestSafetyLevel(str, Enum):
+    """Safety classification for security verification test cases."""
+
+    PASSIVE_ONLY = "PASSIVE_ONLY"
+    SAFE_LOCAL_NON_DESTRUCTIVE = "SAFE_LOCAL_NON_DESTRUCTIVE"
+    DESTRUCTIVE_FORBIDDEN = "DESTRUCTIVE_FORBIDDEN"
+
+

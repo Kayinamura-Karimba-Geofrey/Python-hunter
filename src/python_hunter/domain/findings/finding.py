@@ -12,6 +12,8 @@ from python_hunter.domain.common.enums import (
     FindingStatus,
     ReachabilityType,
     Severity,
+    VerificationStatus,
+    VerificationConfidence,
 )
 from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.exceptions.base import ValidationError
@@ -44,6 +46,9 @@ class Finding:
     attack_path_id: str | None = None
     related_findings: list[str] = field(default_factory=list)
     secondary_evidence: list[str] = field(default_factory=list)
+    verification_status: VerificationStatus = VerificationStatus.NOT_TESTED
+    verification_confidence: VerificationConfidence = VerificationConfidence.LOW
+    verification_timestamp: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
     fingerprint: str = field(default="", init=False)
 

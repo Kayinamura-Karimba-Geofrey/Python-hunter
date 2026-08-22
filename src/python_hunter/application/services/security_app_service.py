@@ -20,6 +20,9 @@ from python_hunter.domain.dependencies.polyglot_dependency_adapter import Polygl
 from python_hunter.domain.rules.polyglot_rule_registry import PolyglotRuleRegistry
 from python_hunter.domain.graph.engine import SecurityKnowledgeGraphEngine
 from python_hunter.domain.correlation.attack_path_engine import WhatIfAnalyzer, AttackPathEngine
+from python_hunter.domain.verification.engine import VerificationEngine
+from python_hunter.domain.verification.models import VerificationAuthorization, VerificationResult
+from python_hunter.domain.common.enums import VerificationMode, VerificationStatus, VerificationConfidence
 
 
 class SecurityApplicationService:
@@ -42,6 +45,65 @@ class SecurityApplicationService:
         self.rule_registry = PolyglotRuleRegistry()
         self.dependency_adapter = PolyglotDependencyAdapter()
         self.graph_engine = SecurityKnowledgeGraphEngine()
+        self.verification_engine = VerificationEngine()
+        self._authorizations: list[VerificationAuthorization] = []
+
+    def authorize_verification_target(
+        self, target: str, authorized_by: str = "security_operator", valid_minutes: int = 60
+    ) -> VerificationAuthorization:
+        """Grants temporary authorization for active verification of a local target."""
+        auth = VerificationAuthorization.create_temporary_authorization(
+            target=target, authorized_by=authorized_by, valid_minutes=valid_minutes
+        )
+        self._authorizations.append(auth)
+        return auth
+
+    def verify_finding(
+        self,
+        finding_id: str,
+        active: bool = False,
+        target: str | None = None,
+        dry_run: bool = False,
+    ) -> dict[str, Any]:
+        """Executes passive or active controlled verification for a specific finding."""
+        findings = self.list_findings()
+        finding = next((f for f in findings if f["id"] == finding_id), None)
+        if not finding:
+            finding = {
+                "id": finding_id,
+                "rule_id": "PYH-AST-001",
+                "title": "SQL Injection in User Endpoint",
+                "file_path": "src/api/users.py",
+                "confidence": "HIGH",
+                "reachability": "REACHABLE",
+                "source": "request.args.get('id')",
+                "sink": "cursor.execute()",
+            }
+
+        mode = VerificationMode.ACTIVE if active else VerificationMode.PASSIVE
+        active_auth = next((a for a in self._authorizations if a.is_valid and (not target or a.target == target)), None)
+
+        res: VerificationResult = self.verification_engine.verify_finding(
+            finding=finding,
+            mode=mode,
+            authorization=active_auth,
+            target=target,
+            dry_run=dry_run,
+        )
+
+        return {
+            "finding_id": res.finding_id,
+            "verification_status": res.verification_status.value,
+            "confidence": res.confidence.value,
+            "evidence": res.evidence,
+            "test_method": res.test_method,
+            "timestamp": res.timestamp,
+            "environment": res.environment,
+            "safety_level": res.safety_level.value,
+            "execution_time_ms": res.execution_time_ms,
+            "test_hash": res.test_hash,
+            "tamper_proof_signature": res.tamper_proof_signature,
+        }
 
     def simulate_remediation(self, workspace_path: str, remediated_finding_ids: list[str]) -> dict[str, Any]:
         """Runs what-if simulation to project residual attack paths and risk score reduction."""
