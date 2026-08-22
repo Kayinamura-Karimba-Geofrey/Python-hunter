@@ -36,6 +36,10 @@ from python_hunter.interfaces.cli.commands.languages import (
     register_languages_command,
     handle_languages_command,
 )
+from python_hunter.interfaces.cli.commands.attack_paths import (
+    register_attack_paths_command,
+    handle_attack_paths_command,
+)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -169,6 +173,9 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Command: languages
     register_languages_command(subparsers)
+
+    # Command: attack-paths
+    register_attack_paths_command(subparsers)
 
     # Command: explain
     explain_p = subparsers.add_parser("explain", help="Explain step-by-step security dataflow evidence and exploitability proof for a finding")
@@ -305,6 +312,9 @@ def run_cli(args: list[str] | None = None) -> int:
     if parsed_args.command == "languages":
         handle_languages_command(parsed_args)
         return 0
+
+    if parsed_args.command == "attack-paths":
+        return handle_attack_paths_command(parsed_args)
 
     if parsed_args.command == "gate":
         from python_hunter.interfaces.cli.commands.gate import run_gate_command

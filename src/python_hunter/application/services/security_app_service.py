@@ -18,6 +18,8 @@ from python_hunter.domain.language.models import Language
 from python_hunter.domain.frameworks.framework_registry import FrameworkRegistry
 from python_hunter.domain.dependencies.polyglot_dependency_adapter import PolyglotDependencyAdapter
 from python_hunter.domain.rules.polyglot_rule_registry import PolyglotRuleRegistry
+from python_hunter.domain.graph.engine import SecurityKnowledgeGraphEngine
+from python_hunter.domain.correlation.attack_path_engine import WhatIfAnalyzer, AttackPathEngine
 
 
 class SecurityApplicationService:
@@ -39,6 +41,22 @@ class SecurityApplicationService:
         self.framework_registry = FrameworkRegistry()
         self.rule_registry = PolyglotRuleRegistry()
         self.dependency_adapter = PolyglotDependencyAdapter()
+        self.graph_engine = SecurityKnowledgeGraphEngine()
+
+    def simulate_remediation(self, workspace_path: str, remediated_finding_ids: list[str]) -> dict[str, Any]:
+        """Runs what-if simulation to project residual attack paths and risk score reduction."""
+        sast = self.list_findings()
+        deps = self.list_dependencies()
+        infra_res = [
+            {"id": "c1", "name": "app-container", "type": "DOCKERFILE", "is_privileged": True},
+            {"id": "db1", "name": "user-db", "type": "CLOUD_DATABASE", "is_publicly_exposed": False},
+        ]
+        graph, paths, clusters = self.graph_engine.synthesize_cross_domain_graph(
+            sast_findings=sast,
+            sca_findings=deps,
+            infrastructure_resources=infra_res,
+        )
+        return WhatIfAnalyzer.simulate_remediation(graph, self.graph_engine.attack_path_engine, remediated_finding_ids)
 
     def get_system_info(self) -> dict[str, Any]:
         return {
@@ -185,7 +203,7 @@ class SecurityApplicationService:
             ]
         return results
 
-    def list_attack_paths() -> list[dict[str, Any]]:
+    def list_attack_paths(self) -> list[dict[str, Any]]:
         return [
             {
                 "id": "ap-01",
@@ -211,7 +229,7 @@ class SecurityApplicationService:
             }
         ]
 
-    def list_dependencies() -> list[dict[str, Any]]:
+    def list_dependencies(self) -> list[dict[str, Any]]:
         return [
             {
                 "id": "dep-1",

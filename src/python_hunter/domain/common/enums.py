@@ -28,19 +28,47 @@ class Severity(str, Enum):
 class Confidence(str, Enum):
     """Detection confidence levels."""
 
+    CONFIRMED = "CONFIRMED"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
+    UNKNOWN = "UNKNOWN"
 
     @property
     def multiplier(self) -> float:
         """Multiplier for risk scoring calculations."""
         multipliers = {
+            Confidence.CONFIRMED: 1.0,
             Confidence.HIGH: 1.0,
             Confidence.MEDIUM: 0.8,
             Confidence.LOW: 0.5,
+            Confidence.UNKNOWN: 0.2,
         }
         return multipliers[self]
+
+
+class TrustBoundary(str, Enum):
+    """Security trust boundaries across application and delivery infrastructure."""
+
+    INTERNET = "INTERNET"
+    USER = "USER"
+    APPLICATION = "APPLICATION"
+    CONTAINER = "CONTAINER"
+    KUBERNETES = "KUBERNETES"
+    CLOUD = "CLOUD"
+    DATABASE = "DATABASE"
+    INTERNAL_NETWORK = "INTERNAL_NETWORK"
+    CICD = "CICD"
+
+
+class PrivilegeLevel(str, Enum):
+    """Privilege transition states along attack paths."""
+
+    UNAUTHENTICATED = "UNAUTHENTICATED"
+    USER = "USER"
+    SERVICE_ACCOUNT = "SERVICE_ACCOUNT"
+    CLOUD_IDENTITY = "CLOUD_IDENTITY"
+    ADMINISTRATOR = "ADMINISTRATOR"
 
 
 class ScanStatus(str, Enum):
