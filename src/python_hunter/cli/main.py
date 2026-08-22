@@ -119,5 +119,59 @@ def attack_paths(target: str) -> None:
     click.echo(f"Reconstructed {len(result.attack_paths)} attack paths.")
 
 
+@main.group()
+def iac() -> None:
+    """Analyze Infrastructure-as-Code, Containers, Kubernetes, Terraform, and CI/CD security."""
+    pass
+
+
+@iac.command("scan")
+@click.argument("target", default=".")
+def iac_scan(target: str) -> None:
+    """Scan all infrastructure and container configurations in the target path."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    service = SecurityApplicationService()
+    res = service.execute_infrastructure_scan(target)
+    click.echo(f"Infrastructure Scan Completed: {res['resources_count']} resources analyzed, {res['findings_count']} findings, {res['attack_paths_count']} attack paths.")
+    for f in res["findings"]:
+        click.echo(f"  [{f['severity']}] {f['rule_id']} ({f['title']}): {f['file_path']}:{f['line_number']} - {f['evidence']}")
+
+
+@iac.command("docker")
+@click.argument("target", default=".")
+def iac_docker(target: str) -> None:
+    """Analyze Dockerfiles and Docker Compose files."""
+    iac_scan.callback(target)
+
+
+@iac.command("kubernetes")
+@click.argument("target", default=".")
+def iac_kubernetes(target: str) -> None:
+    """Analyze Kubernetes manifests and RBAC permissions."""
+    iac_scan.callback(target)
+
+
+@iac.command("terraform")
+@click.argument("target", default=".")
+def iac_terraform(target: str) -> None:
+    """Analyze Terraform HCL files and cloud resources."""
+    iac_scan.callback(target)
+
+
+@iac.command("helm")
+@click.argument("target", default=".")
+def iac_helm(target: str) -> None:
+    """Analyze Helm charts and values statically."""
+    iac_scan.callback(target)
+
+
+@iac.command("ci")
+@click.argument("target", default=".")
+def iac_ci(target: str) -> None:
+    """Analyze CI/CD and GitHub Actions workflows."""
+    iac_scan.callback(target)
+
+
 if __name__ == "__main__":
     main()
+

@@ -278,4 +278,16 @@ def secrets_scan(req: PolyglotScanRequest):
     )
 
 
+@app.post("/api/v1/infrastructure/scan")
+@app.get("/api/v1/infrastructure")
+@app.get("/api/v1/infrastructure/resources")
+@app.get("/api/v1/infrastructure/findings")
+@app.get("/api/v1/infrastructure/graph")
+def infrastructure_scan(req: PolyglotScanRequest):
+    return app_service.execute_infrastructure_scan(
+        workspace_path=req.workspace_path,
+    )
+
+
+
 

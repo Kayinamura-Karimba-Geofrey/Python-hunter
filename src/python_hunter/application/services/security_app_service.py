@@ -1029,3 +1029,84 @@ class SecurityApplicationService:
             ],
         }
 
+    def execute_infrastructure_scan(self, workspace_path: str) -> dict[str, Any]:
+        """Scans workspace for Docker, Kubernetes, Helm, Terraform, Cloud, and CI/CD security vulnerabilities."""
+        import os
+        from python_hunter.domain.infrastructure.models import InfrastructureIR
+        from python_hunter.infrastructure.iac.registry import InfrastructureRegistry
+        from python_hunter.infrastructure.iac.docker_adapter import DockerAdapter
+        from python_hunter.infrastructure.iac.k8s_adapter import KubernetesAdapter
+        from python_hunter.infrastructure.iac.terraform_adapter import TerraformAdapter
+        from python_hunter.infrastructure.iac.cicd_adapter import CICDAdapter
+        from python_hunter.domain.infrastructure.rules_engine import InfrastructureSecurityRuleEngine
+        from python_hunter.domain.infrastructure.graph_engine import CrossLayerGraphEngine
+
+        registry = InfrastructureRegistry()
+        registry.register_adapter(DockerAdapter())
+        registry.register_adapter(KubernetesAdapter())
+        registry.register_adapter(TerraformAdapter())
+        registry.register_adapter(CICDAdapter())
+
+        ir = InfrastructureIR(scan_path=workspace_path)
+
+        for root, _, files in os.walk(workspace_path):
+            for file in files:
+                full_path = os.path.join(root, file)
+                rel_path = os.path.relpath(full_path, workspace_path)
+                try:
+                    with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                        content = f.read()
+                    registry.process_file(rel_path, content, ir)
+                except Exception:
+                    pass
+
+        rule_engine = InfrastructureSecurityRuleEngine()
+        findings = rule_engine.evaluate_ir(ir)
+
+        graph_engine = CrossLayerGraphEngine()
+        cross_graph = graph_engine.build_cross_layer_graph(ir)
+        attack_paths = graph_engine.trace_cross_layer_attack_paths(cross_graph)
+
+        formatted_findings = [
+            {
+                "id": f"iac-find-{idx+1}",
+                "rule_id": f.rule_id,
+                "title": f.rule_name,
+                "severity": f.severity.value,
+                "confidence": f.confidence.value,
+                "file_path": f.file_path,
+                "line_number": f.line_number,
+                "evidence": f.evidence,
+                "description": f.description,
+                "remediation": f.remediation,
+            }
+            for idx, f in enumerate(findings)
+        ]
+
+        resources_formatted = [
+            {
+                "id": r.id,
+                "name": r.name,
+                "type": r.type.value,
+                "provider": r.provider,
+                "file_path": r.file_path,
+                "line": r.line,
+                "is_publicly_exposed": r.is_publicly_exposed,
+                "is_privileged": r.is_privileged,
+                "runs_as_root": r.runs_as_root,
+                "has_encryption_enabled": r.has_encryption_enabled,
+            }
+            for r in ir.resources
+        ]
+
+        return {
+            "status": "COMPLETED",
+            "workspace_path": workspace_path,
+            "resources_count": len(resources_formatted),
+            "resources": resources_formatted,
+            "findings_count": len(formatted_findings),
+            "findings": formatted_findings,
+            "attack_paths_count": len(attack_paths),
+            "attack_paths": attack_paths,
+        }
+
