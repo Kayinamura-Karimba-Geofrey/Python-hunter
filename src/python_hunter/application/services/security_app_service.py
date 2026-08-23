@@ -47,9 +47,14 @@ from python_hunter.domain.governance.rbac import RBACEngine, SystemRole, Team, T
 from python_hunter.domain.governance.engine import GovernanceEngine, SecurityApproval, RiskAcceptance
 from python_hunter.domain.governance.compliance import ComplianceEngine, SecurityControl, ComplianceEvidence
 
+# Step 43: Enterprise Integrations & Security Ecosystem
+from python_hunter.domain.integrations.models import Integration, IntegrationProviderType, IntegrationStatus, ExternalReference, IntegrationEvent
+from python_hunter.domain.integrations.credentials import CredentialManager
+from python_hunter.domain.integrations.engine import IntegrationEngine, IntegrationRegistry, IntegrationCircuitBreaker, IntegrationSyncEngine
+
 
 class SecurityApplicationService:
-    """Unified application service wrapping scanning, policy evaluation, multi-language engine, intelligence platform, continuous operations, and enterprise governance."""
+    """Unified application service wrapping scanning, policy evaluation, multi-language engine, intelligence platform, continuous operations, enterprise governance, and enterprise integrations."""
 
     def __init__(self) -> None:
         self.orchestrator = ScanOrchestrator()
@@ -123,6 +128,17 @@ class SecurityApplicationService:
                 owner_team_id="team-sec",
             )
         }
+
+        # Step 43: Enterprise Integrations & Security Ecosystem
+        self.integration_engine = IntegrationEngine()
+        default_github_integration = Integration(
+            integration_id="int-github-default",
+            organization_id="org-default",
+            provider=IntegrationProviderType.GITHUB,
+            name="GitHub Main App",
+            status=IntegrationStatus.HEALTHY,
+        )
+        self.integration_engine.register_integration(default_github_integration)
 
     def authorize_verification_target(
         self, target: str, authorized_by: str = "security_operator", valid_minutes: int = 60
