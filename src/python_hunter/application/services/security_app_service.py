@@ -23,10 +23,15 @@ from python_hunter.domain.correlation.attack_path_engine import WhatIfAnalyzer, 
 from python_hunter.domain.verification.engine import VerificationEngine
 from python_hunter.domain.verification.models import VerificationAuthorization, VerificationResult
 from python_hunter.domain.common.enums import VerificationMode, VerificationStatus, VerificationConfidence
+from python_hunter.domain.intelligence.engine import SecurityIntelligenceEngine
+from python_hunter.domain.intelligence.source import IntelligenceSourceRegistry
+from python_hunter.domain.intelligence.posture import SecurityPostureTracker
+from python_hunter.domain.intelligence.remediation import RemediationQueueManager, RemediationItem
+from python_hunter.infrastructure.intelligence.db import OSVIntelligenceSource, LocalIntelligenceDatabase
 
 
 class SecurityApplicationService:
-    """Unified application service wrapping scanning, policy evaluation, history tracking, multi-language engine, and reporting."""
+    """Unified application service wrapping scanning, policy evaluation, history tracking, multi-language engine, and security intelligence platform."""
 
     def __init__(self) -> None:
         self.orchestrator = ScanOrchestrator()
@@ -47,6 +52,17 @@ class SecurityApplicationService:
         self.graph_engine = SecurityKnowledgeGraphEngine()
         self.verification_engine = VerificationEngine()
         self._authorizations: list[VerificationAuthorization] = []
+
+        # Step 40: Security Intelligence Engine
+        self.intel_registry = IntelligenceSourceRegistry()
+        self.intel_registry.register(OSVIntelligenceSource())
+        self.intel_engine = SecurityIntelligenceEngine(registry=self.intel_registry)
+        self.posture_tracker = SecurityPostureTracker()
+        self.remediation_queue = RemediationQueueManager()
+        self.intel_db = LocalIntelligenceDatabase()
+        # Seed initial intelligence
+        records = self.intel_engine.ingest_intelligence()
+        self.intel_db.save_records(records)
 
     def authorize_verification_target(
         self, target: str, authorized_by: str = "security_operator", valid_minutes: int = 60
