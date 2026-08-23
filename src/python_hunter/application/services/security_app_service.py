@@ -29,9 +29,20 @@ from python_hunter.domain.intelligence.posture import SecurityPostureTracker
 from python_hunter.domain.intelligence.remediation import RemediationQueueManager, RemediationItem
 from python_hunter.infrastructure.intelligence.db import OSVIntelligenceSource, LocalIntelligenceDatabase
 
+# Step 41: Autonomous Security Operations
+from python_hunter.domain.operations.events import SecurityEventBus, SecurityEvent, SecurityEventType
+from python_hunter.domain.operations.queue import SecurityJobQueue, SecurityWorker, JobType, JobStatus
+from python_hunter.domain.operations.incremental import ChangeImpactEngine, SecurityDriftEngine
+from python_hunter.domain.operations.alerts import AlertEngine, SecurityAlert, AlertType
+from python_hunter.domain.operations.notifications import NotificationRegistry, MockSlackNotificationProvider
+from python_hunter.domain.operations.incidents import IncidentCorrelationEngine, SecurityIncident
+from python_hunter.domain.operations.scheduler import SecurityScheduler, MonitoredRepository
+from python_hunter.domain.operations.health import SecurityPlatformHealth, HealthState
+from python_hunter.infrastructure.operations.webhooks import GitHubWebhookValidator, AuditLogger
+
 
 class SecurityApplicationService:
-    """Unified application service wrapping scanning, policy evaluation, history tracking, multi-language engine, and security intelligence platform."""
+    """Unified application service wrapping scanning, policy evaluation, history tracking, multi-language engine, security intelligence, and continuous operations."""
 
     def __init__(self) -> None:
         self.orchestrator = ScanOrchestrator()
@@ -63,6 +74,21 @@ class SecurityApplicationService:
         # Seed initial intelligence
         records = self.intel_engine.ingest_intelligence()
         self.intel_db.save_records(records)
+
+        # Step 41: Continuous Security Operations & Monitoring
+        self.event_bus = SecurityEventBus()
+        self.job_queue = SecurityJobQueue()
+        self.worker = SecurityWorker(self.job_queue)
+        self.impact_engine = ChangeImpactEngine()
+        self.drift_engine = SecurityDriftEngine()
+        self.alert_engine = AlertEngine()
+        self.notification_registry = NotificationRegistry()
+        self.notification_registry.register(MockSlackNotificationProvider())
+        self.incident_engine = IncidentCorrelationEngine()
+        self.scheduler = SecurityScheduler()
+        self.health_monitor = SecurityPlatformHealth()
+        self.webhook_validator = GitHubWebhookValidator()
+        self.audit_logger = AuditLogger()
 
     def authorize_verification_target(
         self, target: str, authorized_by: str = "security_operator", valid_minutes: int = 60
