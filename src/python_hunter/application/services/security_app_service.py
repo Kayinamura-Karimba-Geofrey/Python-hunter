@@ -40,9 +40,16 @@ from python_hunter.domain.operations.scheduler import SecurityScheduler, Monitor
 from python_hunter.domain.operations.health import SecurityPlatformHealth, HealthState
 from python_hunter.infrastructure.operations.webhooks import GitHubWebhookValidator, AuditLogger
 
+# Step 42: Enterprise Multi-Tenancy & Governance
+from python_hunter.domain.governance.tenant import Organization, OrganizationStatus, Environment, AssetCriticality, Project, TenantContext
+from python_hunter.domain.governance.auth import User, UserStatus, Session, ApiToken
+from python_hunter.domain.governance.rbac import RBACEngine, SystemRole, Team, TeamMembership, OrganizationMembership
+from python_hunter.domain.governance.engine import GovernanceEngine, SecurityApproval, RiskAcceptance
+from python_hunter.domain.governance.compliance import ComplianceEngine, SecurityControl, ComplianceEvidence
+
 
 class SecurityApplicationService:
-    """Unified application service wrapping scanning, policy evaluation, history tracking, multi-language engine, security intelligence, and continuous operations."""
+    """Unified application service wrapping scanning, policy evaluation, multi-language engine, intelligence platform, continuous operations, and enterprise governance."""
 
     def __init__(self) -> None:
         self.orchestrator = ScanOrchestrator()
@@ -89,6 +96,33 @@ class SecurityApplicationService:
         self.health_monitor = SecurityPlatformHealth()
         self.webhook_validator = GitHubWebhookValidator()
         self.audit_logger = AuditLogger()
+
+        # Step 42: Enterprise Multi-Tenancy & Governance
+        self.rbac_engine = RBACEngine()
+        self.governance_engine = GovernanceEngine()
+        self.compliance_engine = ComplianceEngine()
+        self.organizations: dict[str, Organization] = {
+            "org-default": Organization(organization_id="org-default", name="Default Organization", slug="default-org")
+        }
+        self.users: dict[str, User] = {
+            "usr-admin": User(
+                user_id="usr-admin",
+                email="admin@pythonhunter.io",
+                display_name="Security Admin",
+                password_hash=User.hash_password("AdminSecurePassword123!"),
+            )
+        }
+        self.teams: dict[str, Team] = {
+            "team-sec": Team(team_id="team-sec", organization_id="org-default", name="Security Team")
+        }
+        self.projects: dict[str, Project] = {
+            "proj-core": Project(
+                project_id="proj-core",
+                organization_id="org-default",
+                name="Python Hunter Platform",
+                owner_team_id="team-sec",
+            )
+        }
 
     def authorize_verification_target(
         self, target: str, authorized_by: str = "security_operator", valid_minutes: int = 60
