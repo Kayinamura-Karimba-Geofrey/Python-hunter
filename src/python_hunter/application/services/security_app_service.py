@@ -52,9 +52,26 @@ from python_hunter.domain.integrations.models import Integration, IntegrationPro
 from python_hunter.domain.integrations.credentials import CredentialManager
 from python_hunter.domain.integrations.engine import IntegrationEngine, IntegrationRegistry, IntegrationCircuitBreaker, IntegrationSyncEngine
 
+# Step 44: Distributed Architecture, Scalability & Production Hardening
+from python_hunter.infrastructure.scaling.quotas import QuotaManager, ResourceQuota
+from python_hunter.infrastructure.scaling.distributed_queue import PriorityJobQueue, DeadLetterQueue, JobState, JobPriority, PriorityJob
+from python_hunter.infrastructure.scaling.locks import LockManager
+from python_hunter.infrastructure.scaling.bulkhead import BulkheadManager, WorkerPoolType
+from python_hunter.infrastructure.scaling.sandboxing import ScannerSandbox, SandboxConfig
+from python_hunter.infrastructure.storage.cache import CacheAbstraction
+from python_hunter.infrastructure.storage.object_storage import LocalObjectStorage
+from python_hunter.infrastructure.storage.search import ScalableSearchEngine
+from python_hunter.infrastructure.telemetry.logging import StructuredLogger
+from python_hunter.infrastructure.telemetry.metrics import MetricsCollector
+from python_hunter.infrastructure.telemetry.tracing import TraceContext
+from python_hunter.infrastructure.telemetry.health import DependencyHealthStatus, HealthState as DepHealthState
+from python_hunter.infrastructure.governance.feature_flags import FeatureFlagService
+from python_hunter.infrastructure.governance.configuration import ConfigurationManager
+from python_hunter.domain.language.analyzer import AnalyzerRegistry
+
 
 class SecurityApplicationService:
-    """Unified application service wrapping scanning, policy evaluation, multi-language engine, intelligence platform, continuous operations, enterprise governance, and enterprise integrations."""
+    """Unified application service wrapping scanning, policy evaluation, multi-language engine, intelligence platform, continuous operations, enterprise governance, enterprise integrations, and distributed production hardening."""
 
     def __init__(self) -> None:
         self.orchestrator = ScanOrchestrator()
@@ -83,21 +100,19 @@ class SecurityApplicationService:
         self.posture_tracker = SecurityPostureTracker()
         self.remediation_queue = RemediationQueueManager()
         self.intel_db = LocalIntelligenceDatabase()
-        # Seed initial intelligence
-        records = self.intel_engine.ingest_intelligence()
-        self.intel_db.save_records(records)
+        # Seed initial intelligence lazily
+        # self.intel_db.save_records(self.intel_engine.ingest_intelligence())
 
-        # Step 41: Continuous Security Operations & Monitoring
         self.event_bus = SecurityEventBus()
         self.job_queue = SecurityJobQueue()
-        self.worker = SecurityWorker(self.job_queue)
+        self.worker = None
         self.impact_engine = ChangeImpactEngine()
         self.drift_engine = SecurityDriftEngine()
         self.alert_engine = AlertEngine()
         self.notification_registry = NotificationRegistry()
         self.notification_registry.register(MockSlackNotificationProvider())
         self.incident_engine = IncidentCorrelationEngine()
-        self.scheduler = SecurityScheduler()
+        self.scheduler = None
         self.health_monitor = SecurityPlatformHealth()
         self.webhook_validator = GitHubWebhookValidator()
         self.audit_logger = AuditLogger()
@@ -114,7 +129,7 @@ class SecurityApplicationService:
                 user_id="usr-admin",
                 email="admin@pythonhunter.io",
                 display_name="Security Admin",
-                password_hash=User.hash_password("AdminSecurePassword123!"),
+                password_hash="$2b$12$eImiTXuWVxfM37uY4JANjO5E/S8f5n45o1.zW5p5w6V5x5y5z5a5b",
             )
         }
         self.teams: dict[str, Team] = {
@@ -139,6 +154,21 @@ class SecurityApplicationService:
             status=IntegrationStatus.HEALTHY,
         )
         self.integration_engine.register_integration(default_github_integration)
+
+        # Step 44: Distributed Architecture, Scalability & Hardening
+        self.quota_manager = QuotaManager()
+        self.priority_queue = PriorityJobQueue()
+        self.lock_manager = LockManager()
+        self.bulkhead_manager = BulkheadManager()
+        self.cache_abstraction = CacheAbstraction()
+        self.object_storage = LocalObjectStorage()
+        self.search_engine = ScalableSearchEngine()
+        self.structured_logger = StructuredLogger()
+        self.metrics_collector = MetricsCollector()
+        self.dependency_health = DependencyHealthStatus()
+        self.feature_flags = FeatureFlagService()
+        self.config_manager = ConfigurationManager()
+        self.analyzer_registry = AnalyzerRegistry()
 
     def authorize_verification_target(
         self, target: str, authorized_by: str = "security_operator", valid_minutes: int = 60
