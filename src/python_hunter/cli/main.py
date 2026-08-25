@@ -142,37 +142,43 @@ def iac_scan(target: str) -> None:
 
 @iac.command("docker")
 @click.argument("target", default=".")
-def iac_docker(target: str) -> None:
+@click.pass_context
+def iac_docker(ctx: click.Context, target: str) -> None:
     """Analyze Dockerfiles and Docker Compose files."""
-    iac_scan.callback(target)
+    ctx.invoke(iac_scan, target=target)
 
 
 @iac.command("kubernetes")
 @click.argument("target", default=".")
-def iac_kubernetes(target: str) -> None:
+@click.pass_context
+def iac_kubernetes(ctx: click.Context, target: str) -> None:
     """Analyze Kubernetes manifests and RBAC permissions."""
-    iac_scan.callback(target)
+    ctx.invoke(iac_scan, target=target)
 
 
 @iac.command("terraform")
 @click.argument("target", default=".")
-def iac_terraform(target: str) -> None:
+@click.pass_context
+def iac_terraform(ctx: click.Context, target: str) -> None:
     """Analyze Terraform HCL files and cloud resources."""
-    iac_scan.callback(target)
+    ctx.invoke(iac_scan, target=target)
 
 
 @iac.command("helm")
 @click.argument("target", default=".")
-def iac_helm(target: str) -> None:
+@click.pass_context
+def iac_helm(ctx: click.Context, target: str) -> None:
     """Analyze Helm charts and values statically."""
-    iac_scan.callback(target)
+    ctx.invoke(iac_scan, target=target)
 
 
 @iac.command("ci")
 @click.argument("target", default=".")
-def iac_ci(target: str) -> None:
+@click.pass_context
+def iac_ci(ctx: click.Context, target: str) -> None:
     """Analyze CI/CD and GitHub Actions workflows."""
-    iac_scan.callback(target)
+    ctx.invoke(iac_scan, target=target)
+
 
 
 @main.group()

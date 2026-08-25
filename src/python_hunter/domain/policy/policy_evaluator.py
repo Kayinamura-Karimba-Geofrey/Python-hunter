@@ -1,6 +1,7 @@
 """Policy Engine and Security Gate Evaluator."""
 
-from datetime import datetime
+from datetime import datetime, timezone
+
 from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.policy.policy_models import (
@@ -49,7 +50,8 @@ class PolicyEngine:
     ) -> GateResult:
 
         exceptions = exceptions or []
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
+
         active_exceptions = [e for e in exceptions if e.expires_at > now]
 
         policies = self.STRICT_PROFILE

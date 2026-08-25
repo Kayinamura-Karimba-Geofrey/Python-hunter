@@ -27,11 +27,10 @@ class PYHWeb008SSRF(SecurityRule):
     def evaluate(self, ast_summary: ASTAnalysisSummary, context: AnalysisContext) -> list[Finding]:
         findings = []
         for doc in ast_summary.documents:
-            for stmt in doc.statements:
-                if any(client in stmt.code_snippet for client in ("requests.get(", "httpx.get(", "aiohttp.ClientSession")):
-                    if any(arg in stmt.code_snippet for arg in ("url", "target_url", "dest_url")):
-                        line = stmt.location.line_start if stmt.location else 1
-                        loc = Location(line_start=line, line_end=line, column_start=stmt.location.column_start if stmt.location else 0)
+            for line_idx, line_code in enumerate(doc.source_lines, start=1):
+                if any(client in line_code for client in ("requests.get(", "httpx.get(", "aiohttp.ClientSession")):
+                    if any(arg in line_code for arg in ("url", "target_url", "dest_url")):
+                        loc = Location(line_start=line_idx, line_end=line_idx, column_start=0)
                         findings.append(
                             Finding(
                                 rule_id=self.id,
@@ -47,3 +46,4 @@ class PYHWeb008SSRF(SecurityRule):
                             )
                         )
         return findings
+

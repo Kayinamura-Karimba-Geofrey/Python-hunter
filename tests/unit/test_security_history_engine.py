@@ -1,6 +1,6 @@
 """Unit tests for Step 29 Historical Security Intelligence Engine."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 import unittest
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
@@ -35,7 +35,7 @@ class TestSecurityHistoryEngine(unittest.TestCase):
             repository="repo",
             branch="main",
             commit_sha="c111111",
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             findings=[],
             risk_score=0.0,
             security_score=100.0,
@@ -46,11 +46,12 @@ class TestSecurityHistoryEngine(unittest.TestCase):
             repository="repo",
             branch="main",
             commit_sha="c222222",
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             findings=[f1],
             risk_score=7.5,
             security_score=75.0,
         )
+
 
         comp = self.comparator.compare(snap1, snap2)
         self.assertEqual(len(comp.new_findings), 1)

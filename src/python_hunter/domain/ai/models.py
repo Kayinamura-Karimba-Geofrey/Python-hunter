@@ -1,6 +1,7 @@
 """Domain models for AI Security Intelligence Engine (Zero External Dependencies)."""
 
-from datetime import datetime
+from datetime import datetime, timezone
+
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
@@ -291,7 +292,7 @@ class AIAuditLog:
         self.provider_id = provider_id
         self.model = model
         self.request_type = request_type
-        self.timestamp = timestamp or datetime.utcnow()
+        self.timestamp = timestamp or datetime.now(timezone.utc)
         self.tools_used = tools_used or []
         self.status = status
         self.tokens_used = tokens_used

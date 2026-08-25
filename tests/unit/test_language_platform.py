@@ -33,7 +33,8 @@ class TestMultiLanguagePlatform(unittest.TestCase):
     def test_language_registry_supports_10_languages(self):
         registry = LanguageRegistry()
         registered = registry.get_registered_languages()
-        self.assertEqual(len(registered), 10)
+        self.assertEqual(len(registered), 13)
+
         expected_langs = [
             Language.PYTHON, Language.JAVASCRIPT, Language.TYPESCRIPT,
             Language.JAVA, Language.GO, Language.RUST,

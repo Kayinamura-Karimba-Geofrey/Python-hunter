@@ -1,6 +1,7 @@
 """Baseline Snapshot and Scan Diff Engine."""
 
-from datetime import datetime
+from datetime import datetime, timezone
+
 import json
 import logging
 import os
@@ -20,7 +21,8 @@ class BaselineEngine:
         """Create baseline JSON snapshot file."""
         baseline_data = {
             "version": "1.0",
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+
             "count": len(findings),
             "fingerprints": [f.fingerprint for f in findings],
             "findings": [

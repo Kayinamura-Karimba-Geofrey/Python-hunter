@@ -1,7 +1,8 @@
 """Security Policy and Gate Engine."""
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
+
 import logging
 import os
 from typing import Any
@@ -114,7 +115,8 @@ class SecurityPolicyEngine:
     def evaluate(self, findings: list[Finding], project_risk_score: float = 0.0) -> tuple[bool, list[str]]:
         """Evaluate findings and return (policy_passed, violations)."""
         violations: list[str] = []
-        now = datetime.utcnow().strftime("%Y-%m-%d")
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
 
         for f in findings:
             # 1. Apply Severity Overrides

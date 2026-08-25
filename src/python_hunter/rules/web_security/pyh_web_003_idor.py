@@ -27,11 +27,10 @@ class PYHWeb003IDOR(SecurityRule):
     def evaluate(self, ast_summary: ASTAnalysisSummary, context: AnalysisContext) -> list[Finding]:
         findings = []
         for doc in ast_summary.documents:
-            for stmt in doc.statements:
-                if "/{id}" in stmt.code_snippet or "/{user_id}" in stmt.code_snippet:
-                    if "user_id" not in stmt.code_snippet and "owner_id" not in stmt.code_snippet:
-                        line = stmt.location.line_start if stmt.location else 1
-                        loc = Location(line_start=line, line_end=line, column_start=stmt.location.column_start if stmt.location else 0)
+            for line_idx, line_code in enumerate(doc.source_lines, start=1):
+                if "/{id}" in line_code or "/{user_id}" in line_code:
+                    if "user_id" not in line_code and "owner_id" not in line_code:
+                        loc = Location(line_start=line_idx, line_end=line_idx, column_start=0)
                         findings.append(
                             Finding(
                                 rule_id=self.id,
@@ -47,3 +46,4 @@ class PYHWeb003IDOR(SecurityRule):
                             )
                         )
         return findings
+

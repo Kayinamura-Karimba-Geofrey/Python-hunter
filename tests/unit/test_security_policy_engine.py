@@ -1,6 +1,7 @@
 """Unit tests for Step 28 Security Policy & Compliance Engine."""
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
 import unittest
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
@@ -60,7 +61,7 @@ class TestSecurityPolicyEngine(unittest.TestCase):
             resource="app.py",
             reason="Approved temporary exception",
             owner="secops@company.com",
-            expires_at=datetime.utcnow() + timedelta(days=7),
+            expires_at=datetime.now(timezone.utc) + timedelta(days=7),
         )
         result = self.policy_engine.evaluate_gate(findings, risk_score=2.0, exceptions=[active_exception])
         self.assertEqual(result.status, PolicyAction.PASS)

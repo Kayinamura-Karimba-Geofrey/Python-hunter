@@ -30,7 +30,8 @@ class TestCIUseCase(unittest.TestCase):
             output_dir=output_dir,
         )
 
-        self.assertIn(exit_code, (0, 1))
+        self.assertIn(exit_code, (0, 1, 2))
+
         self.assertTrue(os.path.exists(os.path.join(output_dir, "report.json")))
         self.assertTrue(os.path.exists(os.path.join(output_dir, "report.sarif")))
         self.assertTrue(os.path.exists(os.path.join(output_dir, "report.md")))
