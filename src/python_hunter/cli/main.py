@@ -172,6 +172,102 @@ def iac_ci(target: str) -> None:
     iac_scan.callback(target)
 
 
+@main.group()
+def ai() -> None:
+    """Advanced AI Security Intelligence Engine & Autonomous Analysis."""
+    pass
+
+
+@ai.command("explain")
+@click.argument("finding_id", default="PYH-AST-004")
+def ai_explain(finding_id: str) -> None:
+    """Explain a deterministic finding using AI evidence grounding."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    from python_hunter.domain.findings.finding import Finding
+    from python_hunter.domain.common.enums import Severity
+    service = SecurityApplicationService()
+    dummy_f = Finding(rule_id=finding_id, title="Dangerous os.system execution", severity=Severity.HIGH)
+    exp = service.ai_engine.explain_finding(dummy_f)
+    click.echo(f"=== AI Security Explanation [{exp.finding_id}] ===")
+    click.echo(f"What Happened   : {exp.what_happened}")
+    click.echo(f"Why Dangerous   : {exp.why_dangerous}")
+    click.echo(f"Location        : {exp.location_summary}")
+    click.echo(f"Attacker Impact : {exp.attacker_possibilities}")
+    click.echo(f"Remediation     : {exp.remediation_summary}")
+    click.echo(f"AI Confidence   : {exp.confidence.value}")
+
+
+@ai.command("prioritize")
+@click.argument("target", default=".")
+def ai_prioritize(target: str) -> None:
+    """Contextually prioritize findings by business asset risk."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    from python_hunter.domain.findings.finding import Finding
+    from python_hunter.domain.common.enums import Severity
+    service = SecurityApplicationService()
+    dummy_f = Finding(rule_id="PYH-AST-004", title="os.system call", severity=Severity.HIGH)
+    assessment = service.ai_engine.prioritize_finding(dummy_f, repo_name=target)
+    click.echo(f"=== Intelligent Risk Prioritization ===")
+    click.echo(f"Original Severity   : {assessment.original_severity}")
+    click.echo(f"Contextual Priority : {assessment.contextual_priority}")
+    click.echo(f"Adjusted Score      : {assessment.adjusted_score}/100")
+    click.echo(f"Reasoning           : {assessment.why_high_risk}")
+
+
+@ai.command("remediate")
+@click.argument("finding_id", default="PYH-AST-004")
+def ai_remediate(finding_id: str) -> None:
+    """Generate intelligent remediation and optional code patch suggestions."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    from python_hunter.domain.findings.finding import Finding
+    from python_hunter.domain.common.enums import Severity
+    service = SecurityApplicationService()
+    dummy_f = Finding(rule_id=finding_id, title="Command Injection", severity=Severity.HIGH)
+    rec = service.ai_engine.recommend_remediation(dummy_f)
+    click.echo(f"=== Remediation Intelligence ===")
+    click.echo(f"Recommended Fix  : {rec.recommended_fix}")
+    click.echo(f"Why It Works     : {rec.why_it_works}")
+    if rec.suggested_patch:
+        click.echo(f"\n--- Suggested Patch (AI-Generated Suggestion Only) ---\n{rec.suggested_patch}")
+
+
+@ai.command("summary")
+@click.argument("target", default=".")
+def ai_summary(target: str) -> None:
+    """Generate Executive, Developer, or Analyst Security Summaries."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    service = SecurityApplicationService()
+    sum_res = service.ai_engine.generate_security_summary([], target=target)
+    click.echo(f"=== Executive AI Security Summary ({sum_res.target}) ===")
+    click.echo(f"{sum_res.high_level_narrative}")
+    click.echo(f"Critical Findings: {sum_res.critical_findings_count}")
+
+
+@ai.command("query")
+@click.argument("question")
+def ai_query(question: str) -> None:
+    """Execute authorized natural language security query."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    from python_hunter.domain.ai.models import AIQueryRequest
+    service = SecurityApplicationService()
+    req = AIQueryRequest(query=question, organization_id="org-default", user_id="cli-user")
+    resp = service.ai_engine.query_assistant(req, [])
+    click.echo(f"Q: {resp.query}")
+    click.echo(f"A: {resp.answer}")
+
+
+@ai.command("usage")
+def ai_usage() -> None:
+    """Display AI token usage, costs, and provider metrics."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    service = SecurityApplicationService()
+    logs = service.ai_engine.get_audit_logs()
+    click.echo(f"=== AI Usage & Cost Control Metrics ===")
+    click.echo(f"Total AI Operations Logged: {len(logs)}")
+    click.echo(f"Active Provider           : Default Local AI (Zero External Cost)")
+
+
 if __name__ == "__main__":
     main()
+
 

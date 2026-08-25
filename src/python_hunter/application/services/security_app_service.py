@@ -57,7 +57,11 @@ from python_hunter.infrastructure.scaling.quotas import QuotaManager, ResourceQu
 from python_hunter.infrastructure.scaling.distributed_queue import PriorityJobQueue, DeadLetterQueue, JobState, JobPriority, PriorityJob
 from python_hunter.infrastructure.scaling.locks import LockManager
 from python_hunter.infrastructure.scaling.bulkhead import BulkheadManager, WorkerPoolType
-from python_hunter.infrastructure.scaling.sandboxing import ScannerSandbox, SandboxConfig
+from python_hunter.infrastructure.scaling.sandboxing import ScannerSandbox, SandboxConfig# Step 45: Advanced AI Security Intelligence & Autonomous Security Analysis
+from python_hunter.domain.ai import (
+    AISecurityIntelligenceEngine, FindingExplanation, RiskAssessment,
+    RemediationRecommendation, SecuritySummary, AIQueryRequest, AIQueryResponse, AIAuditLog
+)
 from python_hunter.infrastructure.storage.cache import CacheAbstraction
 from python_hunter.infrastructure.storage.object_storage import LocalObjectStorage
 from python_hunter.infrastructure.storage.search import ScalableSearchEngine
@@ -160,9 +164,14 @@ class SecurityApplicationService:
         self.priority_queue = PriorityJobQueue()
         self.lock_manager = LockManager()
         self.bulkhead_manager = BulkheadManager()
-        self.cache_abstraction = CacheAbstraction()
+        self.sandbox = ScannerSandbox()
+        self.cache = CacheAbstraction()
         self.object_storage = LocalObjectStorage()
         self.search_engine = ScalableSearchEngine()
+
+        # Step 45: AI Security Intelligence Engine
+        self.ai_engine = AISecurityIntelligenceEngine()
+
         self.structured_logger = StructuredLogger()
         self.metrics_collector = MetricsCollector()
         self.dependency_health = DependencyHealthStatus()
