@@ -9,6 +9,7 @@ __all__ = [
     "LanguageAdapter",
     "PythonLanguageAdapter",
     "LanguageRegistry",
+    "PolyglotSecurityAnalysisEngine",
 ]
 
 
@@ -22,4 +23,8 @@ def __getattr__(name: str):
     if name == "LanguageRegistry":
         from python_hunter.domain.language.registry import LanguageRegistry
         return LanguageRegistry
+    if name == "PolyglotSecurityAnalysisEngine":
+        from python_hunter.domain.language.engine import PolyglotSecurityAnalysisEngine
+        return PolyglotSecurityAnalysisEngine
     raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+

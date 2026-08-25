@@ -29,6 +29,7 @@ def main() -> None:
 @click.option("--min-confidence", default="medium", help="Minimum confidence threshold (high, medium, low).")
 @click.option("--baseline", default="", help="Path to baseline file for differential PR scan.")
 @click.option("--require-exploitable", is_flag=True, help="Only fail build on provably exploitable findings.")
+@click.option("--language", default="all", help="Target language to scan (python, javascript, typescript, java, go, rust, c, cpp, csharp, php, ruby, kotlin, swift, all).")
 def scan(
     target: str,
     branch: str,
@@ -42,7 +43,9 @@ def scan(
     min_confidence: str,
     baseline: str,
     require_exploitable: bool,
+    language: str,
 ) -> None:
+
     """Scans local project directories, files, or remote GitHub repositories."""
     orchestrator = ScanOrchestrator()
     policy_engine = PolicyEngine()

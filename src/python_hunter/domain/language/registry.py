@@ -13,12 +13,17 @@ from python_hunter.domain.language.ruby_adapter import RubyLanguageAdapter
 from python_hunter.domain.language.rust_adapter import RustLanguageAdapter
 
 
+from python_hunter.domain.language.csharp_adapter import CSharpLanguageAdapter
+from python_hunter.domain.language.kotlin_adapter import KotlinLanguageAdapter
+from python_hunter.domain.language.swift_adapter import SwiftLanguageAdapter
+
+
 class LanguageRegistry:
     """Central registry for discovering, querying, and managing all language adapters."""
 
     def __init__(self) -> None:
         self._adapters: Dict[Language, LanguageAdapter] = {}
-        # Register core built-in language adapters for 10 languages
+        # Register core built-in language adapters for all 13 languages
         self.register_adapter(PythonLanguageAdapter())
         self.register_adapter(JavaScriptLanguageAdapter())
         self.register_adapter(TypeScriptLanguageAdapter())
@@ -27,8 +32,12 @@ class LanguageRegistry:
         self.register_adapter(RustLanguageAdapter())
         self.register_adapter(CLanguageAdapter())
         self.register_adapter(CPPLanguageAdapter())
+        self.register_adapter(CSharpLanguageAdapter())
         self.register_adapter(PHPLanguageAdapter())
         self.register_adapter(RubyLanguageAdapter())
+        self.register_adapter(KotlinLanguageAdapter())
+        self.register_adapter(SwiftLanguageAdapter())
+
 
     def register_adapter(self, adapter: LanguageAdapter) -> None:
         self._adapters[adapter.language] = adapter

@@ -34,14 +34,18 @@ EXTENSION_MAP = {
     ".hpp": Language.CPP,
     ".cc": Language.CPP,
     ".cxx": Language.CPP,
+    ".cs": Language.CSHARP,
     ".php": Language.PHP,
     ".rb": Language.RUBY,
+    ".kt": Language.KOTLIN,
+    ".kts": Language.KOTLIN,
+    ".swift": Language.SWIFT,
 }
 
 MANIFEST_MAP = {
     "pom.xml": Language.JAVA,
     "build.gradle": Language.JAVA,
-    "build.gradle.kts": Language.JAVA,
+    "build.gradle.kts": Language.KOTLIN,
     "go.mod": Language.GO,
     "go.sum": Language.GO,
     "Cargo.toml": Language.RUST,
@@ -52,10 +56,13 @@ MANIFEST_MAP = {
     "requirements.txt": Language.PYTHON,
     "pyproject.toml": Language.PYTHON,
     "setup.py": Language.PYTHON,
-    "package.json": Language.TYPESCRIPT,  # or JS
+    "package.json": Language.TYPESCRIPT,
     "CMakeLists.txt": Language.CPP,
     "Makefile": Language.C,
+    "Package.swift": Language.SWIFT,
+    "Podfile": Language.SWIFT,
 }
+
 
 IGNORED_DIRS = {
     "node_modules",

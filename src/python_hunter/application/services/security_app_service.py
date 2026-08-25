@@ -65,6 +65,10 @@ from python_hunter.domain.ai import (
 # Step 46: Enterprise Compliance, Governance & Security Assurance
 from python_hunter.domain.compliance import ComplianceEngine as EnterpriseComplianceEngine
 
+# Step 47: Advanced Multi-Language Security Analysis Platform
+from python_hunter.domain.language import PolyglotSecurityAnalysisEngine
+
+
 from python_hunter.infrastructure.storage.cache import CacheAbstraction
 from python_hunter.infrastructure.storage.object_storage import LocalObjectStorage
 
@@ -178,6 +182,10 @@ class SecurityApplicationService:
 
         # Step 46: Enterprise Compliance & Governance Engine
         self.enterprise_compliance_engine = EnterpriseComplianceEngine()
+
+        # Step 47: Polyglot Security Analysis Engine
+        self.polyglot_engine = PolyglotSecurityAnalysisEngine()
+
 
 
         self.structured_logger = StructuredLogger()

@@ -16,9 +16,13 @@ class Language(str, Enum):
     RUST = "rust"
     C = "c"
     CPP = "cpp"
+    CSHARP = "csharp"
     PHP = "php"
     RUBY = "ruby"
+    KOTLIN = "kotlin"
+    SWIFT = "swift"
     UNKNOWN = "unknown"
+
 
 
 class AnalyzerCapability(str, Enum):
