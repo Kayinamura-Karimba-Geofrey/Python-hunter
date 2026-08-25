@@ -62,8 +62,12 @@ from python_hunter.domain.ai import (
     AISecurityIntelligenceEngine, FindingExplanation, RiskAssessment,
     RemediationRecommendation, SecuritySummary, AIQueryRequest, AIQueryResponse, AIAuditLog
 )
+# Step 46: Enterprise Compliance, Governance & Security Assurance
+from python_hunter.domain.compliance import ComplianceEngine as EnterpriseComplianceEngine
+
 from python_hunter.infrastructure.storage.cache import CacheAbstraction
 from python_hunter.infrastructure.storage.object_storage import LocalObjectStorage
+
 from python_hunter.infrastructure.storage.search import ScalableSearchEngine
 from python_hunter.infrastructure.telemetry.logging import StructuredLogger
 from python_hunter.infrastructure.telemetry.metrics import MetricsCollector
@@ -171,6 +175,10 @@ class SecurityApplicationService:
 
         # Step 45: AI Security Intelligence Engine
         self.ai_engine = AISecurityIntelligenceEngine()
+
+        # Step 46: Enterprise Compliance & Governance Engine
+        self.enterprise_compliance_engine = EnterpriseComplianceEngine()
+
 
         self.structured_logger = StructuredLogger()
         self.metrics_collector = MetricsCollector()
