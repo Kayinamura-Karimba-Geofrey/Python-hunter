@@ -68,6 +68,10 @@ from python_hunter.domain.compliance import ComplianceEngine as EnterpriseCompli
 # Step 47: Advanced Multi-Language Security Analysis Platform
 from python_hunter.domain.language import PolyglotSecurityAnalysisEngine
 
+# Step 48: Threat Intelligence & Security Research Platform
+from python_hunter.domain.threat_intel import ThreatIntelligenceEngine
+
+
 
 from python_hunter.infrastructure.storage.cache import CacheAbstraction
 from python_hunter.infrastructure.storage.object_storage import LocalObjectStorage
@@ -185,6 +189,10 @@ class SecurityApplicationService:
 
         # Step 47: Polyglot Security Analysis Engine
         self.polyglot_engine = PolyglotSecurityAnalysisEngine()
+
+        # Step 48: Threat Intelligence Engine
+        self.threat_intel_engine = ThreatIntelligenceEngine()
+
 
 
 

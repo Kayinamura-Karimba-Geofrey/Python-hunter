@@ -342,8 +342,72 @@ def compliance_report(framework: str, fmt: str) -> None:
         click.echo(f"SHA-256 Hash: {pkg['report_signature_sha256']}")
 
 
+@main.group()
+def threat() -> None:
+    """Threat Intelligence & Security Research Platform command group."""
+    pass
+
+
+@threat.command("status")
+def threat_status() -> None:
+    """Display threat intelligence sources status and health."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    service = SecurityApplicationService()
+    sources = service.threat_intel_engine.registry.list_sources()
+    click.echo("=== Threat Intelligence Sources Status ===")
+    for s in sources:
+        status_str = "ENABLED" if s.enabled else "DISABLED"
+        click.echo(f"[{status_str}] {s.name} ({s.source_type}) - Update: {s.update_frequency} - Trust: {s.trust_level.value}")
+
+
+@threat.command("kev")
+def threat_kev() -> None:
+    """List CISA Known Exploited Vulnerabilities (KEV)."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    service = SecurityApplicationService()
+    kevs = service.threat_intel_engine.list_kev_vulnerabilities()
+    click.echo(f"=== CISA Known Exploited Vulnerabilities ({len(kevs)}) ===")
+    for k in kevs:
+        click.echo(f"• {k.cve_id} | Package: {k.affected_package} | CVSS: {k.cvss_score} | Due: {k.kev_due_date}")
+
+
+@threat.command("exploited")
+def threat_exploited() -> None:
+    """List actively exploited vulnerabilities."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    service = SecurityApplicationService()
+    exploited = service.threat_intel_engine.list_actively_exploited()
+    click.echo(f"=== Actively Exploited Vulnerabilities ({len(exploited)}) ===")
+    for e in exploited:
+        click.echo(f"• {e.cve_id} | Status: {e.exploitation_status.value} | Severity: {e.severity}")
+
+
+@threat.command("sync")
+def threat_sync() -> None:
+    """Synchronize external threat intelligence feeds."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    service = SecurityApplicationService()
+    res = service.threat_intel_engine.sync_all_sources()
+    click.echo(f"=== Synchronization Complete ===")
+    click.echo(f"Records Processed: {res['processed']}")
+    click.echo(f"Records Changed  : {res['changed']}")
+
+
+@threat.command("hunt")
+@click.argument("query", default="")
+def threat_hunt(query: str) -> None:
+    """Execute defensive threat hunting search."""
+    from python_hunter.application.services.security_app_service import SecurityApplicationService
+    service = SecurityApplicationService()
+    results = service.threat_intel_engine.threat_hunt(query)
+    click.echo(f"=== Threat Hunting Results for '{query}' ({len(results)}) ===")
+    for r in results:
+        click.echo(f"• {r['cve_id']} | CVSS: {r['cvss_score']} | KEV: {r['is_kev']} | Pkg: {r['affected_package']}")
+
+
 if __name__ == "__main__":
     main()
+
 
 
 
