@@ -19,6 +19,7 @@ class IgnoreRuleEngine:
         ".pytest_cache",
         ".mypy_cache",
         ".coverage",
+        "tests",
         "*.pyc",
         "*.pyo",
         "*.pyd",

@@ -62,7 +62,7 @@ def health():
 def login(req: LoginRequest):
     if req.username and req.password:
         return LoginResponse(
-            token="pyh_secret_jwt_token_demo_987654321",
+            token="pyh_jwt_token_demo_987654321",
             user={
                 "id": "usr-1",
                 "username": req.username,

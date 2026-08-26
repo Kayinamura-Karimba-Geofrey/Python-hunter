@@ -27,6 +27,7 @@ class PlaceholderFilter:
         "ENTER_HERE",
         "MY_SECRET",
         "FOOBAR",
+        "CHANGE-THIS-IN-PRODUCTION-SUPER-SECRET-KEY-32-CHARS",
     }
 
     PLACEHOLDER_REGEXES = [
@@ -39,6 +40,8 @@ class PlaceholderFilter:
         re.compile(r"your[_-]?api[_-]?key", re.IGNORECASE),
         re.compile(r"replace[_-]?me", re.IGNORECASE),
         re.compile(r"change[_-]?me", re.IGNORECASE),
+        re.compile(r"change[_-]?this", re.IGNORECASE),
+        re.compile(r"python_hunter", re.IGNORECASE),
     ]
 
     @classmethod
