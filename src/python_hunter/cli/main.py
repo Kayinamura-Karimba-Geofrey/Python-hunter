@@ -193,9 +193,18 @@ def ai_explain(finding_id: str) -> None:
     """Explain a deterministic finding using AI evidence grounding."""
     from python_hunter.application.services.security_app_service import SecurityApplicationService
     from python_hunter.domain.findings.finding import Finding
-    from python_hunter.domain.common.enums import Severity
+    from python_hunter.domain.common.enums import Category, Confidence, Severity
     service = SecurityApplicationService()
-    dummy_f = Finding(rule_id=finding_id, title="Dangerous os.system execution", severity=Severity.HIGH)
+    dummy_f = Finding(
+        rule_id=finding_id,
+        severity=Severity.HIGH,
+        confidence=Confidence.HIGH,
+        category=Category.CODE_SECURITY,
+        title="Dangerous os.system execution",
+        description="os.system call with dynamic input",
+        file_path="app.py",
+        location=None,
+    )
     exp = service.ai_engine.explain_finding(dummy_f)
     click.echo(f"=== AI Security Explanation [{exp.finding_id}] ===")
     click.echo(f"What Happened   : {exp.what_happened}")
@@ -212,9 +221,18 @@ def ai_prioritize(target: str) -> None:
     """Contextually prioritize findings by business asset risk."""
     from python_hunter.application.services.security_app_service import SecurityApplicationService
     from python_hunter.domain.findings.finding import Finding
-    from python_hunter.domain.common.enums import Severity
+    from python_hunter.domain.common.enums import Category, Confidence, Severity
     service = SecurityApplicationService()
-    dummy_f = Finding(rule_id="PYH-AST-004", title="os.system call", severity=Severity.HIGH)
+    dummy_f = Finding(
+        rule_id="PYH-AST-004",
+        severity=Severity.HIGH,
+        confidence=Confidence.HIGH,
+        category=Category.CODE_SECURITY,
+        title="os.system call",
+        description="os.system call detected",
+        file_path="app.py",
+        location=None,
+    )
     assessment = service.ai_engine.prioritize_finding(dummy_f, repo_name=target)
     click.echo(f"=== Intelligent Risk Prioritization ===")
     click.echo(f"Original Severity   : {assessment.original_severity}")
@@ -229,9 +247,19 @@ def ai_remediate(finding_id: str) -> None:
     """Generate intelligent remediation and optional code patch suggestions."""
     from python_hunter.application.services.security_app_service import SecurityApplicationService
     from python_hunter.domain.findings.finding import Finding
-    from python_hunter.domain.common.enums import Severity
+    from python_hunter.domain.common.enums import Category, Confidence, Severity
     service = SecurityApplicationService()
-    dummy_f = Finding(rule_id=finding_id, title="Command Injection", severity=Severity.HIGH)
+    dummy_f = Finding(
+        rule_id=finding_id,
+        severity=Severity.HIGH,
+        confidence=Confidence.HIGH,
+        category=Category.CODE_SECURITY,
+        title="Command Injection",
+        description="Command injection risk",
+        file_path="app.py",
+        location=None,
+    )
+
     rec = service.ai_engine.recommend_remediation(dummy_f)
     click.echo(f"=== Remediation Intelligence ===")
     click.echo(f"Recommended Fix  : {rec.recommended_fix}")
