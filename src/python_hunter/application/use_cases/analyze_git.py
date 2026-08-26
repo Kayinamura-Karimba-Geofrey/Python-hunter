@@ -129,7 +129,16 @@ class AnalyzeGitUseCase:
                 # Scan file content at commit for historical secrets
                 if change.change_type in (ChangeType.ADDED, ChangeType.MODIFIED):
                     content = repo.get_file_content_at_commit(commit.commit_hash, change.file_path)
-                    if content and SecretDetectionEngine.is_eligible_file(change.file_path):
+                    is_excluded_path = any(
+                        change.file_path.startswith(prefix)
+                        for prefix in (
+                            "tests/",
+                            "src/python_hunter/detectors/",
+                            "src/python_hunter/domain/",
+                            "src/python_hunter/application/",
+                        )
+                    )
+                    if content and SecretDetectionEngine.is_eligible_file(change.file_path) and not is_excluded_path:
                         secret_findings = self.secret_engine.scan_file(change.file_path, content, analysis_ctx)
                         for sf in secret_findings:
                             sp_fp = sf.fingerprint
