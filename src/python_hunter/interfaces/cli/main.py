@@ -191,7 +191,18 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Command: scan
     scan_parser = subparsers.add_parser("scan", help="Execute security scan on target directory or repository")
-    scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan")
+    scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan (local directory or remote git URL)")
+    scan_parser.add_argument("--branch", default="", help="Git branch to clone/scan")
+    scan_parser.add_argument("--commit", default="", help="Specific Git commit SHA to checkout and scan")
+    scan_parser.add_argument("--tag", default="", help="Git tag to checkout and scan")
+    scan_parser.add_argument(
+        "--format", choices=["terminal", "json"], default="terminal", help="Output format (terminal or json)"
+    )
+    scan_parser.add_argument("-o", "--output", help="Output file path")
+    scan_parser.add_argument(
+        "--fail-on", default="high", help="Severity threshold to trigger non-zero exit code (critical, high, medium, low)"
+    )
+    scan_parser.add_argument("--ci", action="store_true", help="Enable CI-friendly execution mode")
     scan_parser.add_argument("--language", action="append", help="Target language filter (e.g. java, go, rust)")
     scan_parser.add_argument("--framework", action="append", help="Target framework filter (e.g. spring, django)")
 
@@ -348,8 +359,48 @@ def run_cli(args: list[str] | None = None) -> int:
         elif parsed_args.rules_action == "info":
             return run_rules_info_command(parsed_args.rule_id)
 
+    if parsed_args.command == "scan":
+        from python_hunter.application.orchestrator.scan_orchestrator import ScanOrchestrator
+        from python_hunter.presentation.policy import PolicyEngine
+        from python_hunter.presentation.renderer import JsonRenderer, TerminalRenderer
+
+        orchestrator = ScanOrchestrator()
+        opts = {
+            "ci": getattr(parsed_args, "ci", False),
+            "language": getattr(parsed_args, "language", None),
+            "framework": getattr(parsed_args, "framework", None),
+        }
+        try:
+            res = orchestrator.run_scan(
+                target_str=parsed_args.target,
+                branch=getattr(parsed_args, "branch", ""),
+                commit=getattr(parsed_args, "commit", ""),
+                tag=getattr(parsed_args, "tag", ""),
+                fail_on=getattr(parsed_args, "fail_on", "high"),
+                options=opts,
+            )
+        except Exception as e:
+            sys.stderr.write(f"Error during scan: {e}\n")
+            return 1
+
+        policy_engine = PolicyEngine()
+        exit_code = policy_engine.evaluate(res, fail_on=getattr(parsed_args, "fail_on", "high"))
+        res.exit_code = int(exit_code)
+
+        fmt = getattr(parsed_args, "format", "terminal")
+        renderer = JsonRenderer() if fmt == "json" else TerminalRenderer()
+        output_str = renderer.render(res)
+
+        out_file = getattr(parsed_args, "output", None)
+        if out_file:
+            with open(out_file, "w", encoding="utf-8") as f:
+                f.write(output_str + "\n")
+        else:
+            sys.stdout.write(output_str + "\n")
+
+        return res.exit_code
+
     if parsed_args.command in (
-        "scan",
         "project",
         "dependencies",
         "secrets",
