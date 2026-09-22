@@ -37,7 +37,7 @@ class EvalExecAnalyzer(BaseDynamicAnalyzer):
 
                         if node.args:
                             expr_arg = node.args[0]
-                            is_const = isinstance(expr_arg, (ast.Constant, ast.Str))
+                            is_const = isinstance(expr_arg, ast.Constant)
                             val = str(getattr(expr_arg, "value", None) or getattr(expr_arg, "s", "")) if is_const else None
 
                             behaviors.append(

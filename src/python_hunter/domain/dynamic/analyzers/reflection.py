@@ -32,7 +32,7 @@ class ReflectionAnalyzer(BaseDynamicAnalyzer):
                     if func_name in ("getattr", "hasattr", "delattr"):
                         if len(node.args) >= 2:
                             attr_arg = node.args[1]
-                            if isinstance(attr_arg, (ast.Constant, ast.Str)):
+                            if isinstance(attr_arg, ast.Constant):
                                 val = getattr(attr_arg, "value", None) or getattr(attr_arg, "s", None)
                                 behaviors.append(
                                     DynamicBehavior(
@@ -63,7 +63,7 @@ class ReflectionAnalyzer(BaseDynamicAnalyzer):
                     elif func_name == "setattr":
                         if len(node.args) >= 2:
                             attr_arg = node.args[1]
-                            if isinstance(attr_arg, (ast.Constant, ast.Str)):
+                            if isinstance(attr_arg, ast.Constant):
                                 val = getattr(attr_arg, "value", None) or getattr(attr_arg, "s", None)
                                 behaviors.append(
                                     DynamicBehavior(

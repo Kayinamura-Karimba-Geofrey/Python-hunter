@@ -14,6 +14,8 @@ class TestProjectDiscoveryEngine(unittest.TestCase):
 
     def setUp(self) -> None:
         self.engine = DiscoverProjectUseCase()
+        git_dir = os.path.join(FIXTURES_DIR, "git_project", ".git")
+        os.makedirs(git_dir, exist_ok=True)
 
     def test_invalid_and_missing_paths(self) -> None:
         """Verify empty and non-existent paths raise expected domain exceptions."""

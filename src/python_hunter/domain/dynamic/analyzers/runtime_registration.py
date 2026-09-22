@@ -38,7 +38,7 @@ class RuntimeRegistrationAnalyzer(BaseDynamicAnalyzer):
                         target = None
                         if node.args:
                             first_arg = node.args[0]
-                            if isinstance(first_arg, (ast.Constant, ast.Str)):
+                            if isinstance(first_arg, ast.Constant):
                                 target = str(getattr(first_arg, "value", None) or getattr(first_arg, "s", None))
                             elif isinstance(first_arg, ast.Name):
                                 target = first_arg.id

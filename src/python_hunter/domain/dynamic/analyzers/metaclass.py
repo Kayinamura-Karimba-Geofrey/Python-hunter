@@ -51,8 +51,9 @@ class MetaclassAnalyzer(BaseDynamicAnalyzer):
                         line = getattr(node, "lineno", 1)
                         loc = Location(line_start=line, line_end=line, column_start=getattr(node, "col_offset", 0))
                         class_name = None
-                        if isinstance(node.args[0], (ast.Constant, ast.Str)):
-                            class_name = str(getattr(node.args[0], "value", None) or getattr(node.args[0], "s", None))
+                        arg_val = getattr(node.args[0], "value", None) or getattr(node.args[0], "s", None)
+                        if arg_val is not None:
+                            class_name = str(arg_val)
 
                         behaviors.append(
                             DynamicBehavior(

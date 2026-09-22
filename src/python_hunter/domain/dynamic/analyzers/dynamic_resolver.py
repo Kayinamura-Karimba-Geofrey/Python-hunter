@@ -21,9 +21,9 @@ class DynamicResolver:
         # 1. Constant literal
         if isinstance(node, ast.Constant):
             return {node.value}
-        elif isinstance(node, ast.Str):
+        elif hasattr(ast, "Str") and isinstance(node, getattr(ast, "Str")):
             return {node.s}
-        elif isinstance(node, ast.Num):
+        elif hasattr(ast, "Num") and isinstance(node, getattr(ast, "Num")):
             return {node.n}
 
         # 2. Variable lookup

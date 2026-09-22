@@ -455,7 +455,7 @@ class ModuleTaintVisitor(ast.NodeVisitor):
             # If 1st argument is a string literal (Constant or Str), SQL interpolation is avoided
             if isinstance(first_arg, ast.Constant) and isinstance(first_arg.value, str):
                 return
-            elif isinstance(first_arg, ast.Str):
+            elif hasattr(ast, "Str") and isinstance(first_arg, getattr(ast, "Str")):
                 return
 
         # 2. Command array check: subprocess.run(["ls", user_input]) without shell=True

@@ -74,9 +74,9 @@ class AuthAdapter(BaseFrameworkAdapter):
                         for kw in node.keywords:
                             if kw.arg == "options" and isinstance(kw.value, ast.Dict):
                                 for k, v in zip(kw.value.keys, kw.value.values):
+                                    k_val = getattr(k, "value", None) or getattr(k, "s", None)
                                     if (
-                                        isinstance(k, (ast.Constant, ast.Str))
-                                        and (getattr(k, "value", None) == "verify_signature" or getattr(k, "s", None) == "verify_signature")
+                                        k_val == "verify_signature"
                                         and isinstance(v, ast.Constant)
                                         and v.value is False
                                     ):

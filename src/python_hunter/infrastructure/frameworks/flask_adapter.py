@@ -150,9 +150,8 @@ class FlaskAdapter(BaseFrameworkAdapter):
                 elif isinstance(node, ast.Assign):
                     for target in node.targets:
                         target_name = getattr(target, "attr", None) or getattr(target, "id", None)
-                        if target_name in ("secret_key", "SECRET_KEY") and isinstance(node.value, (ast.Constant, ast.Str)):
-                            val = getattr(node.value, "value", None) or getattr(node.value, "s", None)
-                            if isinstance(val, str) and len(val) > 0 and not val.startswith("env:"):
+                        val = getattr(node.value, "value", None) or getattr(node.value, "s", None)
+                        if target_name in ("secret_key", "SECRET_KEY") and isinstance(val, str) and len(val) > 0 and not val.startswith("env:"):
                                 line = getattr(node, "lineno", 1)
                                 findings.append(
                                     Finding(

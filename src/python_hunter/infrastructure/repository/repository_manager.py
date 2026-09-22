@@ -49,8 +49,10 @@ class RepositoryManager:
 
             cmd = ["git", "clone", "--depth", "1"]
             if target.branch:
+                if target.branch.startswith("-"):
+                    raise ValueError(f"Potentially malicious git branch name detected: {target.branch}")
                 cmd.extend(["--branch", target.branch])
-            cmd.extend([clone_url, temp_dir])
+            cmd.extend(["--", clone_url, temp_dir])
 
             try:
                 subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -59,9 +61,11 @@ class RepositoryManager:
                 raise RuntimeError(f"Failed to clone remote repository '{target.source}' safely.") from e
 
             if target.commit:
+                if target.commit.startswith("-"):
+                    raise ValueError(f"Potentially malicious git commit hash detected: {target.commit}")
                 try:
                     subprocess.run(["git", "fetch", "--depth", "50"], cwd=temp_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    subprocess.run(["git", "checkout", target.commit], cwd=temp_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    subprocess.run(["git", "checkout", "--", target.commit], cwd=temp_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 except Exception as e:
                     self.cleanup()
                     raise RuntimeError(f"Failed to checkout commit '{target.commit}'.") from e

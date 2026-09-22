@@ -28,7 +28,7 @@ class CredentialManager:
     """Encrypted credential storage engine with secret redaction and rotation support."""
 
     def __init__(self, master_key: str = "pyh_enterprise_master_key_32bytes") -> None:
-        self._master_key = master_key
+        self._master_key = os.environ.get("PYTHON_HUNTER_MASTER_KEY", master_key)
         self._metadata_store: dict[str, CredentialMetadata] = {}
         self._encrypted_secrets_store: dict[str, str] = {}
 
