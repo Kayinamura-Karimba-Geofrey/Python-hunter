@@ -7,6 +7,7 @@ from python_hunter.application.use_cases.analyze_ast import AnalyzeASTUseCase
 from python_hunter.application.use_cases.analyze_exploitability import AnalyzeExploitabilityUseCase
 from python_hunter.application.use_cases.analyze_knowledge_graph import AnalyzeKnowledgeGraphUseCase
 from python_hunter.application.orchestrator.scan_context import ScanContext, ScanResult
+from python_hunter.domain.dependencies.npm_supply_chain import NPMSupplyChainAnalyzer
 from python_hunter.domain.discovery.language_detector import LanguageDetector
 from python_hunter.domain.language.registry import LanguageRegistry
 from python_hunter.domain.malware.analyzers.polinrider_detector import PolinRiderDetector
@@ -27,6 +28,7 @@ class ScanOrchestrator:
         self.exploitability_use_case = AnalyzeExploitabilityUseCase()
         self.polinrider_detector = PolinRiderDetector()
         self.polinrider_cleaner = PolinRiderCleaner()
+        self.npm_supply_chain = NPMSupplyChainAnalyzer()
 
     def run_scan(
         self,
@@ -58,20 +60,25 @@ class ScanOrchestrator:
                 cleanup_result = self.polinrider_cleaner.clean(local_path)
                 context.options["cleanup_result"] = cleanup_result
 
+            # Analyze NPM Supply Chain
+            npm_findings = self.npm_supply_chain.analyze_workspace(local_path)
+
+            all_findings = malware_findings + npm_findings
+
             # Execute Knowledge Graph & Attack Path Analysis
             graph, attack_paths, project_risk = self.graph_use_case.execute(local_path)
 
-            if malware_findings and project_risk:
+            if all_findings and project_risk:
                 project_risk.overall_score = max(project_risk.overall_score, 90.0)
 
             context.end_time = datetime.now(timezone.utc).isoformat()
             return ScanResult(
                 context=context,
-                findings=malware_findings,
+                findings=all_findings,
                 graph=graph,
                 attack_paths=attack_paths,
                 project_risk=project_risk,
-                exit_code=1 if malware_findings else 0,
+                exit_code=1 if all_findings else 0,
             )
         finally:
             self.repo_manager.cleanup()
