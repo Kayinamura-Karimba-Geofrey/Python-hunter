@@ -79,8 +79,30 @@ class NPMSupplyChainAnalyzer:
 
     @staticmethod
     def _is_typosquat(name1: str, name2: str) -> bool:
-        """Check for single-character edits or transpositions between dependency names."""
-        if abs(len(name1) - len(name2)) > 1:
+        """Check for single-character edits, transpositions, or insertions/deletions between dependency names."""
+        if name1 == name2 or abs(len(name1) - len(name2)) > 1:
             return False
-        diffs = sum(1 for a, b in zip(name1, name2) if a != b)
-        return diffs == 1
+
+        # Case 1: Same length (substitution or adjacent transposition)
+        if len(name1) == len(name2):
+            mismatches = [i for i, (a, b) in enumerate(zip(name1, name2)) if a != b]
+            if len(mismatches) == 1:
+                return True
+            if len(mismatches) == 2:
+                i, j = mismatches
+                return j == i + 1 and name1[i] == name2[j] and name1[j] == name2[i]
+            return False
+
+        # Case 2: Length difference of 1 (insertion or deletion)
+        short, long = (name1, name2) if len(name1) < len(name2) else (name2, name1)
+        i, j, diffs = 0, 0, 0
+        while i < len(short) and j < len(long):
+            if short[i] == long[j]:
+                i += 1
+                j += 1
+            else:
+                diffs += 1
+                if diffs > 1:
+                    return False
+                j += 1
+        return True

