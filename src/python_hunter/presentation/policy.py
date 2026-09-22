@@ -31,12 +31,12 @@ class PolicyEngine:
         """Determines CLI exit code based on project risk and severity thresholds."""
         threshold = self.SEVERITY_ORDER.get(fail_on.lower(), 3)
 
-        if result.project_risk and result.project_risk.overall_score >= 80.0 and threshold <= 3:
-            return ExitCode.POLICY_VIOLATION
-
         for finding in result.findings:
             f_severity = finding.severity.value.lower()
             if self.SEVERITY_ORDER.get(f_severity, 0) >= threshold:
                 return ExitCode.POLICY_VIOLATION
+
+        if result.project_risk and result.project_risk.overall_score >= 80.0 and threshold <= 3 and len(result.findings) > 0:
+            return ExitCode.POLICY_VIOLATION
 
         return ExitCode.SUCCESS
