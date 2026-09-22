@@ -56,3 +56,9 @@ Thumbs.db
 *.cmd
 *.ps1
 config.bat
+
+# Scan Artifacts & Backups
+*.sarif
+python-hunter-report.*
+*.pyh_backup*
+
