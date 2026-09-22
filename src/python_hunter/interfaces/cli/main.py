@@ -194,9 +194,11 @@ def create_parser() -> argparse.ArgumentParser:
     scan_parser.add_argument("target", nargs="?", default=".", help="Target path to scan (local directory or remote git URL)")
     scan_parser.add_argument("--branch", default="", help="Git branch to clone/scan")
     scan_parser.add_argument("--commit", default="", help="Specific Git commit SHA to checkout and scan")
-    scan_parser.add_argument("--tag", default="", help="Git tag to checkout and scan")
     scan_parser.add_argument(
-        "--format", choices=["terminal", "json"], default="terminal", help="Output format (terminal or json)"
+        "--format",
+        choices=["terminal", "json", "sarif", "markdown", "md", "html", "csv"],
+        default="terminal",
+        help="Output format (terminal, json, sarif, markdown, html, csv)",
     )
     scan_parser.add_argument("-o", "--output", help="Output file path")
     scan_parser.add_argument(
@@ -511,8 +513,10 @@ def run_cli(args: list[str] | None = None) -> int:
         exit_code = policy_engine.evaluate(res, fail_on=getattr(parsed_args, "fail_on", "high"))
         res.exit_code = int(exit_code)
 
+        from python_hunter.presentation.renderer import get_renderer
+
         fmt = getattr(parsed_args, "format", "terminal")
-        renderer = JsonRenderer() if fmt == "json" else TerminalRenderer()
+        renderer = get_renderer(fmt)
         output_str = renderer.render(res)
 
         out_file = getattr(parsed_args, "output", None)
