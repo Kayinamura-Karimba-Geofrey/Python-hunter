@@ -42,30 +42,89 @@ class RepositoryManager:
             self.temp_dirs.append(temp_dir)
 
             clone_url = target.repository_url
-            if self.credentials.github_token and "https://github.com/" in clone_url:
+            token = self.credentials.github_token or os.environ.get("GITHUB_TOKEN")
+            if token and "https://github.com/" in clone_url:
                 clone_url = clone_url.replace(
-                    "https://github.com/", f"https://x-access-token:{self.credentials.github_token}@github.com/"
+                    "https://github.com/", f"https://x-access-token:{token}@github.com/"
                 )
 
-            cmd = ["git", "clone", "--depth", "1"]
-            if target.branch:
-                if target.branch.startswith("-"):
-                    raise ValueError(f"Potentially malicious git branch name detected: {target.branch}")
-                cmd.extend(["--branch", target.branch])
-            cmd.extend(["--", clone_url, temp_dir])
+            git_env = os.environ.copy()
+            git_env["GIT_TERMINAL_PROMPT"] = "0"
 
+            sys.stdout.write(f"[*] Acquiring remote repository: {target.source} ...\n")
+            sys.stdout.flush()
+
+            def build_clone_cmd(url: str) -> list[str]:
+                c = ["git", "clone", "--depth", "1"]
+                if target.branch:
+                    if target.branch.startswith("-"):
+                        raise ValueError(f"Potentially malicious git branch name detected: {target.branch}")
+                    c.extend(["--branch", target.branch])
+                c.extend(["--", url, temp_dir])
+                return c
+
+            cmd = build_clone_cmd(clone_url)
             try:
-                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            except Exception as e:
+                clone_proc = subprocess.run(
+                    cmd, capture_output=True, text=True, timeout=600, env=git_env, check=False
+                )
+            except subprocess.TimeoutExpired as e:
                 self.cleanup()
-                raise RuntimeError(f"Failed to clone remote repository '{target.source}' safely.") from e
+                raise RuntimeError(f"Cloning '{target.source}' timed out after 600 seconds.") from e
+
+            # If HTTPS clone failed (e.g. private repo authentication required) and no token was provided,
+            # attempt fallback to SSH if the target is a GitHub repo.
+            if clone_proc.returncode != 0 and clone_url.startswith("https://github.com/"):
+                owner = target.metadata.get("owner")
+                repo = target.metadata.get("repo")
+                if owner and repo:
+                    ssh_url = f"git@github.com:{owner}/{repo}.git"
+                    sys.stdout.write(f"[*] HTTPS clone failed (private repository). Retrying via SSH: {ssh_url} ...\n")
+                    sys.stdout.flush()
+                    if os.path.exists(temp_dir):
+                        shutil.rmtree(temp_dir, ignore_errors=True)
+                    os.makedirs(temp_dir, exist_ok=True)
+                    ssh_cmd = build_clone_cmd(ssh_url)
+                    try:
+                        ssh_proc = subprocess.run(
+                            ssh_cmd, capture_output=True, text=True, timeout=600, env=git_env, check=False
+                        )
+                        if ssh_proc.returncode == 0:
+                            clone_proc = ssh_proc
+                        else:
+                            clone_proc = ssh_proc
+                    except subprocess.TimeoutExpired as e:
+                        self.cleanup()
+                        raise RuntimeError(f"SSH clone '{ssh_url}' timed out after 600 seconds.") from e
+
+            if clone_proc.returncode != 0:
+                self.cleanup()
+                err_msg = clone_proc.stderr.strip() if clone_proc.stderr else f"Exit code {clone_proc.returncode}"
+                raise RuntimeError(
+                    f"Failed to clone remote repository '{target.source}' safely: {err_msg}\n"
+                    f"Tip: For private repositories, configure GITHUB_TOKEN or use an SSH URL (git@github.com:...)."
+                )
 
             if target.commit:
                 if target.commit.startswith("-"):
                     raise ValueError(f"Potentially malicious git commit hash detected: {target.commit}")
                 try:
-                    subprocess.run(["git", "fetch", "--depth", "50"], cwd=temp_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                    subprocess.run(["git", "checkout", "--", target.commit], cwd=temp_dir, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    subprocess.run(
+                        ["git", "fetch", "--depth", "50"],
+                        cwd=temp_dir,
+                        check=True,
+                        capture_output=True,
+                        timeout=60,
+                        env=git_env,
+                    )
+                    subprocess.run(
+                        ["git", "checkout", "--", target.commit],
+                        cwd=temp_dir,
+                        check=True,
+                        capture_output=True,
+                        timeout=60,
+                        env=git_env,
+                    )
                 except Exception as e:
                     self.cleanup()
                     raise RuntimeError(f"Failed to checkout commit '{target.commit}'.") from e

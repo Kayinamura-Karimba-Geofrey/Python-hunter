@@ -203,8 +203,17 @@ def create_parser() -> argparse.ArgumentParser:
         "--fail-on", default="high", help="Severity threshold to trigger non-zero exit code (critical, high, medium, low)"
     )
     scan_parser.add_argument("--ci", action="store_true", help="Enable CI-friendly execution mode")
+    scan_parser.add_argument("--clean", action="store_true", help="Automatically remediate/clean detected malware threats (e.g. PolinRider)")
     scan_parser.add_argument("--language", action="append", help="Target language filter (e.g. java, go, rust)")
     scan_parser.add_argument("--framework", action="append", help="Target framework filter (e.g. spring, django)")
+
+    # Command: clean
+    clean_parser = subparsers.add_parser("clean", help="Disinfect repository from malware threats (e.g. PolinRider / TasksJacker)")
+    clean_parser.add_argument("target", nargs="?", default=".", help="Target repository directory to disinfect")
+    clean_parser.add_argument("--threat", choices=["all", "polinrider"], default="all", help="Specific malware threat to clean (default: all)")
+    clean_parser.add_argument(
+        "--format", choices=["terminal", "json"], default="terminal", help="Output display format (terminal or json)"
+    )
 
     subparsers.add_parser("project", help="Manage project records")
     subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM")
@@ -359,6 +368,59 @@ def run_cli(args: list[str] | None = None) -> int:
         elif parsed_args.rules_action == "info":
             return run_rules_info_command(parsed_args.rule_id)
 
+    if parsed_args.command == "clean":
+        from python_hunter.domain.malware.cleaners.polinrider_cleaner import PolinRiderCleaner
+        cleaner = PolinRiderCleaner()
+        cleanup = cleaner.clean(parsed_args.target)
+        if getattr(parsed_args, "format", "terminal") == "json":
+            import json
+            cleanup_dict = {
+                "success": cleanup.success,
+                "target": parsed_args.target,
+                "tasks_sanitized": cleanup.tasks_sanitized,
+                "settings_sanitized": cleanup.settings_sanitized,
+                "droppers_deleted": cleanup.droppers_deleted,
+                "trojan_fonts_deleted": cleanup.trojan_fonts_deleted,
+                "build_configs_cleaned": cleanup.build_configs_cleaned,
+                "gitignore_cleaned": cleanup.gitignore_cleaned,
+                "details": cleanup.details,
+            }
+            sys.stdout.write(json.dumps(cleanup_dict, indent=2) + "\n")
+        else:
+            has_action = bool(
+                cleanup.tasks_sanitized
+                or cleanup.settings_sanitized
+                or cleanup.droppers_deleted
+                or cleanup.trojan_fonts_deleted
+                or cleanup.build_configs_cleaned
+                or cleanup.gitignore_cleaned
+            )
+            sys.stdout.write("==========================================================\n")
+            sys.stdout.write(" Python Hunter Malware Disinfection & Remediation\n")
+            sys.stdout.write("==========================================================\n")
+            sys.stdout.write(f"Target Repository : {parsed_args.target}\n")
+            sys.stdout.write(f"Threat Targeted   : PolinRider / TasksJacker\n")
+            sys.stdout.write(f"Status            : {'DISINFECTED' if has_action else 'NO THREATS FOUND'}\n")
+            sys.stdout.write("==========================================================\n")
+            if cleanup.tasks_sanitized:
+                sys.stdout.write(f" [✓] Disinfected tasks.json ({cleanup.tasks_sanitized} malicious tasks removed)\n")
+            if cleanup.settings_sanitized:
+                sys.stdout.write(f" [✓] Sanitized settings.json ({cleanup.settings_sanitized} settings adjusted)\n")
+            if cleanup.droppers_deleted:
+                sys.stdout.write(f" [-] Deleted droppers: {', '.join(cleanup.droppers_deleted)}\n")
+            if cleanup.trojan_fonts_deleted:
+                sys.stdout.write(f" [-] Deleted Trojan fonts: {', '.join(cleanup.trojan_fonts_deleted)}\n")
+            if cleanup.build_configs_cleaned:
+                sys.stdout.write(f" [*] Cleaned build configs: {', '.join(cleanup.build_configs_cleaned)}\n")
+            if cleanup.gitignore_cleaned:
+                sys.stdout.write(" [✓] Restored poisoned .gitignore rules\n")
+            if cleanup.details:
+                sys.stdout.write("\nDetails:\n")
+                for d in cleanup.details:
+                    sys.stdout.write(f"  • {d}\n")
+            sys.stdout.write("==========================================================\n")
+        return 0 if cleanup.success else 1
+
     if parsed_args.command == "scan":
         from python_hunter.application.orchestrator.scan_orchestrator import ScanOrchestrator
         from python_hunter.presentation.policy import PolicyEngine
@@ -367,6 +429,7 @@ def run_cli(args: list[str] | None = None) -> int:
         orchestrator = ScanOrchestrator()
         opts = {
             "ci": getattr(parsed_args, "ci", False),
+            "clean": getattr(parsed_args, "clean", False),
             "language": getattr(parsed_args, "language", None),
             "framework": getattr(parsed_args, "framework", None),
         }

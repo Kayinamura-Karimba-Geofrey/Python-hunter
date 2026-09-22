@@ -33,6 +33,32 @@ class TerminalRenderer(OutputRenderer):
             f" Project Risk: {risk_str} ({risk_score:.1f}/100)",
             "──────────────────────────────────────────────",
         ]
+        malware_findings = [f for f in result.findings if getattr(f, "category", None) and f.category.value == "MALWARE_RISK"]
+        if malware_findings:
+            lines.append("──────────────────────────────────────────────")
+            lines.append(f" [!] MALWARE DETECTED: {len(malware_findings)} PolinRider / Supply-Chain Threats")
+            lines.append("──────────────────────────────────────────────")
+            for f in malware_findings:
+                lines.append(f"  • [{f.severity.value}] {f.title}")
+                lines.append(f"    File:     {f.file_path}")
+                if f.evidence:
+                    lines.append(f"    Evidence: {f.evidence[:70]}")
+            lines.append("──────────────────────────────────────────────")
+
+        cleanup = result.context.options.get("cleanup_result")
+        if cleanup:
+            lines.append("──────────────────────────────────────────────")
+            lines.append("        AUTOMATED DISINFECTION APPLIED        ")
+            lines.append("──────────────────────────────────────────────")
+            lines.append(f" VS Code Tasks Disinfected:   {cleanup.tasks_sanitized}")
+            lines.append(f" VS Code Settings Sanitized:  {cleanup.settings_sanitized}")
+            lines.append(f" Dropper Scripts Deleted:     {len(cleanup.droppers_deleted)}")
+            lines.append(f" Trojan Fonts Deleted:        {len(cleanup.trojan_fonts_deleted)}")
+            lines.append(f" Build Configurations Cleaned:{len(cleanup.build_configs_cleaned)}")
+            if cleanup.gitignore_cleaned:
+                lines.append(" .gitignore Rules Restored:   YES")
+            lines.append("──────────────────────────────────────────────")
+
         if result.exit_code != 0:
             lines.append(" Result:       [!] SECURITY POLICY VIOLATION FAILED")
         else:
@@ -45,6 +71,18 @@ class JsonRenderer(OutputRenderer):
     """Renders structured JSON report output."""
 
     def render(self, result: ScanResult) -> str:
+        cleanup = result.context.options.get("cleanup_result")
+        cleanup_data = None
+        if cleanup:
+            cleanup_data = {
+                "tasks_sanitized": cleanup.tasks_sanitized,
+                "settings_sanitized": cleanup.settings_sanitized,
+                "droppers_deleted": cleanup.droppers_deleted,
+                "trojan_fonts_deleted": cleanup.trojan_fonts_deleted,
+                "build_configs_cleaned": cleanup.build_configs_cleaned,
+                "gitignore_cleaned": cleanup.gitignore_cleaned,
+            }
+
         data = {
             "scan_id": result.context.scan_id,
             "target": result.context.target.source if result.context.target else "",
@@ -52,6 +90,17 @@ class JsonRenderer(OutputRenderer):
             "risk_score": result.project_risk.overall_score if result.project_risk else 0.0,
             "attack_paths_count": len(result.attack_paths),
             "findings_count": len(result.findings),
+            "findings": [
+                {
+                    "rule_id": f.rule_id,
+                    "title": f.title,
+                    "severity": f.severity.value,
+                    "file_path": f.file_path,
+                    "evidence": f.evidence,
+                }
+                for f in result.findings
+            ],
+            "cleanup": cleanup_data,
             "exit_code": result.exit_code,
         }
         return json.dumps(data, indent=2)

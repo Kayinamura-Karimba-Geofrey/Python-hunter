@@ -9,6 +9,8 @@ from python_hunter.application.use_cases.analyze_knowledge_graph import AnalyzeK
 from python_hunter.application.orchestrator.scan_context import ScanContext, ScanResult
 from python_hunter.domain.discovery.language_detector import LanguageDetector
 from python_hunter.domain.language.registry import LanguageRegistry
+from python_hunter.domain.malware.analyzers.polinrider_detector import PolinRiderDetector
+from python_hunter.domain.malware.cleaners.polinrider_cleaner import PolinRiderCleaner
 from python_hunter.infrastructure.repository.repository_manager import RepositoryManager
 from python_hunter.infrastructure.repository.target_resolver import ScanTarget, TargetResolver
 
@@ -23,6 +25,8 @@ class ScanOrchestrator:
         self.language_registry = LanguageRegistry()
         self.graph_use_case = AnalyzeKnowledgeGraphUseCase()
         self.exploitability_use_case = AnalyzeExploitabilityUseCase()
+        self.polinrider_detector = PolinRiderDetector()
+        self.polinrider_cleaner = PolinRiderCleaner()
 
     def run_scan(
         self,
@@ -46,17 +50,28 @@ class ScanOrchestrator:
             detected_langs = self.language_detector.detect_languages(local_path)
             context.options["detected_languages"] = [lang.value for lang in detected_langs]
 
+            # Detect PolinRider / TasksJacker Malware
+            malware_findings = self.polinrider_detector.detect(local_path)
+
+            # Automated Cleanup if requested
+            if options.get("clean", False):
+                cleanup_result = self.polinrider_cleaner.clean(local_path)
+                context.options["cleanup_result"] = cleanup_result
+
             # Execute Knowledge Graph & Attack Path Analysis
             graph, attack_paths, project_risk = self.graph_use_case.execute(local_path)
+
+            if malware_findings and project_risk:
+                project_risk.overall_score = max(project_risk.overall_score, 90.0)
 
             context.end_time = datetime.now(timezone.utc).isoformat()
             return ScanResult(
                 context=context,
-                findings=[],
+                findings=malware_findings,
                 graph=graph,
                 attack_paths=attack_paths,
                 project_risk=project_risk,
-                exit_code=0,
+                exit_code=1 if malware_findings else 0,
             )
         finally:
             self.repo_manager.cleanup()
