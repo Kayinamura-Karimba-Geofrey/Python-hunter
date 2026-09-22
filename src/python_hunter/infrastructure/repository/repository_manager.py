@@ -4,6 +4,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from dataclasses import dataclass
 from typing import Optional
@@ -50,6 +51,7 @@ class RepositoryManager:
 
             git_env = os.environ.copy()
             git_env["GIT_TERMINAL_PROMPT"] = "0"
+            git_env["GIT_SSH_COMMAND"] = "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
 
             sys.stdout.write(f"[*] Acquiring remote repository: {target.source} ...\n")
             sys.stdout.flush()
@@ -66,11 +68,11 @@ class RepositoryManager:
             cmd = build_clone_cmd(clone_url)
             try:
                 clone_proc = subprocess.run(
-                    cmd, capture_output=True, text=True, timeout=600, env=git_env, check=False
+                    cmd, capture_output=True, text=True, timeout=120, env=git_env, check=False
                 )
             except subprocess.TimeoutExpired as e:
                 self.cleanup()
-                raise RuntimeError(f"Cloning '{target.source}' timed out after 600 seconds.") from e
+                raise RuntimeError(f"Cloning '{target.source}' timed out after 120 seconds.") from e
 
             # If HTTPS clone failed (e.g. private repo authentication required) and no token was provided,
             # attempt fallback to SSH if the target is a GitHub repo.
@@ -87,7 +89,7 @@ class RepositoryManager:
                     ssh_cmd = build_clone_cmd(ssh_url)
                     try:
                         ssh_proc = subprocess.run(
-                            ssh_cmd, capture_output=True, text=True, timeout=600, env=git_env, check=False
+                            ssh_cmd, capture_output=True, text=True, timeout=120, env=git_env, check=False
                         )
                         if ssh_proc.returncode == 0:
                             clone_proc = ssh_proc

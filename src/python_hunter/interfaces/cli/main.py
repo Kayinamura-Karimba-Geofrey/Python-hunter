@@ -209,7 +209,9 @@ def create_parser() -> argparse.ArgumentParser:
 
     # Command: clean
     clean_parser = subparsers.add_parser("clean", help="Disinfect repository from malware threats (e.g. PolinRider / TasksJacker)")
-    clean_parser.add_argument("target", nargs="?", default=".", help="Target repository directory to disinfect")
+    clean_parser.add_argument("target", nargs="?", default=".", help="Target repository directory or remote Git URL to disinfect")
+    clean_parser.add_argument("--branch", default="", help="Git branch to clone/disinfect (for remote repositories)")
+    clean_parser.add_argument("--dest", default="", help="Local destination directory when disinfecting a remote repository")
     clean_parser.add_argument("--threat", choices=["all", "polinrider"], default="all", help="Specific malware threat to clean (default: all)")
     clean_parser.add_argument(
         "--format", choices=["terminal", "json"], default="terminal", help="Output display format (terminal or json)"
@@ -369,14 +371,65 @@ def run_cli(args: list[str] | None = None) -> int:
             return run_rules_info_command(parsed_args.rule_id)
 
     if parsed_args.command == "clean":
+        import os
+        import subprocess
         from python_hunter.domain.malware.cleaners.polinrider_cleaner import PolinRiderCleaner
+
+        target_input = parsed_args.target.strip()
+        is_remote = target_input.startswith(("http://", "https://", "git@")) or target_input.endswith(".git")
+        local_path = target_input
+
+        if is_remote:
+            from python_hunter.infrastructure.repository.target_resolver import TargetResolver
+            resolver = TargetResolver()
+            scan_target = resolver.resolve(target_input, branch=getattr(parsed_args, "branch", ""))
+            repo_name = scan_target.metadata.get("repo", "repo")
+            dest_dir = getattr(parsed_args, "dest", "") or f"./{repo_name}-disinfected"
+            dest_dir = os.path.abspath(dest_dir)
+
+            if os.path.exists(dest_dir):
+                sys.stderr.write(f"Notice: Destination directory '{dest_dir}' already exists. Disinfecting existing files...\n")
+            else:
+                sys.stdout.write(f"[*] Cloning remote repository '{target_input}' to '{dest_dir}' ...\n")
+                sys.stdout.flush()
+                git_env = os.environ.copy()
+                git_env["GIT_TERMINAL_PROMPT"] = "0"
+                git_env["GIT_SSH_COMMAND"] = "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
+
+                clone_cmd = ["git", "clone", "--depth", "1"]
+                branch = getattr(parsed_args, "branch", "")
+                if branch:
+                    clone_cmd.extend(["--branch", branch])
+                clone_cmd.extend(["--", scan_target.repository_url, dest_dir])
+
+                proc = subprocess.run(clone_cmd, capture_output=True, text=True, env=git_env)
+                if proc.returncode != 0 and scan_target.repository_url.startswith("https://github.com/"):
+                    owner = scan_target.metadata.get("owner")
+                    repo = scan_target.metadata.get("repo")
+                    if owner and repo:
+                        ssh_url = f"git@github.com:{owner}/{repo}.git"
+                        sys.stdout.write(f"[*] Retrying clone via SSH: {ssh_url} ...\n")
+                        sys.stdout.flush()
+                        clone_cmd = ["git", "clone", "--depth", "1"]
+                        if branch:
+                            clone_cmd.extend(["--branch", branch])
+                        clone_cmd.extend(["--", ssh_url, dest_dir])
+                        proc = subprocess.run(clone_cmd, capture_output=True, text=True, env=git_env)
+
+                if proc.returncode != 0:
+                    sys.stderr.write(f"Error: Failed to clone repository '{target_input}': {proc.stderr}\n")
+                    return 1
+
+            local_path = dest_dir
+
         cleaner = PolinRiderCleaner()
-        cleanup = cleaner.clean(parsed_args.target)
+        cleanup = cleaner.clean(local_path)
         if getattr(parsed_args, "format", "terminal") == "json":
             import json
             cleanup_dict = {
                 "success": cleanup.success,
-                "target": parsed_args.target,
+                "target": target_input,
+                "local_path": local_path,
                 "tasks_sanitized": cleanup.tasks_sanitized,
                 "settings_sanitized": cleanup.settings_sanitized,
                 "droppers_deleted": cleanup.droppers_deleted,
@@ -398,7 +451,9 @@ def run_cli(args: list[str] | None = None) -> int:
             sys.stdout.write("==========================================================\n")
             sys.stdout.write(" Python Hunter Malware Disinfection & Remediation\n")
             sys.stdout.write("==========================================================\n")
-            sys.stdout.write(f"Target Repository : {parsed_args.target}\n")
+            sys.stdout.write(f"Target Repository : {target_input}\n")
+            if is_remote:
+                sys.stdout.write(f"Disinfected At    : {local_path}\n")
             sys.stdout.write(f"Threat Targeted   : PolinRider / TasksJacker\n")
             sys.stdout.write(f"Status            : {'DISINFECTED' if has_action else 'NO THREATS FOUND'}\n")
             sys.stdout.write("==========================================================\n")
@@ -418,6 +473,12 @@ def run_cli(args: list[str] | None = None) -> int:
                 sys.stdout.write("\nDetails:\n")
                 for d in cleanup.details:
                     sys.stdout.write(f"  • {d}\n")
+            if is_remote and has_action:
+                sys.stdout.write("\nNext Steps to Push Cleaned Repository:\n")
+                sys.stdout.write(f"  cd {local_path}\n")
+                sys.stdout.write("  git status\n")
+                sys.stdout.write("  git commit -am \"chore(security): disinfect PolinRider malware artifacts\"\n")
+                sys.stdout.write("  git push\n")
             sys.stdout.write("==========================================================\n")
         return 0 if cleanup.success else 1
 
