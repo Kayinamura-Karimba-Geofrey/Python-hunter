@@ -214,6 +214,7 @@ def create_parser() -> argparse.ArgumentParser:
     clean_parser.add_argument("target", nargs="?", default=".", help="Target repository directory or remote Git URL to disinfect")
     clean_parser.add_argument("--branch", default="", help="Git branch to clone/disinfect (for remote repositories)")
     clean_parser.add_argument("--dest", default="", help="Local destination directory when disinfecting a remote repository")
+    clean_parser.add_argument("--create-pr", action="store_true", help="Automatically push changes and open a GitHub remediation Pull Request")
     clean_parser.add_argument("--threat", choices=["all", "polinrider"], default="all", help="Specific malware threat to clean (default: all)")
     clean_parser.add_argument(
         "--format", choices=["terminal", "json"], default="terminal", help="Output display format (terminal or json)"
@@ -476,11 +477,80 @@ def run_cli(args: list[str] | None = None) -> int:
                 for d in cleanup.details:
                     sys.stdout.write(f"  • {d}\n")
             if is_remote and has_action:
-                sys.stdout.write("\nNext Steps to Push Cleaned Repository:\n")
-                sys.stdout.write(f"  cd {local_path}\n")
-                sys.stdout.write("  git status\n")
-                sys.stdout.write("  git commit -am \"chore(security): disinfect PolinRider malware artifacts\"\n")
-                sys.stdout.write("  git push\n")
+                if getattr(parsed_args, "create_pr", False):
+                    import time
+                    sys.stdout.write("\n[*] Creating GitHub Remediation Pull Request ...\n")
+                    sys.stdout.flush()
+                    ts = int(time.time())
+                    pr_branch = f"fix/security-disinfection-{ts}"
+
+                    # Ensure git identity is configured
+                    subprocess.run(["git", "config", "user.name", "Python Hunter Security"], cwd=local_path, check=False)
+                    subprocess.run(["git", "config", "user.email", "security@python-hunter.local"], cwd=local_path, check=False)
+
+                    # Create branch and commit
+                    subprocess.run(["git", "checkout", "-b", pr_branch], cwd=local_path, check=False)
+                    subprocess.run(["git", "add", "-A"], cwd=local_path, check=False)
+                    commit_msg = "chore(security): remediate PolinRider / TasksJacker malware artifacts\n\nAutomated remediation by Python Hunter"
+                    subprocess.run(["git", "commit", "-m", commit_msg], cwd=local_path, check=False)
+
+                    # Push branch
+                    push_res = subprocess.run(["git", "push", "-u", "origin", pr_branch], cwd=local_path, capture_output=True, text=True, check=False)
+                    if push_res.returncode == 0:
+                        sys.stdout.write(f" [✓] Pushed remediation branch: {pr_branch}\n")
+                        owner = scan_target.metadata.get("owner", "")
+                        repo = scan_target.metadata.get("repo", "")
+                        base_b = getattr(parsed_args, "branch", "") or "main"
+
+                        token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
+                        pr_url = None
+                        if token and owner and repo:
+                            import urllib.request
+                            import json
+                            pr_payload = {
+                                "title": "chore(security): remediate PolinRider / TasksJacker malware artifacts",
+                                "body": (
+                                    "## Python Hunter Automated Remediation\n\n"
+                                    "This PR was automatically created by **Python Hunter** to disinfect malware artifacts:\n"
+                                    f"- Tasks Sanitized: {cleanup.tasks_sanitized}\n"
+                                    f"- Settings Sanitized: {cleanup.settings_sanitized}\n"
+                                    f"- Dropper Scripts Removed: {len(cleanup.droppers_deleted)}\n"
+                                    f"- Trojan Font Payloads Removed: {len(cleanup.trojan_fonts_deleted)}\n"
+                                    f"- Build Configs Cleaned: {len(cleanup.build_configs_cleaned)}\n"
+                                ),
+                                "head": pr_branch,
+                                "base": base_b,
+                            }
+                            req = urllib.request.Request(
+                                f"https://api.github.com/repos/{owner}/{repo}/pulls",
+                                data=json.dumps(pr_payload).encode("utf-8"),
+                                headers={
+                                    "Authorization": f"Bearer {token}",
+                                    "Accept": "application/vnd.github+json",
+                                    "Content-Type": "application/json",
+                                    "User-Agent": "Python-Hunter",
+                                },
+                            )
+                            try:
+                                with urllib.request.urlopen(req, timeout=15) as resp:
+                                    pr_data = json.loads(resp.read().decode("utf-8"))
+                                    pr_url = pr_data.get("html_url")
+                            except Exception:
+                                pass
+
+                        if pr_url:
+                            sys.stdout.write(f" [✓] Created Pull Request: {pr_url}\n")
+                        else:
+                            compare_url = f"https://github.com/{owner}/{repo}/compare/{base_b}...{pr_branch}?expand=1"
+                            sys.stdout.write(f" [✓] Open Pull Request via URL: {compare_url}\n")
+                    else:
+                        sys.stderr.write(f" [!] Failed to push branch '{pr_branch}': {push_res.stderr.strip()}\n")
+                else:
+                    sys.stdout.write("\nNext Steps to Push Cleaned Repository:\n")
+                    sys.stdout.write(f"  cd {local_path}\n")
+                    sys.stdout.write("  git status\n")
+                    sys.stdout.write("  git commit -am \"chore(security): disinfect PolinRider malware artifacts\"\n")
+                    sys.stdout.write("  git push\n")
             sys.stdout.write("==========================================================\n")
         return 0 if cleanup.success else 1
 

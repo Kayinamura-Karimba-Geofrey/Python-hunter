@@ -57,7 +57,7 @@ class RepositoryManager:
             sys.stdout.flush()
 
             def build_clone_cmd(url: str) -> list[str]:
-                c = ["git", "clone", "--depth", "1"]
+                c = ["git", "clone", "--depth", "1", "--single-branch"]
                 if target.branch:
                     if target.branch.startswith("-"):
                         raise ValueError(f"Potentially malicious git branch name detected: {target.branch}")
