@@ -48,9 +48,8 @@ pip install -e ".[dev]"
 Detailed architecture specifications, component designs, REST API specs, and development roadmaps are available in the [docs](docs/) directory.
 
 * [Architecture Specification](docs/architecture/)
-* [API Guide](docs/api/)
-* [CLI Reference](docs/cli/)
-* [Rule Taxonomy](docs/rules/)
+* [Operations Runbook](docs/operations/runbook.md)
+* [CI/CD Integration Templates](docs/CI_TEMPLATES.md)
 * [Contributing Guide](CONTRIBUTING.md)
 
 ---
@@ -58,4 +57,3 @@ Detailed architecture specifications, component designs, REST API specs, and dev
 ## License
 
 This project is licensed under the Apache 2.0 License - see the [LICENSE](LICENSE) file for details.
-# Python-hunter

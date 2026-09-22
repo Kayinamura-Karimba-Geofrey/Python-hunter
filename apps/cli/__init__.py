@@ -1,1 +1,0 @@
-"""CLI execution application entrypoint."""
