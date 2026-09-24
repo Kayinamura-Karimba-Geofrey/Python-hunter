@@ -29,21 +29,50 @@ class TerminalRenderer(OutputRenderer):
             f" Target:       {target_name}",
             f" Languages:    {langs}",
             f" Scan ID:      {result.context.scan_id}",
+            f" Total Issues: {len(result.findings)}",
             f" Attack Paths: {paths_count}",
             f" Project Risk: {risk_str} ({risk_score:.1f}/100)",
             "──────────────────────────────────────────────",
         ]
+
         malware_findings = [f for f in result.findings if getattr(f, "category", None) and f.category.value == "MALWARE_RISK"]
+        secret_findings = [f for f in result.findings if getattr(f, "category", None) and f.category.value == "SECRET_LEAK"]
+        supply_findings = [
+            f for f in result.findings
+            if getattr(f, "category", None) and f.category.value in ("SUPPLY_CHAIN", "VULNERABLE_DEPENDENCY", "DEPENDENCY")
+        ]
+
         if malware_findings:
             lines.append("──────────────────────────────────────────────")
-            lines.append(f" [!] MALWARE DETECTED: {len(malware_findings)} PolinRider / Supply-Chain Threats")
+            lines.append(f" [!] MALWARE DETECTED: {len(malware_findings)} PolinRider / Threat(s)")
             lines.append("──────────────────────────────────────────────")
             for f in malware_findings:
                 lines.append(f"  • [{f.severity.value}] {f.title}")
                 lines.append(f"    File:     {f.file_path}")
                 if f.evidence:
                     lines.append(f"    Evidence: {f.evidence[:70]}")
+
+        if secret_findings:
             lines.append("──────────────────────────────────────────────")
+            lines.append(f" [!] CREDENTIAL EXPOSURES: {len(secret_findings)} Secret Leak(s)")
+            lines.append("──────────────────────────────────────────────")
+            for f in secret_findings:
+                loc_str = f"{f.file_path}:{f.location.line_start}" if f.location else f.file_path
+                lines.append(f"  • [{f.severity.value}] {f.title}")
+                lines.append(f"    File:     {loc_str}")
+                if f.evidence:
+                    lines.append(f"    Evidence: {f.evidence[:70]}")
+
+        if supply_findings:
+            lines.append("──────────────────────────────────────────────")
+            lines.append(f" [!] SUPPLY-CHAIN & DEPENDENCIES: {len(supply_findings)} Issue(s)")
+            lines.append("──────────────────────────────────────────────")
+            for f in supply_findings:
+                loc_str = f"{f.file_path}:{f.location.line_start}" if f.location else f.file_path
+                lines.append(f"  • [{f.severity.value}] {f.title}")
+                lines.append(f"    File:     {loc_str}")
+                if f.evidence:
+                    lines.append(f"    Evidence: {f.evidence[:70]}")
 
         cleanup = result.context.options.get("cleanup_result")
         if cleanup:
