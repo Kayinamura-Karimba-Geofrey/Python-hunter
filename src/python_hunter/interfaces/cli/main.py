@@ -329,6 +329,48 @@ def create_parser() -> argparse.ArgumentParser:
         help="Custom report title",
     )
 
+    # Command: fix
+    fix_parser = subparsers.add_parser(
+        "fix", help="Automatically bump and pin vulnerable or unconstrained dependencies"
+    )
+    fix_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        help="Target project directory or repository (default: .)",
+    )
+    fix_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview proposed dependency updates without writing changes to disk",
+    )
+    fix_parser.add_argument(
+        "--unpinned-only",
+        action="store_true",
+        help="Only pin unconstrained or broad dependencies",
+    )
+    fix_parser.add_argument(
+        "--vulns-only",
+        action="store_true",
+        help="Only fix dependencies matching known vulnerability advisories",
+    )
+    fix_parser.add_argument(
+        "--create-pr",
+        action="store_true",
+        help="Commit changes, push remediation branch, and open a GitHub Pull Request",
+    )
+    fix_parser.add_argument(
+        "--branch",
+        default="",
+        help="Target base Git branch for Pull Request (default: main)",
+    )
+    fix_parser.add_argument(
+        "--format",
+        choices=["terminal", "json"],
+        default="terminal",
+        help="Output display format (default: terminal)",
+    )
+
     subparsers.add_parser("plugins", help="Manage third-party plugins")
 
     return parser
@@ -440,6 +482,22 @@ def run_cli(args: list[str] | None = None) -> int:
         if getattr(parsed_args, "title", None):
             r_args.extend(["--title", parsed_args.title])
         return run_report_command(r_args)
+
+    if parsed_args.command == "fix":
+        from python_hunter.interfaces.cli.commands.fix import run_fix_command
+
+        f_args = [parsed_args.target, "--format", parsed_args.format]
+        if getattr(parsed_args, "dry_run", False):
+            f_args.append("--dry-run")
+        if getattr(parsed_args, "unpinned_only", False):
+            f_args.append("--unpinned-only")
+        if getattr(parsed_args, "vulns_only", False):
+            f_args.append("--vulns-only")
+        if getattr(parsed_args, "create_pr", False):
+            f_args.append("--create-pr")
+        if getattr(parsed_args, "branch", ""):
+            f_args.extend(["--branch", parsed_args.branch])
+        return run_fix_command(f_args)
 
     if parsed_args.command == "github":
         from python_hunter.application.services.security_app_service import SecurityApplicationService
