@@ -8,6 +8,7 @@ from python_hunter.application.use_cases.analyze_exploitability import AnalyzeEx
 from python_hunter.application.use_cases.analyze_knowledge_graph import AnalyzeKnowledgeGraphUseCase
 from python_hunter.application.orchestrator.scan_context import ScanContext, ScanResult
 from python_hunter.domain.dependencies.npm_supply_chain import NPMSupplyChainAnalyzer
+from python_hunter.domain.dependencies.pypi_supply_chain import PyPISupplyChainAnalyzer
 from python_hunter.domain.discovery.language_detector import LanguageDetector
 from python_hunter.domain.language.registry import LanguageRegistry
 from python_hunter.domain.malware.analyzers.polinrider_detector import PolinRiderDetector
@@ -29,6 +30,7 @@ class ScanOrchestrator:
         self.polinrider_detector = PolinRiderDetector()
         self.polinrider_cleaner = PolinRiderCleaner()
         self.npm_supply_chain = NPMSupplyChainAnalyzer()
+        self.pypi_supply_chain = PyPISupplyChainAnalyzer()
 
     def run_scan(
         self,
@@ -67,7 +69,10 @@ class ScanOrchestrator:
             # Analyze NPM Supply Chain
             npm_findings = self.npm_supply_chain.analyze_workspace(local_path)
 
-            all_findings = malware_findings + npm_findings
+            # Analyze PyPI Supply Chain
+            pypi_findings = self.pypi_supply_chain.analyze_workspace(local_path)
+
+            all_findings = malware_findings + npm_findings + pypi_findings
 
             # Execute Knowledge Graph & Attack Path Analysis
             graph, attack_paths, project_risk = self.graph_use_case.execute(local_path)
