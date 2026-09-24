@@ -85,6 +85,10 @@ class SecretDetectionEngine:
             except Exception:
                 continue
 
+        norm_fp = file_path.replace("\\", "/")
+        if "detectors/secrets" in norm_fp or "rules/secrets" in norm_fp:
+            return []
+
         findings: list[Finding] = []
         seen_fingerprints: set[str] = set()
 
@@ -95,6 +99,13 @@ class SecretDetectionEngine:
             if PlaceholderFilter.is_placeholder(raw_secret_str):
                 cand.is_placeholder = True
                 continue
+
+            # 1b. Self-referential assignment check (e.g. CONSTANT = "CONSTANT" in enums or constants)
+            if cand.evidence_snippet and "=" in cand.evidence_snippet:
+                lhs = cand.evidence_snippet.split("=")[0].strip()
+                val = cand.evidence_snippet.split("=")[1].strip().strip("\"'")
+                if lhs.upper() == val.upper() or (cand.context_key and cand.context_key.upper() == raw_secret_str.strip().strip("\"'").upper()):
+                    continue
 
             # 2. Offline Structural Validation
             is_valid_format = SecretValidator.validate_structurally(cand)
