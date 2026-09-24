@@ -101,10 +101,13 @@ class ScanOrchestrator:
             if all_findings and project_risk:
                 has_critical = any(f.severity.value == "CRITICAL" for f in all_findings)
                 has_high = any(f.severity.value == "HIGH" for f in all_findings)
-                if has_critical:
+                has_medium = any(f.severity.value == "MEDIUM" for f in all_findings)
+                if has_critical or has_high:
                     project_risk.overall_score = max(project_risk.overall_score, 90.0)
-                elif has_high:
-                    project_risk.overall_score = max(project_risk.overall_score, 75.0)
+                elif has_medium:
+                    project_risk.overall_score = max(project_risk.overall_score, 50.0)
+                else:
+                    project_risk.overall_score = max(project_risk.overall_score, 20.0)
 
             context.end_time = datetime.now(timezone.utc).isoformat()
             has_violations = any(f.severity.value in ("CRITICAL", "HIGH") for f in all_findings)

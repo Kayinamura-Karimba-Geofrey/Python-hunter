@@ -16,6 +16,11 @@ class PlaceholderFilter:
         "EXAMPLE",
         "SAMPLE",
         "DUMMY",
+        "DEMO",
+        "MOCK",
+        "FAKE",
+        "REDACTED",
+        "[REDACTED]",
         "LOCALHOST",
         "PASSWORD",
         "SECRET",
@@ -42,12 +47,6 @@ class PlaceholderFilter:
         re.compile(r"change[_-]?me", re.IGNORECASE),
         re.compile(r"change[_-]?this", re.IGNORECASE),
         re.compile(r"python_hunter", re.IGNORECASE),
-        re.compile(r"dummy", re.IGNORECASE),
-        re.compile(r"demo", re.IGNORECASE),
-        re.compile(r"mock", re.IGNORECASE),
-        re.compile(r"fake", re.IGNORECASE),
-        re.compile(r"sample", re.IGNORECASE),
-        re.compile(r"redacted", re.IGNORECASE),
     ]
 
     @classmethod
