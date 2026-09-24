@@ -45,7 +45,11 @@ class ScanOrchestrator:
         context = ScanContext(target=scan_target, options=options)
 
         try:
-            local_path = self.repo_manager.acquire_target(scan_target)
+            local_path = self.repo_manager.acquire_target(
+                scan_target,
+                timeout=options.get("timeout"),
+                idle_timeout=options.get("idle_timeout"),
+            )
             context.workspace_path = local_path
 
             # Detect Languages

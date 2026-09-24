@@ -207,7 +207,18 @@ def create_parser() -> argparse.ArgumentParser:
     scan_parser.add_argument("--ci", action="store_true", help="Enable CI-friendly execution mode")
     scan_parser.add_argument("--clean", action="store_true", help="Automatically remediate/clean detected malware threats (e.g. PolinRider)")
     scan_parser.add_argument("--language", action="append", help="Target language filter (e.g. java, go, rust)")
-    scan_parser.add_argument("--framework", action="append", help="Target framework filter (e.g. spring, django)")
+    scan_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="Wall-clock timeout in seconds for repository clone (default: no wall-clock limit when active)",
+    )
+    scan_parser.add_argument(
+        "--idle-timeout",
+        type=int,
+        default=None,
+        help="Inactivity timeout in seconds before aborting stalled git clone (default: 45s)",
+    )
 
     # Command: clean
     clean_parser = subparsers.add_parser("clean", help="Disinfect repository from malware threats (e.g. PolinRider / TasksJacker)")
@@ -218,6 +229,18 @@ def create_parser() -> argparse.ArgumentParser:
     clean_parser.add_argument("--threat", choices=["all", "polinrider"], default="all", help="Specific malware threat to clean (default: all)")
     clean_parser.add_argument(
         "--format", choices=["terminal", "json"], default="terminal", help="Output display format (terminal or json)"
+    )
+    clean_parser.add_argument(
+        "--timeout",
+        type=int,
+        default=None,
+        help="Wall-clock timeout in seconds for repository clone",
+    )
+    clean_parser.add_argument(
+        "--idle-timeout",
+        type=int,
+        default=None,
+        help="Inactivity timeout in seconds before aborting stalled git clone",
     )
 
     subparsers.add_parser("project", help="Manage project records")
@@ -383,7 +406,7 @@ def run_cli(args: list[str] | None = None) -> int:
         local_path = target_input
 
         if is_remote:
-            from python_hunter.infrastructure.repository.target_resolver import TargetResolver
+            from python_hunter.infrastructure.repository import RepositoryManager, TargetResolver
             resolver = TargetResolver()
             scan_target = resolver.resolve(target_input, branch=getattr(parsed_args, "branch", ""))
             repo_name = scan_target.metadata.get("repo", "repo")
@@ -392,38 +415,19 @@ def run_cli(args: list[str] | None = None) -> int:
 
             if os.path.exists(dest_dir):
                 sys.stderr.write(f"Notice: Destination directory '{dest_dir}' already exists. Disinfecting existing files...\n")
+                local_path = dest_dir
             else:
-                sys.stdout.write(f"[*] Cloning remote repository '{target_input}' to '{dest_dir}' ...\n")
-                sys.stdout.flush()
-                git_env = os.environ.copy()
-                git_env["GIT_TERMINAL_PROMPT"] = "0"
-                git_env["GIT_SSH_COMMAND"] = "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
-
-                clone_cmd = ["git", "clone", "--depth", "1"]
-                branch = getattr(parsed_args, "branch", "")
-                if branch:
-                    clone_cmd.extend(["--branch", branch])
-                clone_cmd.extend(["--", scan_target.repository_url, dest_dir])
-
-                proc = subprocess.run(clone_cmd, capture_output=True, text=True, env=git_env)
-                if proc.returncode != 0 and scan_target.repository_url.startswith("https://github.com/"):
-                    owner = scan_target.metadata.get("owner")
-                    repo = scan_target.metadata.get("repo")
-                    if owner and repo:
-                        ssh_url = f"git@github.com:{owner}/{repo}.git"
-                        sys.stdout.write(f"[*] Retrying clone via SSH: {ssh_url} ...\n")
-                        sys.stdout.flush()
-                        clone_cmd = ["git", "clone", "--depth", "1"]
-                        if branch:
-                            clone_cmd.extend(["--branch", branch])
-                        clone_cmd.extend(["--", ssh_url, dest_dir])
-                        proc = subprocess.run(clone_cmd, capture_output=True, text=True, env=git_env)
-
-                if proc.returncode != 0:
-                    sys.stderr.write(f"Error: Failed to clone repository '{target_input}': {proc.stderr}\n")
+                repo_mgr = RepositoryManager()
+                try:
+                    local_path = repo_mgr.acquire_target(
+                        scan_target,
+                        dest_dir=dest_dir,
+                        timeout=getattr(parsed_args, "timeout", None),
+                        idle_timeout=getattr(parsed_args, "idle_timeout", None),
+                    )
+                except Exception as e:
+                    sys.stderr.write(f"Error: Failed to clone repository '{target_input}': {e}\n")
                     return 1
-
-            local_path = dest_dir
 
         cleaner = PolinRiderCleaner()
         cleanup = cleaner.clean(local_path)
@@ -565,6 +569,8 @@ def run_cli(args: list[str] | None = None) -> int:
             "clean": getattr(parsed_args, "clean", False),
             "language": getattr(parsed_args, "language", None),
             "framework": getattr(parsed_args, "framework", None),
+            "timeout": getattr(parsed_args, "timeout", None),
+            "idle_timeout": getattr(parsed_args, "idle_timeout", None),
         }
         try:
             res = orchestrator.run_scan(
