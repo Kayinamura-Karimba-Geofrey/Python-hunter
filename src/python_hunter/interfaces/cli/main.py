@@ -371,6 +371,22 @@ def create_parser() -> argparse.ArgumentParser:
         help="Output display format (default: terminal)",
     )
 
+    # Command: tui
+    tui_parser = subparsers.add_parser(
+        "tui", help="Launch interactive terminal dashboard to inspect findings and attack paths"
+    )
+    tui_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        help="Target project directory or repository (default: .)",
+    )
+    tui_parser.add_argument(
+        "--snapshot",
+        action="store_true",
+        help="Print terminal dashboard snapshot and exit without launching curses UI",
+    )
+
     subparsers.add_parser("plugins", help="Manage third-party plugins")
 
     return parser
@@ -498,6 +514,14 @@ def run_cli(args: list[str] | None = None) -> int:
         if getattr(parsed_args, "branch", ""):
             f_args.extend(["--branch", parsed_args.branch])
         return run_fix_command(f_args)
+
+    if parsed_args.command == "tui":
+        from python_hunter.interfaces.cli.commands.tui import run_tui_command
+
+        t_args = [parsed_args.target]
+        if getattr(parsed_args, "snapshot", False):
+            t_args.append("--snapshot")
+        return run_tui_command(t_args)
 
     if parsed_args.command == "github":
         from python_hunter.application.services.security_app_service import SecurityApplicationService
