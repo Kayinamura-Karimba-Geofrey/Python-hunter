@@ -196,9 +196,9 @@ def create_parser() -> argparse.ArgumentParser:
     scan_parser.add_argument("--commit", default="", help="Specific Git commit SHA to checkout and scan")
     scan_parser.add_argument(
         "--format",
-        choices=["terminal", "json", "sarif", "markdown", "md", "html", "csv"],
+        choices=["terminal", "json", "sarif", "markdown", "md", "html", "csv", "cyclonedx", "cdx", "spdx", "spdx-json"],
         default="terminal",
-        help="Output format (terminal, json, sarif, markdown, html, csv)",
+        help="Output format (terminal, json, sarif, markdown, html, csv, cyclonedx, spdx)",
     )
     scan_parser.add_argument("-o", "--output", help="Output file path")
     scan_parser.add_argument(
@@ -249,7 +249,41 @@ def create_parser() -> argparse.ArgumentParser:
     )
 
     subparsers.add_parser("project", help="Manage project records")
-    subparsers.add_parser("sbom", help="Generate CycloneDX/SPDX SBOM")
+
+    # Command: sbom
+    sbom_parser = subparsers.add_parser(
+        "sbom", help="Generate CycloneDX 1.5 or SPDX 2.3 Software Bill of Materials (SBOM)"
+    )
+    sbom_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        help="Target project directory or manifest file (default: .)",
+    )
+    sbom_parser.add_argument(
+        "--format",
+        "-f",
+        choices=["cyclonedx", "cdx", "spdx", "spdx-json"],
+        default="cyclonedx",
+        help="SBOM standard format (default: cyclonedx)",
+    )
+    sbom_parser.add_argument(
+        "--spec-version",
+        default=None,
+        help="Specification version (e.g. 1.5, 1.4 for CycloneDX; 2.3, 2.2 for SPDX)",
+    )
+    sbom_parser.add_argument(
+        "-o",
+        "--output",
+        default=None,
+        help="Output file path (default: stdout)",
+    )
+    sbom_parser.add_argument(
+        "--include-vulns",
+        action="store_true",
+        help="Embed matched vulnerability findings into CycloneDX SBOM document",
+    )
+
     subparsers.add_parser("report", help="Generate security reports")
     subparsers.add_parser("plugins", help="Manage third-party plugins")
 
@@ -336,6 +370,18 @@ def run_cli(args: list[str] | None = None) -> int:
 
     if parsed_args.command == "git":
         return run_git_command(parsed_args)
+
+    if parsed_args.command == "sbom":
+        from python_hunter.interfaces.cli.commands.sbom import run_sbom_command
+
+        s_args = [parsed_args.target, "--format", parsed_args.format]
+        if getattr(parsed_args, "spec_version", None):
+            s_args.extend(["--spec-version", parsed_args.spec_version])
+        if getattr(parsed_args, "output", None):
+            s_args.extend(["-o", parsed_args.output])
+        if getattr(parsed_args, "include_vulns", False):
+            s_args.append("--include-vulns")
+        return run_sbom_command(s_args)
 
     if parsed_args.command == "github":
         from python_hunter.application.services.security_app_service import SecurityApplicationService
@@ -617,7 +663,6 @@ def run_cli(args: list[str] | None = None) -> int:
         "dependencies",
         "secrets",
         "git",
-        "sbom",
         "report",
         "plugins",
     ):

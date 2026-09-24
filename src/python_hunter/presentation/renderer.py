@@ -274,6 +274,41 @@ class CsvRenderer(OutputRenderer):
         return output.getvalue().strip()
 
 
+class CycloneDXRenderer(OutputRenderer):
+    """Renders CycloneDX 1.5 JSON Software Bill of Materials (SBOM)."""
+
+    def render(self, result: ScanResult) -> str:
+        from python_hunter.application.use_cases.generate_sbom import GenerateSBOMUseCase
+
+        target = result.context.target.source if result.context.target and result.context.target.source else "."
+        vulns = [
+            f
+            for f in result.findings
+            if getattr(f, "category", None)
+            and f.category.value in ("VULNERABLE_DEPENDENCY", "SUPPLY_CHAIN")
+        ]
+        res = GenerateSBOMUseCase().execute(
+            target_path=target,
+            format_type="cyclonedx",
+            include_vulns=bool(vulns),
+        )
+        return res["sbom_json"]
+
+
+class SPDXRenderer(OutputRenderer):
+    """Renders SPDX 2.3 JSON Software Bill of Materials (SBOM)."""
+
+    def render(self, result: ScanResult) -> str:
+        from python_hunter.application.use_cases.generate_sbom import GenerateSBOMUseCase
+
+        target = result.context.target.source if result.context.target and result.context.target.source else "."
+        res = GenerateSBOMUseCase().execute(
+            target_path=target,
+            format_type="spdx",
+        )
+        return res["sbom_json"]
+
+
 def get_renderer(format_name: str) -> OutputRenderer:
     """Factory helper returning appropriate OutputRenderer instance."""
     fmt = (format_name or "terminal").lower()
@@ -287,5 +322,9 @@ def get_renderer(format_name: str) -> OutputRenderer:
         return CsvRenderer()
     elif fmt == "json":
         return JsonRenderer()
+    elif fmt in ("cyclonedx", "cdx"):
+        return CycloneDXRenderer()
+    elif fmt in ("spdx", "spdx-json"):
+        return SPDXRenderer()
     return TerminalRenderer()
 
