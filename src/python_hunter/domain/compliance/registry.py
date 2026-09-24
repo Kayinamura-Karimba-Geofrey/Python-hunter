@@ -19,6 +19,7 @@ class ControlRegistry:
         # 1. Frameworks
         frameworks = [
             ComplianceFrameworkModel("OWASP_ASVS_V4", "OWASP Application Security Verification Standard", "4.0.3", "Standard for Web App Security Controls"),
+            ComplianceFrameworkModel("OWASP_TOP_10", "OWASP Top 10 Web Application Security Risks", "2021", "Standard security awareness document for developers and security analysts"),
             ComplianceFrameworkModel("OWASP_SAMM_V2", "OWASP Software Assurance Maturity Model", "2.0", "Maturity model for software security"),
             ComplianceFrameworkModel("NIST_CSF_V2", "NIST Cybersecurity Framework", "2.0", "Framework for managing cybersecurity risk"),
             ComplianceFrameworkModel("NIST_800_53_REV5", "NIST SP 800-53", "Rev. 5", "Security and Privacy Controls for Info Systems"),
@@ -78,6 +79,61 @@ class ControlRegistry:
                 category=ControlCategory.LOGGING,
                 requirements=["Audit logging enabled", "Log retention policy enforced"],
                 mapped_cwes=["CWE-778"]
+            ),
+            ComplianceControlModel(
+                control_id="CTRL-OWASP-A03",
+                framework_id="OWASP_TOP_10",
+                title="A03:2021 Injection & Dangerous Code Execution",
+                description="Prevent SQL injection, OS command execution, and untrusted dynamic code evaluation.",
+                category=ControlCategory.VULNERABILITY_MANAGEMENT,
+                requirements=["Parameterized database queries", "Safe process execution primitives"],
+                mapped_cwes=["CWE-89", "CWE-78", "CWE-77"],
+                mapped_rule_ids=["PYH-AST-001", "PYH-AST-004", "PYH-TAINT-001", "PYH-SEC-004"]
+            ),
+            ComplianceControlModel(
+                control_id="CTRL-OWASP-A06",
+                framework_id="OWASP_TOP_10",
+                title="A06:2021 Vulnerable and Outdated Components",
+                description="Verify software supply-chain integrity, audit dependencies, and prevent typosquatting.",
+                category=ControlCategory.SUPPLIER_SECURITY,
+                requirements=["Audited dependencies", "No malicious setup hooks or supply-chain trojans"],
+                mapped_cwes=["CWE-1395", "CWE-1104", "CWE-829"],
+                mapped_rule_ids=[
+                    "PYHUNTER-PYPI-SETUP-001",
+                    "PYHUNTER-NPM-SCRIPT-001",
+                    "PYHUNTER-PYPI-TYPO-001",
+                    "PYHUNTER-NPM-TYPO-001",
+                    "PYH-DEP-001",
+                    "PYH-DEP-002",
+                    "PYH-SUPPLY-004",
+                    "PYH-VULN-001"
+                ]
+            ),
+            ComplianceControlModel(
+                control_id="CTRL-OWASP-A07",
+                framework_id="OWASP_TOP_10",
+                title="A07:2021 Identification & Secret Security",
+                description="Eliminate hardcoded API keys, tokens, and credentials from version control.",
+                category=ControlCategory.DATA_PROTECTION,
+                requirements=["Zero hardcoded credentials or unredacted secrets in code"],
+                mapped_cwes=["CWE-798", "CWE-259"],
+                mapped_rule_ids=["PYH-SECRET-001", "PYH-SECRET-002", "PYH-SEC-001"]
+            ),
+            ComplianceControlModel(
+                control_id="CTRL-OWASP-A08",
+                framework_id="OWASP_TOP_10",
+                title="A08:2021 Software and Data Integrity Failures",
+                description="Detect repository malware, tasks hijacking, trojan font scripts, and git droppers.",
+                category=ControlCategory.VULNERABILITY_MANAGEMENT,
+                requirements=["Zero malware or task jacking payloads in workspace"],
+                mapped_cwes=["CWE-494", "CWE-345"],
+                mapped_rule_ids=[
+                    "PYH-MAL-001",
+                    "PYH-MAL-002",
+                    "PYH-MAL-003",
+                    "PYH-MAL-004",
+                    "PYH-MAL-005"
+                ]
             ),
         ]
         for ctrl in controls:

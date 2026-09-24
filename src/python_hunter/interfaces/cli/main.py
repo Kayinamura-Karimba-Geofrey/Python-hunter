@@ -284,7 +284,51 @@ def create_parser() -> argparse.ArgumentParser:
         help="Embed matched vulnerability findings into CycloneDX SBOM document",
     )
 
-    subparsers.add_parser("report", help="Generate security reports")
+    # Command: report
+    report_parser = subparsers.add_parser(
+        "report", help="Generate executive, compliance, and developer security reports"
+    )
+    report_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        help="Target project directory or manifest file to audit (default: .)",
+    )
+    report_parser.add_argument(
+        "--type",
+        choices=["executive", "compliance", "technical"],
+        default="executive",
+        help="Report archetype (default: executive)",
+    )
+    report_parser.add_argument(
+        "--format",
+        "-f",
+        choices=["html", "markdown", "md", "json"],
+        default="html",
+        help="Report export format (default: html)",
+    )
+    report_parser.add_argument(
+        "--framework",
+        default="owasp-top-10",
+        help="Compliance framework benchmark (e.g. owasp-top-10, nist, soc-2, iso27001, cis)",
+    )
+    report_parser.add_argument(
+        "-o",
+        "--output",
+        default=None,
+        help="Output file path (default: python-hunter-report.html or stdout)",
+    )
+    report_parser.add_argument(
+        "--organization",
+        default="Enterprise Security",
+        help="Organization or team name to appear on report header",
+    )
+    report_parser.add_argument(
+        "--title",
+        default=None,
+        help="Custom report title",
+    )
+
     subparsers.add_parser("plugins", help="Manage third-party plugins")
 
     return parser
@@ -382,6 +426,20 @@ def run_cli(args: list[str] | None = None) -> int:
         if getattr(parsed_args, "include_vulns", False):
             s_args.append("--include-vulns")
         return run_sbom_command(s_args)
+
+    if parsed_args.command == "report":
+        from python_hunter.interfaces.cli.commands.report import run_report_command
+
+        r_args = [parsed_args.target, "--type", parsed_args.type, "--format", parsed_args.format]
+        if getattr(parsed_args, "framework", None):
+            r_args.extend(["--framework", parsed_args.framework])
+        if getattr(parsed_args, "output", None):
+            r_args.extend(["-o", parsed_args.output])
+        if getattr(parsed_args, "organization", None):
+            r_args.extend(["--organization", parsed_args.organization])
+        if getattr(parsed_args, "title", None):
+            r_args.extend(["--title", parsed_args.title])
+        return run_report_command(r_args)
 
     if parsed_args.command == "github":
         from python_hunter.application.services.security_app_service import SecurityApplicationService
@@ -663,7 +721,6 @@ def run_cli(args: list[str] | None = None) -> int:
         "dependencies",
         "secrets",
         "git",
-        "report",
         "plugins",
     ):
         sys.stdout.write(
