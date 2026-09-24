@@ -119,7 +119,7 @@ class PyPISupplyChainAnalyzer:
                             f"pattern ({cat_name}) commonly observed in PyPI droppers and trojans."
                         ),
                         file_path=rel_path,
-                        location=Location(lineno, 1),
+                        location=Location(lineno, lineno, 1, 1),
                         evidence=match.group(0),
                         remediation="Remove dynamic exec/eval payloads from setup and build scripts.",
                     )
@@ -142,7 +142,7 @@ class PyPISupplyChainAnalyzer:
                             f"pattern ({ep_name}): {match.group(0)}"
                         ),
                         file_path=rel_path,
-                        location=Location(lineno, 1),
+                        location=Location(lineno, lineno, 1, 1),
                         evidence=match.group(0),
                         remediation="Audit outbound network requests in packaging scripts and verify package authenticity.",
                     )
@@ -189,7 +189,7 @@ class PyPISupplyChainAnalyzer:
                                                     f"potentially malicious operations ({func_name}) during package installation."
                                                 ),
                                                 file_path=rel_path,
-                                                location=Location(item.lineno, item.col_offset + 1),
+                                                location=Location(item.lineno, item.lineno, item.col_offset + 1, item.col_offset + 1),
                                                 evidence=f"class {node.name} -> def {item.name}: calls {func_name}()",
                                                 remediation="Do not execute shell commands or network requests during package installation.",
                                             )
@@ -197,29 +197,30 @@ class PyPISupplyChainAnalyzer:
                     if has_dangerous_call:
                         suspicious_classes.add(node.name)
 
-            # Check for direct module-level execution (outside of functions)
-            if isinstance(node, ast.Call):
-                func_name = self._get_name(node.func)
-                if self._is_dangerous_call(func_name):
-                    # Check if this call is at top level
-                    if node in tree.body:  # type: ignore[attr-defined]
-                        findings.append(
-                            Finding(
-                                rule_id="PYHUNTER-PYPI-SETUP-001",
-                                severity=Severity.HIGH,
-                                confidence=Confidence.HIGH,
-                                category=Category.SUPPLY_CHAIN,
-                                title=f"Top-Level Execution in Packaging Script: {func_name}",
-                                description=(
-                                    f"Setup script '{rel_path}' executes dangerous operation '{func_name}' directly at import time. "
-                                    "This runs automatically whenever the package is inspected or installed."
-                                ),
-                                file_path=rel_path,
-                                location=Location(node.lineno, node.col_offset + 1),
-                                evidence=f"Top-level call: {func_name}()",
-                                remediation="Remove side-effects and dangerous top-level execution from setup.py.",
+        # Check for direct module-level execution (outside of functions/classes)
+        for stmt in getattr(tree, "body", []):
+            if not isinstance(stmt, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                for subnode in ast.walk(stmt):
+                    if isinstance(subnode, ast.Call):
+                        func_name = self._get_name(subnode.func)
+                        if self._is_dangerous_call(func_name):
+                            findings.append(
+                                Finding(
+                                    rule_id="PYHUNTER-PYPI-SETUP-001",
+                                    severity=Severity.HIGH,
+                                    confidence=Confidence.HIGH,
+                                    category=Category.SUPPLY_CHAIN,
+                                    title=f"Top-Level Execution in Packaging Script: {func_name}",
+                                    description=(
+                                        f"Setup script '{rel_path}' executes dangerous operation '{func_name}' directly at import time. "
+                                        "This runs automatically whenever the package is inspected or installed."
+                                    ),
+                                    file_path=rel_path,
+                                    location=Location(subnode.lineno, subnode.lineno, subnode.col_offset + 1, subnode.col_offset + 1),
+                                    evidence=f"Top-level call: {func_name}()",
+                                    remediation="Remove side-effects and dangerous top-level execution from setup.py.",
+                                )
                             )
-                        )
 
         return findings
 
@@ -279,7 +280,7 @@ class PyPISupplyChainAnalyzer:
                                     "Attackers publish typosquatted packages to execute trojans upon installation."
                                 ),
                                 file_path=source_file,
-                                location=Location(lineno, 1),
+                                location=Location(lineno, lineno, 1, 1),
                                 evidence=f"Package: {dep_name} (Similar to: {pop_pkg})",
                                 remediation=f"Confirm if '{dep_name}' was intended or replace with official '{pop_pkg}'.",
                             )
@@ -315,7 +316,7 @@ class PyPISupplyChainAnalyzer:
                                         title=f"Obfuscated Execution in Package Init ({cat_name})",
                                         description=f"Package init file '{rel_path}' contains suspicious obfuscated code execution ({cat_name}).",
                                         file_path=rel_path,
-                                        location=Location(lineno, 1),
+                                        location=Location(lineno, lineno, 1, 1),
                                         evidence=match.group(0),
                                         remediation="Audit package initialization and remove obfuscated payloads.",
                                     )
@@ -335,7 +336,7 @@ class PyPISupplyChainAnalyzer:
                                         title=f"Malicious Exfiltration Endpoint in Package Init ({ep_name})",
                                         description=f"Package init file '{rel_path}' references exfiltration endpoint ({ep_name}): {match.group(0)}",
                                         file_path=rel_path,
-                                        location=Location(lineno, 1),
+                                        location=Location(lineno, lineno, 1, 1),
                                         evidence=match.group(0),
                                         remediation="Remove suspicious telemetry / exfiltration endpoints from package modules.",
                                     )
