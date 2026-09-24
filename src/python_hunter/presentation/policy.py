@@ -36,7 +36,4 @@ class PolicyEngine:
             if self.SEVERITY_ORDER.get(f_severity, 0) >= threshold:
                 return ExitCode.POLICY_VIOLATION
 
-        if result.project_risk and result.project_risk.overall_score >= 80.0 and threshold <= 3 and len(result.findings) > 0:
-            return ExitCode.POLICY_VIOLATION
-
         return ExitCode.SUCCESS
