@@ -219,6 +219,11 @@ def create_parser() -> argparse.ArgumentParser:
         default=None,
         help="Inactivity timeout in seconds before aborting stalled git clone (default: 45s)",
     )
+    scan_parser.add_argument("--no-secrets", action="store_true", help="Disable secret scanning during security scan")
+    scan_parser.add_argument(
+        "--no-dependencies", "--no-sca", dest="no_dependencies", action="store_true", help="Disable SCA dependency and vulnerability scanning"
+    )
+    scan_parser.add_argument("--offline", action="store_true", help="Operate strictly offline without querying remote vulnerability databases")
 
     # Command: clean
     clean_parser = subparsers.add_parser("clean", help="Disinfect repository from malware threats (e.g. PolinRider / TasksJacker)")
@@ -571,6 +576,9 @@ def run_cli(args: list[str] | None = None) -> int:
             "framework": getattr(parsed_args, "framework", None),
             "timeout": getattr(parsed_args, "timeout", None),
             "idle_timeout": getattr(parsed_args, "idle_timeout", None),
+            "no_secrets": getattr(parsed_args, "no_secrets", False),
+            "no_dependencies": getattr(parsed_args, "no_dependencies", False),
+            "offline": getattr(parsed_args, "offline", False),
         }
         try:
             res = orchestrator.run_scan(
