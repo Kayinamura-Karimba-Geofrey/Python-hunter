@@ -4,12 +4,16 @@ from datetime import datetime, timezone
 from typing import Any
 
 from python_hunter.application.use_cases.analyze_ast import AnalyzeASTUseCase
+from python_hunter.application.use_cases.analyze_dependencies import AnalyzeDependenciesUseCase
 from python_hunter.application.use_cases.analyze_exploitability import AnalyzeExploitabilityUseCase
 from python_hunter.application.use_cases.analyze_knowledge_graph import AnalyzeKnowledgeGraphUseCase
+from python_hunter.application.use_cases.analyze_secrets import AnalyzeSecretsUseCase
+from python_hunter.application.use_cases.analyze_vulnerabilities import AnalyzeVulnerabilitiesUseCase
 from python_hunter.application.orchestrator.scan_context import ScanContext, ScanResult
 from python_hunter.domain.dependencies.npm_supply_chain import NPMSupplyChainAnalyzer
 from python_hunter.domain.dependencies.pypi_supply_chain import PyPISupplyChainAnalyzer
 from python_hunter.domain.discovery.language_detector import LanguageDetector
+from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.language.registry import LanguageRegistry
 from python_hunter.domain.malware.analyzers.polinrider_detector import PolinRiderDetector
 from python_hunter.domain.malware.cleaners.polinrider_cleaner import PolinRiderCleaner
@@ -18,7 +22,7 @@ from python_hunter.infrastructure.repository.target_resolver import ScanTarget, 
 
 
 class ScanOrchestrator:
-    """Coordinates target resolution, repository acquisition, language detection, knowledge graph construction, risk calculation, and report generation."""
+    """Coordinates target resolution, repository acquisition, language detection, SAST, secrets, SCA, malware, risk calculation, and report generation."""
 
     def __init__(self) -> None:
         self.target_resolver = TargetResolver()
@@ -31,6 +35,9 @@ class ScanOrchestrator:
         self.polinrider_cleaner = PolinRiderCleaner()
         self.npm_supply_chain = NPMSupplyChainAnalyzer()
         self.pypi_supply_chain = PyPISupplyChainAnalyzer()
+        self.secrets_use_case = AnalyzeSecretsUseCase()
+        self.dependencies_use_case = AnalyzeDependenciesUseCase()
+        self.vulnerabilities_use_case = AnalyzeVulnerabilitiesUseCase(offline=True)
 
     def run_scan(
         self,
@@ -58,7 +65,7 @@ class ScanOrchestrator:
             detected_langs = self.language_detector.detect_languages(local_path)
             context.options["detected_languages"] = [lang.value for lang in detected_langs]
 
-            # Detect PolinRider / TasksJacker Malware
+            # 1. Detect PolinRider / TasksJacker Malware
             malware_findings = self.polinrider_detector.detect(local_path)
 
             # Automated Cleanup if requested
@@ -66,28 +73,90 @@ class ScanOrchestrator:
                 cleanup_result = self.polinrider_cleaner.clean(local_path)
                 context.options["cleanup_result"] = cleanup_result
 
-            # Analyze NPM Supply Chain
+            # 2. Analyze NPM Supply Chain
             npm_findings = self.npm_supply_chain.analyze_workspace(local_path)
 
-            # Analyze PyPI Supply Chain
+            # 3. Analyze PyPI Supply Chain
             pypi_findings = self.pypi_supply_chain.analyze_workspace(local_path)
 
-            all_findings = malware_findings + npm_findings + pypi_findings
+            # 4. Scan Secrets
+            secret_findings = self._scan_secrets(local_path, options)
+
+            # 5. Scan SCA Dependencies & Vulnerabilities
+            sca_findings = self._scan_dependencies(local_path, options)
+
+            # Aggregate all multi-domain findings
+            raw_findings = (
+                malware_findings
+                + npm_findings
+                + pypi_findings
+                + secret_findings
+                + sca_findings
+            )
+            all_findings = self._deduplicate_findings(raw_findings)
 
             # Execute Knowledge Graph & Attack Path Analysis
             graph, attack_paths, project_risk = self.graph_use_case.execute(local_path)
 
             if all_findings and project_risk:
-                project_risk.overall_score = max(project_risk.overall_score, 90.0)
+                has_critical = any(f.severity.value == "CRITICAL" for f in all_findings)
+                has_high = any(f.severity.value == "HIGH" for f in all_findings)
+                if has_critical:
+                    project_risk.overall_score = max(project_risk.overall_score, 90.0)
+                elif has_high:
+                    project_risk.overall_score = max(project_risk.overall_score, 75.0)
 
             context.end_time = datetime.now(timezone.utc).isoformat()
+            has_violations = any(f.severity.value in ("CRITICAL", "HIGH") for f in all_findings)
             return ScanResult(
                 context=context,
                 findings=all_findings,
                 graph=graph,
                 attack_paths=attack_paths,
                 project_risk=project_risk,
-                exit_code=1 if all_findings else 0,
+                exit_code=1 if has_violations else 0,
             )
         finally:
             self.repo_manager.cleanup()
+
+    def _scan_secrets(self, local_path: str, options: dict[str, Any]) -> list[Finding]:
+        """Executes secret scanning unless explicitly disabled."""
+        if options.get("no_secrets", False):
+            return []
+        try:
+            res = self.secrets_use_case.execute(local_path)
+            return res.get("findings", [])
+        except Exception:
+            return []
+
+    def _scan_dependencies(self, local_path: str, options: dict[str, Any]) -> list[Finding]:
+        """Executes SCA dependency policy evaluation and vulnerability matching."""
+        if options.get("no_dependencies", False) or options.get("no_sca", False):
+            return []
+        findings: list[Finding] = []
+        try:
+            dep_res = self.dependencies_use_case.execute(local_path)
+            findings.extend(dep_res.get("findings", []))
+        except Exception:
+            pass
+
+        try:
+            vuln_res = self.vulnerabilities_use_case.execute(local_path)
+            findings.extend(vuln_res.get("findings", []))
+        except Exception:
+            pass
+
+        return findings
+
+    @staticmethod
+    def _deduplicate_findings(findings: list[Finding]) -> list[Finding]:
+        """Deduplicates findings based on rule ID, file location, and evidence."""
+        seen: set[tuple[str, str, int, str]] = set()
+        deduped: list[Finding] = []
+        for f in findings:
+            line = f.location.line_start if f.location else 0
+            key = (f.rule_id, f.file_path, line, f.evidence)
+            if key not in seen:
+                seen.add(key)
+                deduped.append(f)
+        return deduped
