@@ -1,0 +1,84 @@
+{
+  "name": "python-hunter-vscode",
+  "displayName": "Python Hunter Security Linter",
+  "description": "Real-time SAST, Secrets, Supply-Chain, and Malware security linting with automated dependency fixes for VS Code.",
+  "version": "1.0.0",
+  "publisher": "python-hunter",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Linters",
+    "Security",
+    "Programming Languages"
+  ],
+  "keywords": [
+    "security",
+    "sast",
+    "secrets",
+    "sca",
+    "malware",
+    "dependencies",
+    "polinrider"
+  ],
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:python",
+    "onLanguage:pip-requirements",
+    "onLanguage:toml",
+    "onLanguage:json",
+    "workspaceContains:requirements.txt",
+    "workspaceContains:pyproject.toml",
+    "workspaceContains:package.json"
+  ],
+  "contributes": {
+    "configuration": {
+      "type": "object",
+      "title": "Python Hunter Security",
+      "properties": {
+        "pythonHunter.enable": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable Python Hunter real-time security diagnostics and quick-fixes."
+        },
+        "pythonHunter.executablePath": {
+          "type": "string",
+          "default": "python-hunter",
+          "description": "Path to the python-hunter executable (default: 'python-hunter' in PATH)."
+        },
+        "pythonHunter.tcpPort": {
+          "type": "number",
+          "default": 0,
+          "description": "Connect to an existing LSP server via TCP port instead of launching stdio process (0 = use stdio)."
+        },
+        "pythonHunter.logLevel": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "messages",
+          "description": "Trace verbosity for language server messages."
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "python-hunter.scanWorkspace",
+        "title": "Python Hunter: Scan Current Workspace for Security Threats"
+      },
+      {
+        "command": "python-hunter.fixDependencies",
+        "title": "Python Hunter: Auto-Fix Vulnerable & Unpinned Dependencies"
+      },
+      {
+        "command": "python-hunter.launchTui",
+        "title": "Python Hunter: Open Interactive Security TUI Dashboard"
+      }
+    ]
+  },
+  "dependencies": {
+    "vscode-languageclient": "^8.1.0"
+  }
+}

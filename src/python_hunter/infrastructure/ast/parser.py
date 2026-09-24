@@ -49,3 +49,28 @@ class StandardASTParser(ASTParserEngine):
                 message=str(ex),
             )
             return ASTDocument(file_path=rel_path, module_name=rel_path, source_lines=lines, parse_error=err)
+
+    def parse_string(self, content: str, file_path: str = "in_memory.py", root_path: str = "") -> ASTDocument:
+        """Parse source code string directly without reading from disk."""
+        rel_path = os.path.relpath(file_path, root_path) if root_path else file_path
+        lines = content.splitlines(keepends=True)
+        try:
+            parsed_tree = ast.parse(content, filename=file_path)
+            visitor = ComprehensiveASTVisitor()
+            return visitor.visit_tree(parsed_tree, rel_path, lines)
+        except SyntaxError as se:
+            err = ASTParseError(
+                file_path=rel_path,
+                error_type="SYNTAX_ERROR",
+                message=se.msg,
+                line=se.lineno,
+                column=se.offset,
+            )
+            return ASTDocument(file_path=rel_path, module_name=rel_path, source_lines=lines, parse_error=err)
+        except Exception as ex:
+            err = ASTParseError(
+                file_path=rel_path,
+                error_type="PARSER_ERROR",
+                message=str(ex),
+            )
+            return ASTDocument(file_path=rel_path, module_name=rel_path, source_lines=lines, parse_error=err)

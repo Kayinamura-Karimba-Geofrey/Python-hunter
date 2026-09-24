@@ -387,6 +387,52 @@ def create_parser() -> argparse.ArgumentParser:
         help="Print terminal dashboard snapshot and exit without launching curses UI",
     )
 
+    # Command: lsp
+    lsp_parser = subparsers.add_parser(
+        "lsp", help="Run Language Server Protocol (LSP 3.17) server for real-time in-editor security diagnostics"
+    )
+    lsp_parser.add_argument(
+        "--stdio",
+        action="store_true",
+        default=True,
+        help="Run language server over standard input and output (default, used by VS Code / Neovim)",
+    )
+    lsp_parser.add_argument(
+        "--tcp",
+        metavar="[HOST:]PORT",
+        default="",
+        help="Listen for LSP client connections over TCP (e.g. 2087 or 127.0.0.1:2087)",
+    )
+    lsp_parser.add_argument(
+        "--log-file",
+        metavar="PATH",
+        default="",
+        help="Log server operations and JSON-RPC wire messages to specified file",
+    )
+
+    # Command: diagnostics
+    diag_parser = subparsers.add_parser(
+        "diagnostics", help="Emit security diagnostics in editor-friendly formats (gcc, lsp, codeclimate, rdjson)"
+    )
+    diag_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        help="Target file or project directory to evaluate (default: .)",
+    )
+    diag_parser.add_argument(
+        "--format",
+        choices=["gcc", "lsp", "json", "codeclimate", "rdjson"],
+        default="gcc",
+        help="Output format (default: gcc)",
+    )
+    diag_parser.add_argument(
+        "--fail-on",
+        choices=["critical", "high", "medium", "low", "none"],
+        default="high",
+        help="Exit with failure status if findings meet or exceed severity (default: high)",
+    )
+
     subparsers.add_parser("plugins", help="Manage third-party plugins")
 
     return parser
@@ -522,6 +568,28 @@ def run_cli(args: list[str] | None = None) -> int:
         if getattr(parsed_args, "snapshot", False):
             t_args.append("--snapshot")
         return run_tui_command(t_args)
+
+    if parsed_args.command == "lsp":
+        from python_hunter.interfaces.cli.commands.lsp import run_lsp_command
+
+        l_args = []
+        if getattr(parsed_args, "tcp", ""):
+            l_args.extend(["--tcp", parsed_args.tcp])
+        if getattr(parsed_args, "log_file", ""):
+            l_args.extend(["--log-file", parsed_args.log_file])
+        return run_lsp_command(l_args)
+
+    if parsed_args.command == "diagnostics":
+        from python_hunter.interfaces.cli.commands.diagnostics import run_diagnostics_command
+
+        d_args = [
+            parsed_args.target,
+            "--format",
+            parsed_args.format,
+            "--fail-on",
+            parsed_args.fail_on,
+        ]
+        return run_diagnostics_command(d_args)
 
     if parsed_args.command == "github":
         from python_hunter.application.services.security_app_service import SecurityApplicationService

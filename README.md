@@ -4,12 +4,13 @@
 
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
-[![Tests: 351 Passing](https://img.shields.io/badge/tests-351%20passing-brightgreen.svg)]()
+[![Tests: 366 Passing](https://img.shields.io/badge/tests-366%20passing-brightgreen.svg)]()
 [![Code Style: Ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Type Checked: MyPy](https://img.shields.io/badge/mypy-strict-blue)](https://mypy-lang.org/)
 [![SARIF Compliant](https://img.shields.io/badge/SARIF-v2.1.0-blueviolet.svg)](https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html)
 [![CycloneDX 1.5](https://img.shields.io/badge/CycloneDX-v1.5-blue.svg)](https://cyclonedx.org/)
 [![SPDX 2.3](https://img.shields.io/badge/SPDX-v2.3-orange.svg)](https://spdx.dev/)
+[![LSP 3.17](https://img.shields.io/badge/LSP-v3.17-blue.svg)](https://microsoft.github.io/language-server-protocol/)
 
 ---
 
@@ -17,13 +18,16 @@
 
 **Python Hunter** is an enterprise-grade Application Security & Code Intelligence Platform designed to protect repositories from malware campaigns, malicious package hooks, software supply-chain attacks, hardcoded secrets, software vulnerabilities, and compliance regressions.
 
-Operating as a unified local CLI engine, a CI/CD security gatekeeper, and a multi-tenant REST service, Python Hunter consolidates **SAST, Secrets Detection, Software Composition Analysis (SCA), Malware Disinfection, and Enterprise SBOM Generation** into a seamless workflow.
+Operating as a unified local CLI engine, a CI/CD security gatekeeper, a Language Server (LSP) for VS Code / JetBrains, and a multi-tenant REST service, Python Hunter consolidates **SAST, Secrets Detection, Software Composition Analysis (SCA), Malware Disinfection, and Enterprise SBOM Generation** into a seamless workflow.
 
 ---
 
 ## Key Capabilities
 
 * **Unified Multi-Domain Pipeline (`python-hunter scan`):** Single-command security execution aggregating AST dataflow analysis, PolinRider / TasksJacker malware detection, secret leak scanning, and open-source dependency auditing.
+* **Automated Dependency Vulnerability Fixes & Version Bumping (`python-hunter fix`):** Automatically upgrades vulnerable, unpinned, or compromised dependency versions across `requirements.txt`, `pyproject.toml`, and `package.json`, complete with `--create-pr` GitHub automation.
+* **Interactive Terminal TUI Dashboard (`python-hunter tui`):** Rich curses-based terminal UI with keyboard navigation to inspect findings across domains (All, Malware, Secrets, Supply-Chain, SAST), examine exploitability evidence, and explore dependency risk scores.
+* **Real-Time IDE Integrations (VS Code & JetBrains LSP 3.17):** Dedicated Language Server Protocol daemon (`python-hunter lsp`) and compiler diagnostics CLI (`python-hunter diagnostics`) powering real-time red squiggles, inline hovers, and one-click quick fixes.
 * **Targeted Malware Disinfection (`python-hunter clean`):** Automated eradication of DPRK/PolinRider malware campaigns (sanitizing `.vscode/tasks.json`, deleting trojanized font binaries, neutralizing batch wipers, and restoring `.gitignore`).
 * **Automated Remediation Pull Requests (`--create-pr`):** Clones remote Git repositories, cleans active threats, commits patches, and opens a GitHub Remediation PR automatically.
 * **NPM & PyPI Supply-Chain Security:** Static AST inspection for dangerous `setup.py` `cmdclass` hooks, import-time process execution, dynamic base64/hex dynamic evaluation, C2 exfiltration webhooks, and typosquatting detection across ecosystems.
@@ -170,7 +174,76 @@ python-hunter report . --framework soc-2 --format json -o soc2-audit.json
 
 ---
 
-### 5. Individual Domain Security Subcommands
+---
+
+### 5. Automated Dependency Vulnerability Fixes & Version Bumping (`python-hunter fix`)
+Automatically detect and bump vulnerable or unpinned dependencies in `requirements.txt`, `pyproject.toml`, and `package.json`:
+
+```bash
+# Preview proposed fixes without writing to disk
+python-hunter fix . --dry-run
+
+# Apply dependency fixes to workspace
+python-hunter fix .
+
+# Only pin unconstrained dependencies
+python-hunter fix . --unpinned-only
+
+# Only fix known CVE vulnerabilities
+python-hunter fix . --vulns-only
+
+# Commit changes, push remediation branch, and open a GitHub Pull Request
+python-hunter fix https://github.com/org/repo --create-pr --branch main
+```
+
+---
+
+### 6. Interactive Terminal TUI Dashboard (`python-hunter tui`)
+Launch an interactive split-view terminal dashboard with keyboard navigation:
+
+```bash
+# Launch interactive curses dashboard
+python-hunter tui .
+
+# Headless snapshot output (for CI logs or non-interactive shells)
+python-hunter tui . --snapshot
+```
+
+**Keyboard Controls**:
+* `Tab` / `Left` / `Right`: Switch category tabs (`All`, `Malware`, `Secrets`, `Supply-Chain`, `SAST`)
+* `Up` / `Down` / `j` / `k`: Navigate through findings list
+* `Enter` / `Space`: Inspect finding evidence and remediation in detail pane
+* `r`: Re-scan project workspace
+* `q`: Exit dashboard
+
+---
+
+### 7. Real-Time IDE Plugin Integrations (VS Code & JetBrains)
+
+#### Visual Studio Code (`contrib/vscode`)
+1. Run Python Hunter as an in-editor Language Server:
+   ```bash
+   python-hunter lsp --stdio
+   ```
+2. Or use the turnkey VS Code extension located in [`contrib/vscode`](contrib/vscode/README.md) for inline squiggles and one-click quick fixes.
+
+#### JetBrains (PyCharm / IntelliJ IDEA / WebStorm)
+Configure `python-hunter diagnostics` as an **External Tool** or **File Watcher**:
+```bash
+# Emit compiler-style lint diagnostics for instant jump-to-line navigation
+python-hunter diagnostics path/to/file.py --format gcc
+
+# Emit Reviewdog Diagnostic JSON (rdjson)
+python-hunter diagnostics . --format rdjson
+
+# Emit GitLab / CodeClimate Quality format
+python-hunter diagnostics . --format codeclimate
+```
+See the complete JetBrains configuration guide in [`contrib/jetbrains/README.md`](contrib/jetbrains/README.md).
+
+---
+
+### 8. Individual Domain Security Subcommands
 Audit credentials and secret exposures:
 ```bash
 python-hunter secrets . [--format text|json]
