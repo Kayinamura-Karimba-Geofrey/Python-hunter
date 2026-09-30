@@ -5,9 +5,21 @@ from datetime import datetime, timezone
 import json
 import os
 import shutil
+import tempfile
 from typing import Any, Dict, List, Optional
 from python_hunter.domain.dependencies.models import Ecosystem
 from python_hunter.domain.dependencies.vulnerability_intel import Advisory, VulnerabilityProvider
+
+
+def _default_db_dir() -> str:
+    """V-09 fix: per-user cache location instead of shared world-writable /tmp.
+
+    A fixed /tmp/pyh_advisory_db path lets any local user pre-create (or poison) the
+    advisory DB and plant symlinks that this process would write through. A
+    user-scoped directory with restrictive permissions removes that attack.
+    """
+    base = os.getenv("XDG_CACHE_HOME") or os.path.join(os.path.expanduser("~"), ".cache")
+    return os.path.join(base, "python_hunter", "advisory_db")
 
 
 @dataclass
@@ -27,8 +39,8 @@ class DatabaseMetadata:
 class AdvisoryDatabase(VulnerabilityProvider):
     """Local offline advisory database provider supporting atomic updates, rollback, and corruption checks."""
 
-    def __init__(self, db_dir: str = "/tmp/pyh_advisory_db") -> None:
-        self.db_dir = db_dir
+    def __init__(self, db_dir: str = "") -> None:
+        self.db_dir = db_dir or _default_db_dir()
         self.meta_path = os.path.join(self.db_dir, "metadata.json")
         self.data_path = os.path.join(self.db_dir, "advisories.json")
         self.backup_dir = os.path.join(self.db_dir, ".backup")
@@ -37,7 +49,15 @@ class AdvisoryDatabase(VulnerabilityProvider):
         self._initialize_database()
 
     def _initialize_database(self) -> None:
-        os.makedirs(self.db_dir, exist_ok=True)
+        os.makedirs(self.db_dir, mode=0o700, exist_ok=True)
+        try:
+            os.chmod(self.db_dir, 0o700)
+        except OSError:
+            pass
+        # V-09/V-10: never write through a pre-planted symlink.
+        for p in (self.data_path, self.meta_path):
+            if os.path.islink(p):
+                raise RuntimeError(f"Refusing to operate on symlinked advisory database file: {p}")
         if not os.path.exists(self.data_path):
             self._bootstrap_default_advisories()
         else:
@@ -126,8 +146,9 @@ class AdvisoryDatabase(VulnerabilityProvider):
                     "vulnerable_functions": a.vulnerable_functions,
                 })
 
-        with open(self.data_path, "w", encoding="utf-8") as f:
-            json.dump(raw_data, f, indent=2)
+        # V-10 fix: atomic write (temp file in the same directory + rename). Never
+        # writes through symlinks and never leaves partially-written databases.
+        self._atomic_write_json(self.data_path, raw_data)
 
         meta_dict = {
             "database_version": self.metadata.database_version,
@@ -135,8 +156,25 @@ class AdvisoryDatabase(VulnerabilityProvider):
             "source": self.metadata.source,
             "total_advisories": self.metadata.total_advisories,
         }
-        with open(self.meta_path, "w", encoding="utf-8") as f:
-            json.dump(meta_dict, f, indent=2)
+        self._atomic_write_json(self.meta_path, meta_dict)
+
+    @staticmethod
+    def _atomic_write_json(path: str, payload: Any) -> None:
+        if os.path.islink(path):
+            raise RuntimeError(f"Refusing to write through symlink: {path}")
+        dir_name = os.path.dirname(path) or "."
+        fd, tmp_path = tempfile.mkstemp(prefix=".pyh_advisory_", dir=dir_name)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                json.dump(payload, f, indent=2)
+            os.chmod(tmp_path, 0o600)
+            os.replace(tmp_path, path)
+        except Exception:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+            raise
 
     def _load_database(self) -> None:
         try:

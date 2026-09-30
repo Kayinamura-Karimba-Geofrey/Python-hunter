@@ -25,6 +25,7 @@ class TestConfiguration(unittest.TestCase):
             "PYH_LOG_LEVEL": "DEBUG",
             "PYH_MAX_SCAN_FILE_SIZE_MB": "50",
             "PYH_SCAN_TIMEOUT_SECONDS": "600",
+            "PYH_SECRET_KEY": "a" * 48,
         }
         settings = Settings.load_from_env(env)
         self.assertEqual(settings.app.env, "production")
@@ -32,6 +33,12 @@ class TestConfiguration(unittest.TestCase):
         self.assertEqual(settings.log.level, "DEBUG")
         self.assertEqual(settings.scan.max_file_size_mb, 50)
         self.assertEqual(settings.scan.timeout_seconds, 600)
+
+        # V-02 regression guard: production with the old default secret is rejected.
+        with self.assertRaises(ConfigurationError):
+            Settings.load_from_env({**env, "PYH_SECRET_KEY": "change-this-in-production-super-secret-key"})
+        with self.assertRaises(ConfigurationError):
+            Settings.load_from_env({**env, "PYH_SECRET_KEY": ""})
 
     def test_invalid_log_level_validation(self) -> None:
         """Verify invalid log level raises ConfigurationError."""

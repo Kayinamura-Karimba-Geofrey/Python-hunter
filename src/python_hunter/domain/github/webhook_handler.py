@@ -4,6 +4,9 @@ import hashlib
 import hmac
 import json
 import logging
+import os
+import sys
+from collections import OrderedDict
 from urllib.parse import urlparse
 from typing import Any, Dict, Optional
 
@@ -13,6 +16,13 @@ logger = logging.getLogger("python_hunter.webhook")
 
 ALLOWED_GITHUB_HOSTS = {"api.github.com", "github.com", "raw.githubusercontent.com"}
 MAX_PAYLOAD_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB max payload size limit
+MAX_TRACKED_DELIVERIES = 10_000  # Replay-cache bound (memory exhaustion defense)
+
+
+class WebhookSecretNotConfiguredError(RuntimeError):
+    """Raised when webhook signature verification is attempted without a configured secret."""
+
+    pass
 
 
 class WebhookValidationError(Exception):
@@ -24,11 +34,35 @@ class GitHubWebhookHandler:
     """Validates and parses incoming GitHub webhooks safely."""
 
     def __init__(self, secret: Optional[str] = None) -> None:
-        self.secret = secret or "pyh_webhook_secret_dev_12345"
-        self._processed_deliveries: Dict[str, GitHubWebhookDelivery] = {}
+        # V-01 fix: never fall back to a hardcoded secret. The secret must come from
+        # configuration. When unset, signature verification hard-fails closed unless the
+        # process is explicitly running in a development environment.
+        env_secret = os.getenv("PYH_WEBHOOK_SECRET", "")
+        resolved = secret or env_secret
+        self._secret_configured = bool(resolved)
+        if not resolved:
+            is_dev = os.getenv("PYH_ENV", "production").lower() in ("dev", "development", "local", "test")
+            if is_dev:
+                resolved = f"pyh_dev_only_{os.urandom(16).hex()}"
+                logger.warning(
+                    "PYH_WEBHOOK_SECRET not set: using a random ephemeral secret for this "
+                    "development session only. GitHub webhooks must be reconfigured accordingly."
+                )
+            else:
+                # Constructible in production (so pure validation helpers like SSRF
+                # checks keep working), but signature verification fails closed below.
+                resolved = ""
+        self.secret = resolved
+        # V-13 fix: bounded FIFO replay cache instead of an unbounded dict.
+        self._processed_deliveries: "OrderedDict[str, GitHubWebhookDelivery]" = OrderedDict()
 
     def validate_signature(self, raw_body: bytes, signature_header: Optional[str]) -> bool:
         """Validates GitHub HMAC SHA-256 signature (X-Hub-Signature-256)."""
+        if not self._secret_configured:
+            raise WebhookSecretNotConfiguredError(
+                "Webhook secret is not configured. Set the PYH_WEBHOOK_SECRET environment "
+                "variable to the GitHub webhook secret before processing deliveries."
+            )
         if not signature_header:
             raise WebhookValidationError("Missing X-Hub-Signature-256 header.")
 
@@ -56,19 +90,45 @@ class GitHubWebhookHandler:
             delivery_id=delivery_id,
             event_type=event_type,
         )
+        while len(self._processed_deliveries) > MAX_TRACKED_DELIVERIES:
+            self._processed_deliveries.popitem(last=False)
         return True
 
     @staticmethod
     def validate_ssrf_host(url: str) -> bool:
-        """Validates that repository and external resource URLs belong to allowed GitHub hosts."""
+        """Validates that repository and external resource URLs belong to allowed GitHub hosts.
+
+        V-03 hardening:
+        - Only HTTPS is accepted for remote resources (plain HTTP is rejected).
+        - The previous ``endswith(".github.com")`` check allowed lookalike domains
+          (e.g. ``evil.github.com.attacker.io``); suffix matching now requires a dot
+          boundary immediately after an allowed host.
+        - Literal-IP URLs (http://169.254.169.254, http://127.0.0.1, ...) are rejected:
+          they can never be legitimate GitHub hosts and enable cloud-metadata SSRF.
+        """
         if not url:
             return True
         parsed = urlparse(url)
-        if parsed.scheme not in ("http", "https"):
-            raise WebhookValidationError(f"Invalid URL scheme: {parsed.scheme}")
+        if parsed.scheme != "https":
+            raise WebhookValidationError(f"Invalid URL scheme: '{parsed.scheme}'. Only https:// is allowed.")
 
-        hostname = parsed.hostname or ""
-        if hostname.lower() not in ALLOWED_GITHUB_HOSTS and not hostname.lower().endswith(".github.com"):
+        hostname = (parsed.hostname or "").lower()
+        if not hostname:
+            raise WebhookValidationError("SSRF violation: URL has no hostname.")
+
+        # Reject literal-IP hosts entirely (metadata endpoints, loopback, link-local, RFC1918).
+        try:
+            import ipaddress
+
+            ipaddress.ip_address(hostname)  # Raises ValueError if hostname is not an IP literal.
+            raise WebhookValidationError(f"SSRF violation: Literal-IP URL '{hostname}' is not allowed.")
+        except ValueError:
+            pass
+
+        allowed = hostname in ALLOWED_GITHUB_HOSTS or (
+            "." in hostname and hostname.endswith(".github.com")
+        )
+        if not allowed:
             raise WebhookValidationError(f"SSRF violation: Host '{hostname}' is not an allowed GitHub domain.")
         return True
 

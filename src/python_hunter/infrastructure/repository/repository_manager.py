@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 import selectors
 import shutil
 import subprocess
@@ -14,6 +15,27 @@ from typing import Optional
 from python_hunter.infrastructure.repository.target_resolver import ScanTarget, TargetType
 
 logger = logging.getLogger(__name__)
+
+
+def validate_git_ref(ref: str, kind: str = "ref") -> str:
+    """Validates a git branch/tag/commit reference before it reaches the command line.
+
+    V-14 fix: single shared validator with a strict allow-list. Previously only a
+    leading-"-" prefix was rejected, and the check was duplicated per call site.
+    """
+    if not ref or not ref.strip():
+        raise ValueError(f"Empty git {kind} reference.")
+    if ref.startswith("-") or ref.startswith("/"):
+        raise ValueError(f"Potentially malicious git {kind} detected: {ref!r}")
+    if any(c.isspace() for c in ref):
+        raise ValueError(f"Potentially malicious git {kind} detected (whitespace): {ref!r}")
+    if any(c in ref for c in "~^:?*[\\\x00"):
+        raise ValueError(f"Potentially malicious git {kind} detected (control/ambiguous char): {ref!r}")
+    if ref in (".", "..") or ".lock" in ref:
+        raise ValueError(f"Disallowed git {kind}: {ref!r}")
+    if len(ref) > 255:
+        raise ValueError(f"Git {kind} exceeds maximum length.")
+    return ref
 
 
 @dataclass
@@ -188,6 +210,7 @@ class RepositoryManager:
     ) -> None:
         self.credentials = credentials or RepositoryCredentials.from_env()
         self.temp_dirs: list[str] = []
+        self.temp_files: list[str] = []  # credential helper scripts etc. (V-04 hygiene)
         self.default_timeout = timeout
         self.default_idle_timeout = idle_timeout
 
@@ -204,6 +227,14 @@ class RepositoryManager:
             return target.local_path
 
         if target.target_type == TargetType.GITHUB_REPOSITORY:
+            # V-03 fix: enforce the host allow-list before any network I/O. The
+            # TargetResolver regex only matches github.com URLs, but it accepts plain
+            # http:// which must never be cloned (credentials/cleartext sniffing) and
+            # this manager is also callable with arbitrary ScanTargets from the API.
+            from python_hunter.domain.github.webhook_handler import GitHubWebhookHandler
+
+            GitHubWebhookHandler.validate_ssrf_host(target.repository_url)
+
             target_dir = dest_dir
             if not target_dir:
                 target_dir = tempfile.mkdtemp(prefix="pyh_repo_")
@@ -211,14 +242,25 @@ class RepositoryManager:
 
             clone_url = target.repository_url
             token = self.credentials.github_token or os.environ.get("GITHUB_TOKEN")
-            if token and "https://github.com/" in clone_url:
-                clone_url = clone_url.replace(
-                    "https://github.com/", f"https://x-access-token:{token}@github.com/"
-                )
-
             git_env = os.environ.copy()
             git_env["GIT_TERMINAL_PROMPT"] = "0"
             git_env["GIT_SSH_COMMAND"] = "ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15"
+
+            # V-04 fix: do NOT embed the token in the clone URL. A URL like
+            # https://x-access-token:<secret>@github.com/... exposes the credential via
+            # the process list (ps/proc) for the whole clone and can leak through git
+            # error output and logs. Instead pass the secret via the GIT_ASKPASS
+            # credential helper, which git invokes as a child process at auth time.
+            if token and "https://github.com/" in clone_url:
+                askpass = self._write_git_askpass(token)
+                git_env["GIT_ASKPASS"] = askpass
+                git_env["GIT_USERNAME"] = "x-access-token"
+                git_env["GH_ASKPASS_TOKEN"] = token
+                # Defense in depth: stop git from echoing diagnostics that could
+                # include credential material.
+                git_env["GIT_TRACE"] = "0"
+                git_env["GIT_CURL_VERBOSE"] = "0"
+                self.temp_files.append(askpass)
 
             sys.stdout.write(f"[*] Acquiring remote repository: {target.source} ...\n")
             sys.stdout.flush()
@@ -229,8 +271,7 @@ class RepositoryManager:
             def build_clone_cmd(url: str) -> list[str]:
                 c = ["git", "clone", "--depth", "1", "--single-branch", "--progress"]
                 if target.branch:
-                    if target.branch.startswith("-"):
-                        raise ValueError(f"Potentially malicious git branch name detected: {target.branch}")
+                    validate_git_ref(target.branch, "branch")
                     c.extend(["--branch", target.branch])
                 c.extend(["--", url, target_dir])
                 return c
@@ -285,19 +326,20 @@ class RepositoryManager:
                 )
 
             if target.commit:
-                if target.commit.startswith("-"):
-                    raise ValueError(f"Potentially malicious git commit hash detected: {target.commit}")
+                validate_git_ref(target.commit, "commit")
                 try:
                     subprocess.run(
-                        ["git", "fetch", "--depth", "50"],
+                        ["git", "fetch", "--depth", "50", "origin"],
                         cwd=target_dir,
                         check=True,
                         capture_output=True,
                         timeout=60,
                         env=git_env,
                     )
+                    # V-14 fix: 'git checkout -- <ref>' is the path-disambiguating form
+                    # and fails for commit SHAs on shallow clones; use '--detach <sha>'.
                     subprocess.run(
-                        ["git", "checkout", "--", target.commit],
+                        ["git", "checkout", "--detach", target.commit],
                         cwd=target_dir,
                         check=True,
                         capture_output=True,
@@ -312,10 +354,37 @@ class RepositoryManager:
 
         raise ValueError(f"Unsupported target type: {target.target_type}")
 
+    @staticmethod
+    def _write_git_askpass(token: str) -> str:
+        """Writes a temporary GIT_ASKPASS helper returning the token on stdout.
+
+        The token never appears in the git command line or in the environment of the
+        git process itself; it lives only inside this helper script (mode 0600) in a
+        private temp directory and is deleted with the rest of the temp state.
+        """
+        helper_dir = tempfile.mkdtemp(prefix="pyh_askpass_")
+        helper_path = os.path.join(helper_dir, "askpass.sh")
+        fd = os.open(helper_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write('#!/bin/sh\necho "$GH_ASKPASS_TOKEN"\n')
+        os.chmod(helper_path, 0o700)
+        return helper_path
+
     def cleanup(self) -> None:
-        """Safely removes all temporary cloned repository directories."""
+        """Safely removes all temporary cloned repository directories and credential files."""
         for temp_dir in self.temp_dirs:
             if os.path.exists(temp_dir):
                 shutil.rmtree(temp_dir, ignore_errors=True)
         self.temp_dirs.clear()
+        # V-04 hygiene: shred askpass helpers (which reference the token) first, then
+        # their private directories.
+        for temp_file in self.temp_files:
+            try:
+                if os.path.exists(temp_file):
+                    with open(temp_file, "r+") as fh:
+                        fh.write("#!/bin/sh\nexit 1\n" + " " * 64)
+                os.remove(temp_file)
+            except Exception:
+                pass
+        self.temp_files.clear()
 

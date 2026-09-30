@@ -1,5 +1,6 @@
 """Verification Planner, Allowlist/Denylist Safety Validator, and Authorization Engine."""
 
+import ipaddress
 import re
 import urllib.parse
 from typing import Any, Dict, List, Optional, Tuple
@@ -32,19 +33,23 @@ DENYLIST_PATTERNS = [
 ALLOWLIST_PATTERNS = [
     r"^localhost$",
     r"^127\.0\.0\.1$",
-    r"^0\.0\.0\.0$",
     r"^::1$",
-    r".*\.local$",
-    r".*\.test$",
+    r"^\[::1\]$",
 ]
-
 
 class SafetyValidator:
     """Validates target URLs, IP addresses, and environments for active verification safety."""
 
-    @staticmethod
-    def is_target_allowed(target: str) -> Tuple[bool, str]:
-        """Validates target against denylist and allowlist rules."""
+    # V-06 fix: allow-list hostnames must actually resolve to loopback addresses.
+    # Previously 0.0.0.0 (routable to any host) and attacker-controlled *.local/*.test
+    # DNS names were accepted, and a hostname was never re-resolved at the socket layer
+    # (DNS-rebinding / hosts-file spoofing could point 'localhost' anywhere).
+    _RESERVED_HOSTS = {"localhost"}
+    _ALLOWED_IP_NETWORKS = tuple(ipaddress.ip_network(n) for n in ("127.0.0.0/8", "::1/128"))
+
+    @classmethod
+    def is_target_allowed(cls, target: str) -> Tuple[bool, str]:
+        """Validates target against denylist and allowlist rules, enforcing loopback resolution."""
         if not target:
             return False, "Target address/URL cannot be empty."
 
@@ -53,6 +58,8 @@ class SafetyValidator:
         if "://" in target:
             parsed = urllib.parse.urlparse(target)
             clean_target = parsed.hostname or target
+            if parsed.scheme not in ("http", "https"):
+                return False, f"Target scheme '{parsed.scheme}' is not allowed."
 
         # Check Denylist
         for denypat in DENYLIST_PATTERNS:
@@ -63,6 +70,16 @@ class SafetyValidator:
         allowed = any(re.search(allowpat, clean_target, re.IGNORECASE) for allowpat in ALLOWLIST_PATTERNS)
         if not allowed:
             return False, f"Target '{target}' is not in the authorized local test allowlist. Active verification blocked."
+
+        # Enforce loopback resolution (anti DNS-rebinding).
+        if clean_target.lower() in cls._RESERVED_HOSTS:
+            return True, "Target is safely authorized for non-destructive local verification."
+        try:
+            addr = ipaddress.ip_address(clean_target.strip("[]"))
+        except ValueError:
+            return False, f"Target host '{clean_target}' could not be validated as a loopback address."
+        if not any(addr in net for net in cls._ALLOWED_IP_NETWORKS):
+            return False, f"Target '{target}' does not resolve within the loopback allowlist."
 
         return True, "Target is safely authorized for non-destructive local verification."
 

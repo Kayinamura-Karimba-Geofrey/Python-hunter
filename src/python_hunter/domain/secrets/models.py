@@ -67,11 +67,45 @@ class SecretPrivilege(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+def _fingerprint_salt() -> str:
+    """V-11: per-installation random salt for secret fingerprints.
+
+    A static salt embedded in the source lets an attacker who obtains a database of
+    fingerprints brute-force candidate secrets offline. A random per-install salt
+    (generated once, stored next to other local state with user-only permissions)
+    keeps fingerprints stable within one machine while making cross-target
+    dictionary attacks infeasible.
+    """
+    import os
+
+    salt_file = os.path.join(
+        os.getenv("XDG_CACHE_HOME") or os.path.join(os.path.expanduser("~"), ".cache"),
+        "python_hunter",
+        "fp_salt",
+    )
+    try:
+        os.makedirs(os.path.dirname(salt_file), mode=0o700, exist_ok=True)
+        if os.path.exists(salt_file) and not os.path.islink(salt_file):
+            with open(salt_file, "r", encoding="utf-8") as f:
+                stored = f.read().strip()
+                if stored:
+                    return stored
+        salt = os.urandom(32).hex()
+        fd = os.open(salt_file, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(salt)
+        return salt
+    except Exception:
+        # Last resort: ephemeral random salt. Fingerprints remain valid for this
+        # process run only, which still prevents offline cross-target correlation.
+        return os.urandom(32).hex()
+
+
 def compute_secret_fingerprint(secret_val: str) -> str:
-    """Computes a non-reversible SHA-256 fingerprint for secret identification without storing raw credentials."""
+    """Computes a non-reversible keyed SHA-256 fingerprint for secret identification without storing raw credentials."""
     if not secret_val:
         return ""
-    salt = "pyh_secret_salt_v1"
+    salt = _fingerprint_salt()
     hasher = hashlib.sha256()
     hasher.update(f"{salt}:{secret_val.strip()}".encode("utf-8"))
     return f"sec_fp_{hasher.hexdigest()[:32]}"

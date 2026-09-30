@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import json
 import logging
 import os
+import tempfile
 from typing import Any
 
 from python_hunter.domain.vulnerabilities.models import (
@@ -80,12 +81,28 @@ class CachedVulnerabilityProvider(VulnerabilityProvider):
 
     def _save_cache(self) -> None:
         try:
-            os.makedirs(self.cache_dir, exist_ok=True)
+            os.makedirs(self.cache_dir, mode=0o700, exist_ok=True)
             serializable: dict[str, Any] = {}
             for key, vulns in self._memory_cache.items():
                 serializable[key] = [self._vuln_to_dict(v) for v in vulns]
-            with open(self._cache_file, "w", encoding="utf-8") as f:
-                json.dump(serializable, f, indent=2)
+            # V-10 fix: atomic, no-symlink write. The old direct open(..., "w") would
+            # happily follow a pre-planted symlink at self._cache_file and truncate
+            # whatever file it pointed at.
+            if os.path.islink(self._cache_file):
+                logger.warning("Refusing to write vulnerability cache through symlink: %s", self._cache_file)
+                return
+            fd, tmp_path = tempfile.mkstemp(prefix=".pyh_vulncache_", dir=self.cache_dir)
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as f:
+                    json.dump(serializable, f, indent=2)
+                os.chmod(tmp_path, 0o600)
+                os.replace(tmp_path, self._cache_file)
+            except Exception:
+                try:
+                    os.unlink(tmp_path)
+                except OSError:
+                    pass
+                raise
         except Exception as e:
             logger.warning(f"Failed to write vulnerability cache file: {e}")
 

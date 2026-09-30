@@ -12,7 +12,27 @@ class AppConfig:
 
     env: str = "development"
     debug: bool = True
-    secret_key: str = "change-this-in-production-super-secret-key"
+    secret_key: str = ""
+
+    # V-02 fix: known-insecure default keys. Starting a production process with one of
+    # these (or an empty key) is a critical misconfiguration, so it is rejected.
+    FORBIDDEN_SECRET_KEYS = {
+        "",
+        "change-this-in-production-super-secret-key",
+        "change-this-in-production-super-secret-key-32-chars",
+    }
+
+    def __post_init__(self) -> None:
+        if self.env.lower() not in ("development", "dev", "local", "test") and self.secret_key in self.FORBIDDEN_SECRET_KEYS:
+            raise ConfigurationError(
+                "Refusing to start in production with the default PYH_SECRET_KEY. "
+                "Generate a unique high-entropy secret, e.g.: python -c "
+                "'import secrets; print(secrets.token_urlsafe(48))'",
+                {"env": self.env},
+            )
+
+    def is_development(self) -> bool:
+        return self.env.lower() in ("development", "dev", "local", "test")
 
 
 @dataclass
@@ -63,7 +83,9 @@ class Settings:
 
         app_env = env.get("PYH_ENV", "development")
         app_debug = env.get("PYH_DEBUG", "true").lower() in ("true", "1", "yes")
-        app_secret = env.get("PYH_SECRET_KEY", "change-this-in-production-super-secret-key")
+        # V-02 fix: no default secret key is invented here. Production startup with a
+        # missing/default key is rejected by AppConfig.__post_init__ below.
+        app_secret = env.get("PYH_SECRET_KEY", "")
 
         log_level = env.get("PYH_LOG_LEVEL", "INFO")
         log_format = env.get("PYH_LOG_FORMAT", "text")

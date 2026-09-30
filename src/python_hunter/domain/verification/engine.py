@@ -6,6 +6,17 @@ import urllib.request
 import urllib.error
 from typing import Any, Dict, List, Optional, Tuple
 
+
+class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """V-07 fix: blocks redirect-following during active verification.
+
+    Without this, a 3xx from the target could bounce the verification request to any
+    host, silently bypassing the SafetyValidator loopback allowlist.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[no-untyped-def]
+        return None
+
 from python_hunter.domain.common.enums import (
     Confidence,
     TestSafetyLevel,
@@ -86,8 +97,9 @@ class VerificationSandbox:
                 },
             )
 
-            # Enforce execution timeout
-            with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
+            # Enforce execution timeout; V-07: redirect responses are NOT followed.
+            opener = urllib.request.build_opener(_NoRedirectHandler)
+            with opener.open(req, timeout=self.timeout_seconds) as resp:
                 body = resp.read().decode("utf-8", errors="ignore")
                 elapsed_ms = (time.time() - start_time) * 1000.0
 

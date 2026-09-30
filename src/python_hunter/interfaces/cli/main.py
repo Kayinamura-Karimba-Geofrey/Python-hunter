@@ -673,6 +673,28 @@ def run_cli(args: list[str] | None = None) -> int:
             dest_dir = os.path.abspath(dest_dir)
 
             if os.path.exists(dest_dir):
+                # V-12 fix: refuse to run destructive disinfection + PR automation
+                # inside a pre-existing directory that is not the requested GitHub
+                # repository (a user could otherwise point --dest at any repo).
+                dest_git_config = os.path.join(dest_dir, ".git", "config")
+                if not os.path.isfile(dest_git_config):
+                    sys.stderr.write(
+                        f"Error: Destination '{dest_dir}' exists but is not a git repository clone. "
+                        "Remove it or choose another --dest directory.\n"
+                    )
+                    return 1
+                try:
+                    cfg = open(dest_git_config, "r", encoding="utf-8", errors="ignore").read()
+                except Exception:
+                    cfg = ""
+                expected_owner = scan_target.metadata.get("owner", "")
+                expected_repo = scan_target.metadata.get("repo", "")
+                if expected_owner and expected_repo and f"github.com/{expected_owner}/{expected_repo}" not in cfg:
+                    sys.stderr.write(
+                        f"Error: Destination '{dest_dir}' belongs to a different repository "
+                        f"than '{expected_owner}/{expected_repo}'. Refusing to disinfect.\n"
+                    )
+                    return 1
                 sys.stderr.write(f"Notice: Destination directory '{dest_dir}' already exists. Disinfecting existing files...\n")
                 local_path = dest_dir
             else:

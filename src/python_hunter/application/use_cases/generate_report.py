@@ -40,6 +40,8 @@ from python_hunter.infrastructure.reporting.base import ReporterRegistry
 
 # Import reporters to ensure registration in ReporterRegistry
 import python_hunter.infrastructure.reporting.csv_reporter  # noqa: F401
+import html as _html
+
 import python_hunter.infrastructure.reporting.html_reporter  # noqa: F401
 import python_hunter.infrastructure.reporting.json_reporter  # noqa: F401
 import python_hunter.infrastructure.reporting.markdown_reporter  # noqa: F401
@@ -296,10 +298,10 @@ class GenerateReportUseCase:
             rem_rows.append(
                 f"""<tr>
                   <td style="font-weight:bold;text-align:center;">#{r.priority_level}</td>
-                  <td><code>{r.rule_id}</code></td>
-                  <td><strong>{r.title}</strong><br><span style="color:#94a3b8;font-size:12px;">{r.file_path}:{r.line}</span></td>
+                  <td><code>{_html.escape(r.rule_id)}</code></td>
+                  <td><strong>{_html.escape(r.title)}</strong><br><span style="color:#94a3b8;font-size:12px;">{_html.escape(r.file_path)}:{r.line}</span></td>
                   <td><span style="background:#dc2626;color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:bold;">{r.risk_score:.1f}</span></td>
-                  <td style="color:#cbd5e1;font-size:13px;">{r.remediation_text}</td>
+                  <td style="color:#cbd5e1;font-size:13px;">{_html.escape(r.remediation_text)}</td>
                 </tr>"""
             )
 
@@ -310,8 +312,8 @@ class GenerateReportUseCase:
             st_color = "#10b981" if state_str == "COMPLIANT" else ("#f59e0b" if state_str == "PARTIALLY_COMPLIANT" else "#ef4444")
             ctrl_rows.append(
                 f"""<tr>
-                  <td><code>{c.get('control_id')}</code></td>
-                  <td>{c.get('title')}</td>
+                  <td><code>{_html.escape(str(c.get('control_id')))}</code></td>
+                  <td>{_html.escape(str(c.get('title')))}</td>
                   <td><span style="background:{st_color};color:#fff;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:bold;">{state_str}</span></td>
                   <td style="text-align:center;">{c.get('findings_count', 0)}</td>
                 </tr>"""
@@ -325,9 +327,9 @@ class GenerateReportUseCase:
             findings_rows.append(
                 f"""<tr>
                   <td><span style="background:{s_color};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:bold;">{sev}</span></td>
-                  <td><code>{f.rule_id}</code></td>
-                  <td><strong>{f.title}</strong><br><span style="color:#94a3b8;font-size:11px;">{f.file_path}:{line_no}</span></td>
-                  <td style="font-family:monospace;font-size:12px;color:#cbd5e1;">{f.evidence or '-'}</td>
+                  <td><code>{_html.escape(f.rule_id)}</code></td>
+                  <td><strong>{_html.escape(f.title)}</strong><br><span style="color:#94a3b8;font-size:11px;">{_html.escape(f.file_path)}:{line_no}</span></td>
+                  <td style="font-family:monospace;font-size:12px;color:#cbd5e1;">{_html.escape(f.evidence or '-')}</td>
                 </tr>"""
             )
 
@@ -336,7 +338,7 @@ class GenerateReportUseCase:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{d['title']}</title>
+  <title>{_html.escape(d['title'])}</title>
   <style>
     :root {{
       --bg: #0b1120;
@@ -423,10 +425,10 @@ class GenerateReportUseCase:
   <div class="container">
     <div class="header">
       <div>
-        <h1>{d['title']}</h1>
+        <h1>{_html.escape(d['title'])}</h1>
         <div class="meta">
-          Organization: <span class="badge-org">{d['organization']}</span> &nbsp;|&nbsp;
-          Target: <code>{d['target']}</code> &nbsp;|&nbsp;
+          Organization: <span class="badge-org">{_html.escape(d['organization'])}</span> &nbsp;|&nbsp;
+          Target: <code>{_html.escape(d['target'])}</code> &nbsp;|&nbsp;
           Timestamp: {d['timestamp']}
         </div>
       </div>
@@ -498,7 +500,6 @@ class GenerateReportUseCase:
         <div style="font-size:12px;color:var(--text-muted);">Injection sinks, command execution, insecure deserialization.</div>
       </div>
     </div>
-
     <div class="section-card">
       <h2>Top Remediation Priorities (Actionable Roadmap)</h2>
       <table>
