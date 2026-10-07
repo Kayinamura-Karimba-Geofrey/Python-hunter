@@ -1,7 +1,6 @@
 """Structured Logger with Secret Redaction."""
 
 import json
-import logging
 from datetime import datetime, timezone
 from typing import Any
 
@@ -35,5 +34,4 @@ class StructuredLogger:
         payload.update(extra)
         raw_json = json.dumps(payload)
         # Redact secrets
-        safe_json = raw_json.replace("SECRET", "[REDACTED]")
-        return safe_json
+        return raw_json.replace("SECRET", "[REDACTED]")
