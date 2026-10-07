@@ -49,7 +49,7 @@ class IntelligenceImpactGraph:
             for neighbor in self.edges.get(curr, set()):
                 queue.append(neighbor)
 
-        return sorted(list(affected_repos))
+        return sorted(affected_repos)
 
     def get_organization_impact(self) -> dict[str, Any]:
         """Summarize organization-wide vulnerability impact."""
