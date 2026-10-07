@@ -1,6 +1,5 @@
 """Unit tests for Step 37 Infrastructure Security Engine."""
 
-import os
 import unittest
 from python_hunter.domain.infrastructure.models import InfrastructureIR
 from python_hunter.infrastructure.iac.docker_adapter import DockerAdapter
