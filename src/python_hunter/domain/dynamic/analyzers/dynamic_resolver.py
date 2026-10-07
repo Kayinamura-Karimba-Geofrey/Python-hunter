@@ -59,7 +59,7 @@ class DynamicResolver:
                     parts_sets.append({str(v) for v in sub_vals} if sub_vals else {"<dynamic>"})
                 else:
                     parts_sets.append({"<dynamic>"})
-            
+
             # Cartesian product of parts
             results = {""}
             for pset in parts_sets:
