@@ -27,7 +27,7 @@ class NPMSupplyChainAnalyzer:
             return findings
 
         try:
-            with open(package_json_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(package_json_path, encoding="utf-8", errors="ignore") as f:
                 data = json.load(f)
 
             # Analyze lifecycle scripts
