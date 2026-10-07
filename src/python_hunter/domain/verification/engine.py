@@ -4,7 +4,7 @@ import logging
 import time
 import urllib.request
 import urllib.error
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 
 class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
@@ -18,7 +18,6 @@ class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
         return None
 
 from python_hunter.domain.common.enums import (
-    Confidence,
     TestSafetyLevel,
     VerificationConfidence,
     VerificationMode,
@@ -29,8 +28,7 @@ from python_hunter.domain.verification.models import (
     VerificationAuthorization,
     VerificationResult,
 )
-from python_hunter.domain.verification.payloads import SafePayloadRegistry
-from python_hunter.domain.verification.planner import SafetyValidator, VerificationPlanner
+from python_hunter.domain.verification.planner import VerificationPlanner
 
 logger = logging.getLogger("python_hunter.verification")
 
@@ -41,8 +39,6 @@ class PassiveVerifier:
     @staticmethod
     def verify_finding(finding: Dict[str, Any]) -> VerificationResult:
         """Analyzes static evidence quality to upgrade confidence passively."""
-        rule_id = str(finding.get("rule_id", ""))
-        evidence = str(finding.get("evidence", ""))
         reachability = str(finding.get("reachability", "")).upper()
         confidence_str = str(finding.get("confidence", "LOW")).upper()
 
@@ -62,7 +58,7 @@ class PassiveVerifier:
         else:
             status = VerificationStatus.NOT_VERIFIED
             conf = VerificationConfidence.LOW
-            ev_summary = f"Passive Verification Inconclusive: Finding has limited static evidence traces."
+            ev_summary = "Passive Verification Inconclusive: Finding has limited static evidence traces."
 
         return VerificationResult(
             finding_id=str(finding.get("id", "f-unknown")),
