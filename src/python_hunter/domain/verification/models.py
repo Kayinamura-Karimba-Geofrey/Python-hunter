@@ -2,13 +2,12 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import List
 import hashlib
 
 from python_hunter.domain.common.enums import (
     VerificationStatus,
     VerificationConfidence,
-    VerificationMode,
     TestSafetyLevel,
 )
 
