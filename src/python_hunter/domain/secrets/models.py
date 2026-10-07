@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
 import hashlib
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.common.enums import Confidence, Severity
@@ -86,7 +86,7 @@ def _fingerprint_salt() -> str:
     try:
         os.makedirs(os.path.dirname(salt_file), mode=0o700, exist_ok=True)
         if os.path.exists(salt_file) and not os.path.islink(salt_file):
-            with open(salt_file, "r", encoding="utf-8") as f:
+            with open(salt_file, encoding="utf-8") as f:
                 stored = f.read().strip()
                 if stored:
                     return stored
