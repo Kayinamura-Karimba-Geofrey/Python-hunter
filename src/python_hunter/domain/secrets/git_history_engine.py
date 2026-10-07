@@ -1,16 +1,13 @@
 """Git History Secret Scanner and Pull Request Secret Diffing Engine."""
 
 from dataclasses import dataclass, field
-from enum import Enum
 import os
 import subprocess
 from typing import Any, Dict, List, Optional, Set
 
 from python_hunter.domain.secrets.engine import SecretDetectionEngine
 from python_hunter.domain.secrets.models import (
-    ExposureType,
     SecretCandidate,
-    SecretExposure,
     compute_secret_fingerprint,
 )
 from python_hunter.domain.secrets.redaction import Redactor
