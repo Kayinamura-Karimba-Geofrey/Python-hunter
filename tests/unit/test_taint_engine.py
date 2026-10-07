@@ -1,6 +1,5 @@
 """Unit tests for Static Dataflow & Taint Analysis Engine."""
 
-import ast
 import unittest
 
 from python_hunter.domain.ast.models import ASTDocument
