@@ -3,20 +3,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
 from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.findings.finding import Finding
-
-
-class FindingLifecycle(str, Enum):
-    """Lifecycle state of a finding across snapshots."""
-
-    NEW = "NEW"
-    EXISTING = "EXISTING"
-    FIXED = "FIXED"
-    REOPENED = "REOPENED"
-    CHANGED = "CHANGED"
-    SUPPRESSED = "SUPPRESSED"
 
 
 class RegressionType(str, Enum):
