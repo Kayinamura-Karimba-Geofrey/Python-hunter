@@ -2,7 +2,6 @@
 
 from enum import IntEnum
 from python_hunter.application.orchestrator.scan_context import ScanResult
-from python_hunter.domain.common.enums import Severity
 
 
 class ExitCode(IntEnum):
