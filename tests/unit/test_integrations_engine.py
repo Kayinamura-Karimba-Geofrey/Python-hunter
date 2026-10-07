@@ -3,9 +3,8 @@
 import unittest
 
 from python_hunter.domain.integrations.credentials import CredentialManager
-from python_hunter.domain.integrations.engine import IntegrationCircuitBreaker, IntegrationEngine
-from python_hunter.domain.integrations.models import Integration, IntegrationProviderType, IntegrationStatus
-from python_hunter.domain.integrations.providers import JiraProvider, SlackProvider, WebhookProvider
+from python_hunter.domain.integrations.engine import IntegrationCircuitBreaker
+from python_hunter.domain.integrations.providers import JiraProvider, WebhookProvider
 
 
 class TestIntegrationsEngineUnit(unittest.TestCase):
@@ -13,7 +12,7 @@ class TestIntegrationsEngineUnit(unittest.TestCase):
 
     def test_credential_encryption_and_tenant_isolation(self) -> None:
         mgr = CredentialManager(master_key="test_master_key_32bytes")
-        meta = mgr.store_credential(
+        mgr.store_credential(
             credential_id="cred-jira-1",
             organization_id="org-a",
             integration_id="int-jira-1",
