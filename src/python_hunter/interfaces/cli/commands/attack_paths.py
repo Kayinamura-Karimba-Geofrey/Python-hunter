@@ -2,7 +2,6 @@
 
 import argparse
 import sys
-from typing import List
 
 from python_hunter.application.services.security_app_service import SecurityApplicationService
 
@@ -19,10 +18,13 @@ def register_attack_paths_command(subparsers: argparse._SubParsersAction) -> Non
 
 def handle_attack_paths_command(args: argparse.Namespace) -> int:
     service = SecurityApplicationService()
-    
+
     if getattr(args, "explain", None):
         paths = service.list_attack_paths()
-        target_path = next((p for p in paths if p["id"] == args.explain), paths[0])
+        target_path = next((p for p in paths if p["id"] == args.explain), None)
+        if target_path is None:
+            sys.stderr.write(f"Error: Attack path '{args.explain}' not found in the latest recorded scan.\n")
+            return 1
         sys.stdout.write("==========================================================\n")
         sys.stdout.write(f" Attack Path Explanation: {target_path['id']}\n")
         sys.stdout.write("==========================================================\n")
