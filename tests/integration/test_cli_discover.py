@@ -1,6 +1,5 @@
 """Integration tests for CLI discover command."""
 
-import json
 import os
 import unittest
 from python_hunter.interfaces.cli.main import run_cli
