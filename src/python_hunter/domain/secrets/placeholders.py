@@ -43,6 +43,9 @@ class PlaceholderFilter:
         re.compile(r"^<.*>$"),
         re.compile(r"^\[.*\]$"),
         re.compile(r"your[_-]?api[_-]?key", re.IGNORECASE),
+        # Documentation placeholders such as ghp_yourTokenHere or ghp_yourPersonalAccessToken
+        re.compile(r"your[a-z_-]*(?:token|key|secret|password|pat)", re.IGNORECASE),
+        re.compile(r"(?:token|key|secret|password)[_-]?here$", re.IGNORECASE),
         re.compile(r"replace[_-]?me", re.IGNORECASE),
         re.compile(r"change[_-]?me", re.IGNORECASE),
         re.compile(r"change[_-]?this", re.IGNORECASE),
