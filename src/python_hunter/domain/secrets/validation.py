@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from python_hunter.domain.secrets.models import SecretCandidate, SecretType
 
 
@@ -44,15 +44,3 @@ class ExternalValidationProvider(ABC):
     @abstractmethod
     def validate_externally(self, candidate: SecretCandidate) -> Dict[str, Any]:
         """Validate credential state against external API endpoint with strict privacy controls."""
-        pass
-
-
-class DummyExternalValidationProvider(ExternalValidationProvider):
-    """Safe fallback external validation provider ensuring zero network traffic."""
-
-    def validate_externally(self, candidate: SecretCandidate) -> Dict[str, Any]:
-        return {
-            "validated": False,
-            "status": "EXTERNAL_VALIDATION_DISABLED",
-            "message": "External secret validation is disabled by default to prevent secret exposure.",
-        }
