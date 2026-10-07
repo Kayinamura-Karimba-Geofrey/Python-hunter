@@ -5,8 +5,6 @@ import unittest
 
 from python_hunter.application.use_cases.analyze_ast import AnalyzeASTUseCase
 from python_hunter.application.use_cases.analyze_web_security import AnalyzeWebSecurityUseCase
-from python_hunter.domain.web_security.models import AuthRequirement, AuthzMechanism
-from python_hunter.rules.web_security import PYHWeb003IDOR, PYHWeb004JWTWeakness, PYHWeb008SSRF
 
 
 class TestWebSecurityAnalysisEngine(unittest.TestCase):
