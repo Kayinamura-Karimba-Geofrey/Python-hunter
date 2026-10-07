@@ -20,7 +20,7 @@ class TestCrossServiceAnalysisEngine(unittest.TestCase):
     def test_cross_service_attack_path_building(self) -> None:
         pub_service = Service(service_id="gateway", name="gateway", language=None, root_directory=".", trust_boundary=TrustBoundary.PUBLIC_API)
         int_service = Service(service_id="user_service", name="user_service", language=None, root_directory=".", trust_boundary=TrustBoundary.INTERNAL_SERVICE)
-        
+
         from python_hunter.domain.architecture.service_models import ApiClientCall
         from python_hunter.domain.common.value_objects import Location
 
