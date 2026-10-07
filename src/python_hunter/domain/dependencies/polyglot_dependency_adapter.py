@@ -4,7 +4,7 @@ import os
 import json
 import re
 from dataclasses import dataclass
-from typing import List, Dict, Any
+from typing import List
 from python_hunter.domain.language.models import Language
 
 
@@ -72,7 +72,7 @@ class PolyglotDependencyAdapter:
     def _parse_pom_xml(file_path: str) -> List[DiscoveredDependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             artifacts = re.findall(r'<artifactId>([^<]+)</artifactId>\s*(?:<version>([^<]+)</version>)?', content)
             for art, ver in artifacts:
@@ -90,7 +90,7 @@ class PolyglotDependencyAdapter:
     def _parse_build_gradle(file_path: str) -> List[DiscoveredDependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             impls = re.findall(r'implementation\s+[\'"]([^\':]+):([^\':]+):([^\':]+)[\'"]', content)
             for group, art, ver in impls:
@@ -108,7 +108,7 @@ class PolyglotDependencyAdapter:
     def _parse_go_mod(file_path: str) -> List[DiscoveredDependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             requires = re.findall(r'^\s*([a-zA-Z0-9\.\-_/]+)\s+(v[0-9\.]+)', content, re.MULTILINE)
             for pkg, ver in requires:
@@ -126,7 +126,7 @@ class PolyglotDependencyAdapter:
     def _parse_cargo_toml(file_path: str) -> List[DiscoveredDependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             crates = re.findall(r'^([a-zA-Z0-9\-_]+)\s*=\s*[\'"]([0-9\.]+)[\'"]', content, re.MULTILINE)
             for crate, ver in crates:
@@ -144,7 +144,7 @@ class PolyglotDependencyAdapter:
     def _parse_composer_json(file_path: str) -> List[DiscoveredDependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 data = json.load(f)
             requires = data.get("require", {})
             for pkg, ver in requires.items():
@@ -163,7 +163,7 @@ class PolyglotDependencyAdapter:
     def _parse_gemfile(file_path: str) -> List[DiscoveredDependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             gems = re.findall(r'gem\s+[\'"]([^\'"]+)[\'"](?:\s*,\s*[\'"]([^\'"]+)[\'"])?', content)
             for gem, ver in gems:
@@ -181,7 +181,7 @@ class PolyglotDependencyAdapter:
     def _parse_requirements_txt(file_path: str) -> List[DiscoveredDependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 for line in f:
                     line = line.strip()
                     if line and not line.startswith("#"):
@@ -202,7 +202,7 @@ class PolyglotDependencyAdapter:
     def _parse_package_json(file_path: str) -> List[DiscoveredDependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 data = json.load(f)
             dependencies = data.get("dependencies", {})
             for pkg, ver in dependencies.items():
