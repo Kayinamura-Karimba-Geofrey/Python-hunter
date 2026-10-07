@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import sys
 from typing import Any
 
 from python_hunter.application.use_cases.analyze_callgraph import AnalyzeCallGraphUseCase
