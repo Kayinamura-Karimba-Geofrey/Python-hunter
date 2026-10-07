@@ -4,7 +4,6 @@ import os
 import unittest
 
 from python_hunter.application.orchestrator import ScanOrchestrator
-from python_hunter.infrastructure.repository import TargetResolver
 from python_hunter.presentation import ExitCode, PolicyEngine
 
 
