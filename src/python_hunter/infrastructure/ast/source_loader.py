@@ -23,10 +23,10 @@ class SafeSourceLoader(ASTSourceLoader):
         content = ""
         # Try UTF-8 first, fallback to latin-1
         try:
-            with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+            with open(file_path, encoding="utf-8", errors="replace") as f:
                 content = f.read()
         except Exception:
-            with open(file_path, "r", encoding="latin-1", errors="replace") as f:
+            with open(file_path, encoding="latin-1", errors="replace") as f:
                 content = f.read()
 
         lines = content.splitlines()
