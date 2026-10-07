@@ -12,7 +12,6 @@ class BaseReporter(ABC):
     @abstractmethod
     def render(self, report: SecurityReport, options: dict[str, Any] | None = None) -> str:
         """Render SecurityReport instance into formatted string report."""
-        pass
 
 
 class ReporterRegistry:
