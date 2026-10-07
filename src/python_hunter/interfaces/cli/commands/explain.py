@@ -1,7 +1,6 @@
 """CLI Explain Command for Security Dataflow Evidence and Exploitability Proofs."""
 
 import argparse
-import sys
 from python_hunter.application.use_cases.analyze_taint import AnalyzeTaintUseCase
 
 
