@@ -3,7 +3,6 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from python_hunter.application.use_cases.analyze_ast import AnalyzeASTUseCase
 from python_hunter.application.use_cases.analyze_dependencies import AnalyzeDependenciesUseCase
 from python_hunter.application.use_cases.analyze_exploitability import AnalyzeExploitabilityUseCase
 from python_hunter.application.use_cases.analyze_knowledge_graph import AnalyzeKnowledgeGraphUseCase
@@ -18,7 +17,7 @@ from python_hunter.domain.language.registry import LanguageRegistry
 from python_hunter.domain.malware.analyzers.polinrider_detector import PolinRiderDetector
 from python_hunter.domain.malware.cleaners.polinrider_cleaner import PolinRiderCleaner
 from python_hunter.infrastructure.repository.repository_manager import RepositoryManager
-from python_hunter.infrastructure.repository.target_resolver import ScanTarget, TargetResolver
+from python_hunter.infrastructure.repository.target_resolver import TargetResolver
 
 
 class ScanOrchestrator:
