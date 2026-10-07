@@ -1,33 +1,9 @@
 """Attack Path Engine, Asset Inventory, What-If Analyzer, and Remediation Impact Calculator."""
 
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple
 
-from python_hunter.domain.common.enums import Confidence, Severity, AssetCriticality, DataSensitivity, TrustBoundary, PrivilegeLevel
-from python_hunter.domain.graph.models import SecurityGraph, NodeType, EdgeType, SecurityNode, SecurityEdge, AttackPath
-
-
-@dataclass
-class AssetInventory:
-    """Centralized asset inventory tracking applications, services, APIs, databases, containers, and cloud resources."""
-
-    repositories: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    services: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    apis: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    databases: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    containers: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-    cloud_resources: Dict[str, Dict[str, Any]] = field(default_factory=dict)
-
-
-@dataclass
-class RemediationImpact:
-    """Calculated impact of fixing a finding or set of findings on the overall attack path landscape."""
-
-    finding_id: str
-    broken_attack_path_ids: List[str] = field(default_factory=list)
-    remaining_attack_path_ids: List[str] = field(default_factory=list)
-    risk_reduction_score: float = 0.0
-    affected_assets: List[str] = field(default_factory=list)
+from python_hunter.domain.common.enums import Confidence, Severity, TrustBoundary, PrivilegeLevel
+from python_hunter.domain.graph.models import SecurityGraph, NodeType, SecurityNode, AttackPath
 
 
 class AttackPathEngine:
