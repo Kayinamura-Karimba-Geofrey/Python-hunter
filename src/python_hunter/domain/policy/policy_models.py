@@ -3,9 +3,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Any
 from python_hunter.domain.common.enums import Severity
-from python_hunter.domain.findings.finding import Finding
 
 
 class PolicyAction(str, Enum):
@@ -49,16 +47,6 @@ class SecurityPolicy:
     description: str
     action: PolicyAction = PolicyAction.FAIL
     condition: PolicyRuleCondition = field(default_factory=PolicyRuleCondition)
-
-
-@dataclass
-class ComplianceControl:
-    """Generic security control mapped to security findings."""
-
-    control_id: str
-    title: str
-    status: PolicyAction
-    evidence_count: int = 0
 
 
 @dataclass
