@@ -7,7 +7,6 @@ from python_hunter.application.use_cases.analyze_ast import AnalyzeASTUseCase
 from python_hunter.application.use_cases.analyze_taint import AnalyzeTaintUseCase
 from python_hunter.domain.ast.models import ASTDocument
 from python_hunter.domain.taint.advanced_engine import AdvancedDataflowEngine
-from python_hunter.domain.taint.models import ExploitabilityLevel, TaintSinkCategory, TaintSourceCategory, TrustLevel
 
 
 class TestAdvancedDataflowEngine(unittest.TestCase):
