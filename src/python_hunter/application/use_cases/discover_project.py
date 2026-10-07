@@ -247,7 +247,7 @@ class DiscoverProjectUseCase(ProjectDiscoveryEngine):
             has_virtual_env=has_venv,
             files=discovered_files,
             directories=discovered_dirs,
-            entry_points=sorted(list(entry_points)),
+            entry_points=sorted(entry_points),
             frameworks=frameworks,
             test_frameworks=test_frameworks,
             dependency_files=dependency_files,
