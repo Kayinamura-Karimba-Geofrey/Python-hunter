@@ -2,7 +2,7 @@
 
 import os
 from dataclasses import dataclass, field
-from typing import Dict, List, Set
+from typing import Dict, List
 from python_hunter.domain.language.models import Language
 
 
@@ -98,7 +98,7 @@ class LanguageDetector:
             ext = os.path.splitext(workspace_path)[1].lower()
             lang = EXTENSION_MAP.get(ext, Language.UNKNOWN)
             try:
-                with open(workspace_path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(workspace_path, encoding="utf-8", errors="ignore") as f:
                     lines = len(f.readlines())
             except Exception:
                 lines = 1
@@ -118,7 +118,7 @@ class LanguageDetector:
 
             for file_name in files:
                 full_path = os.path.join(root, file_name)
-                
+
                 # Check manifest files
                 if file_name in MANIFEST_MAP:
                     detected_manifests.append(file_name)
@@ -129,7 +129,7 @@ class LanguageDetector:
                 if ext in EXTENSION_MAP:
                     lang = EXTENSION_MAP[ext]
                     try:
-                        with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                        with open(full_path, encoding="utf-8", errors="ignore") as f:
                             lines = sum(1 for line in f if line.strip())
                     except Exception:
                         lines = 1
