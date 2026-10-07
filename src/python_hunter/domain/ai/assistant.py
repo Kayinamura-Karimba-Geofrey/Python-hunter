@@ -1,6 +1,6 @@
 """Natural Language Security Assistant and Query Authorization Engine."""
 
-from typing import List, Optional
+from typing import List
 from python_hunter.domain.ai.models import AIConfidence, AIQueryRequest, AIQueryResponse
 from python_hunter.domain.ai.tools import AIToolCallManager
 from python_hunter.domain.findings.finding import Finding
