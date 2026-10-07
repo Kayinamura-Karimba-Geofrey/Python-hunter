@@ -1,7 +1,6 @@
 """Terminal and JSON Output Renderers implementation."""
 
 import json
-from typing import Any
 from python_hunter.application.orchestrator.scan_context import ScanResult
 
 
@@ -214,7 +213,7 @@ class HtmlRenderer(OutputRenderer):
                 f"<td><code>{f.rule_id}</code></td><td>{f.title}</td><td><code>{f.file_path}</code></td></tr>"
             )
 
-        html = f"""<!DOCTYPE html>
+        return f"""<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -248,7 +247,6 @@ class HtmlRenderer(OutputRenderer):
   <p style="color:#64748b;font-size:12px;">Python Hunter v{__version__} Security Intelligence</p>
 </body>
 </html>"""
-        return html
 
 
 class CsvRenderer(OutputRenderer):
