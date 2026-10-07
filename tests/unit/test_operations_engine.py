@@ -1,18 +1,14 @@
 """Unit tests for Step 41 Autonomous Security Operations & Continuous Monitoring."""
 
 import unittest
-from datetime import datetime, timezone
 
 from python_hunter.domain.common.enums import Severity
-from python_hunter.domain.operations.alerts import AlertEngine, AlertStatus, AlertType, SecurityAlert
+from python_hunter.domain.operations.alerts import AlertEngine, AlertType
 from python_hunter.domain.operations.events import SecurityEvent, SecurityEventBus, SecurityEventType
-from python_hunter.domain.operations.health import HealthState, SecurityPlatformHealth
-from python_hunter.domain.operations.incidents import IncidentCorrelationEngine, IncidentStatus
-from python_hunter.domain.operations.incremental import ChangeImpactEngine, SecurityDriftEngine
-from python_hunter.domain.operations.notifications import MockSlackNotificationProvider, NotificationRegistry
-from python_hunter.domain.operations.queue import DeadLetterQueue, JobStatus, JobType, SecurityJobQueue, SecurityWorker
-from python_hunter.domain.operations.scheduler import MonitoredRepository, SecurityScheduler
-from python_hunter.infrastructure.operations.webhooks import AuditLogger, GitHubWebhookValidator
+from python_hunter.domain.operations.incidents import IncidentCorrelationEngine
+from python_hunter.domain.operations.incremental import ChangeImpactEngine
+from python_hunter.domain.operations.queue import JobStatus, JobType, SecurityJobQueue, SecurityWorker
+from python_hunter.infrastructure.operations.webhooks import GitHubWebhookValidator
 
 
 class TestOperationsEngineUnit(unittest.TestCase):
@@ -90,7 +86,7 @@ class TestOperationsEngineUnit(unittest.TestCase):
         a1 = engine.create_or_deduplicate_alert(
             "alt-1", Severity.HIGH, AlertType.CRITICAL_VULNERABILITY, "intel", "repo-d", "Vuln 1", "Desc 1", finding_id="f1"
         )
-        a2 = engine.create_or_deduplicate_alert(
+        engine.create_or_deduplicate_alert(
             "alt-2", Severity.CRITICAL, AlertType.CRITICAL_VULNERABILITY, "intel", "repo-d", "Vuln 1", "Desc 1", finding_id="f1"
         )
 
