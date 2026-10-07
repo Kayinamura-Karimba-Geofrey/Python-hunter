@@ -4,7 +4,6 @@ import re
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.findings.finding import Finding
-from python_hunter.domain.ir.models import SecurityIR
 from python_hunter.domain.language.models import Language
 
 
