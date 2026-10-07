@@ -1,6 +1,5 @@
 """Feature Flag Rollout Service."""
 
-from typing import Any
 
 
 class FeatureFlagService:
