@@ -1,9 +1,12 @@
 """PYH-SECRET-003: Private Key Detector."""
 
 import re
+
 from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.common.enums import Confidence, Severity
 from python_hunter.domain.secrets.models import SecretCandidate, SecretDetector, SecretType
+
+DOC_EXTENSIONS = (".md", ".markdown", ".rst", ".adoc")
 
 
 class PYHSecret003PrivateKey(SecretDetector):
@@ -28,6 +31,8 @@ class PYHSecret003PrivateKey(SecretDetector):
         candidates: list[SecretCandidate] = []
         for line_num, line in enumerate(content.splitlines(), start=1):
             match = self.HEADER_PATTERN.search(line)
+            if match and self._is_documentation_reference(file_path, line, match):
+                continue
             if match:
                 secret_val = match.group(0)
                 col = match.start(0)
@@ -44,3 +49,10 @@ class PYHSecret003PrivateKey(SecretDetector):
                     )
                 )
         return candidates
+
+    @staticmethod
+    def _is_documentation_reference(file_path: str, line: str, match: re.Match[str]) -> bool:
+        """A header quoted as inline code in prose docs names the format; it is not a key."""
+        if not file_path.lower().endswith(DOC_EXTENSIONS):
+            return False
+        return line[: match.start()].endswith("`") and line[match.end() :].startswith("`")
