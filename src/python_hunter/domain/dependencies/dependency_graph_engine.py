@@ -1,8 +1,8 @@
 """Dependency Graph Analytics Engine for depth, bloat, and Single Point of Failure (SPOF) detection."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Set
-from python_hunter.domain.dependencies.models import Dependency, DependencyGraph, DependencyInventory
+from typing import Any, Dict, List, Set
+from python_hunter.domain.dependencies.models import DependencyGraph
 
 
 @dataclass
@@ -53,7 +53,7 @@ class DependencyGraphEngine:
                 spofs.append({
                     "package": child_name,
                     "dependents_count": len(parent_set),
-                    "dependents": sorted(list(parent_set)),
+                    "dependents": sorted(parent_set),
                     "description": f"Critical dependency {child_name} is relied upon by {len(parent_set)} upstream packages.",
                 })
 
