@@ -1,11 +1,8 @@
 """Dockerfile and Docker Compose static parser adapter."""
 
 import os
-import re
-from typing import Any, Dict, List, Optional
 from python_hunter.domain.infrastructure.models import (
     ContainerImage,
-    InfrastructureEnvironment,
     InfrastructureIR,
     InfrastructureResource,
     InfrastructureResourceType,
@@ -49,7 +46,7 @@ class DockerAdapter(InfrastructureAdapter):
             clean = line.strip()
             if not clean or clean.startswith("#"):
                 continue
-            
+
             parts = clean.split(maxsplit=1)
             cmd = parts[0].upper()
             val = parts[1] if len(parts) > 1 else ""
@@ -62,7 +59,7 @@ class DockerAdapter(InfrastructureAdapter):
                 is_pinned = "@sha256:" in raw_img
                 tag = raw_img.split(":")[1] if ":" in raw_img and "@" not in raw_img else None
                 digest = raw_img.split("@")[1] if "@" in raw_img else None
-                
+
                 base_images.append(
                     ContainerImage(
                         raw_reference=raw_img,
@@ -162,12 +159,12 @@ class DockerAdapter(InfrastructureAdapter):
                 if ":" in p_str:
                     parts = p_str.split(":")
                     if len(parts) == 3:
-                        host_ip, host_p, container_p = parts[0], parts[1], parts[2]
+                        host_ip, container_p = parts[0], parts[2]
                     elif len(parts) == 2:
-                        host_ip, host_p = "", parts[0]
+                        host_ip = ""
                         container_p = parts[1]
                     else:
-                        host_ip, host_p = "", p_str
+                        host_ip = ""
                     if host_ip in ("0.0.0.0", "", "*"):
                         is_public = True
                     try:
