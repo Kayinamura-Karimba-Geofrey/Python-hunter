@@ -1,4 +1,4 @@
-"""End-to-End Test Suite for Step 41 Autonomous Security Operations & Continuous Monitoring."""
+"""End-to-End Test Suite for Autonomous Security Operations & Continuous Monitoring."""
 
 import hashlib
 import hmac
@@ -6,14 +6,13 @@ import unittest
 
 from python_hunter.application.services.security_app_service import SecurityApplicationService
 from python_hunter.domain.common.enums import Severity
-from python_hunter.domain.operations.alerts import AlertType, AlertStatus
+from python_hunter.domain.operations.alerts import AlertType
 from python_hunter.domain.operations.events import SecurityEvent, SecurityEventType
-from python_hunter.domain.operations.health import HealthState
-from python_hunter.domain.operations.queue import JobType, JobStatus
+from python_hunter.domain.operations.queue import JobStatus, JobType
 from python_hunter.domain.operations.scheduler import MonitoredRepository
 
 
-class TestStep41OperationsE2E(unittest.TestCase):
+class TestOperationsE2E(unittest.TestCase):
     """End-to-end tests validating autonomous continuous security operations."""
 
     def setUp(self) -> None:
@@ -72,7 +71,7 @@ class TestStep41OperationsE2E(unittest.TestCase):
             description="Vulnerable HTTP library version.",
             finding_id="FIND-1",
         )
-        a2 = self.app_service.alert_engine.create_or_deduplicate_alert(
+        self.app_service.alert_engine.create_or_deduplicate_alert(
             alert_id="ALT-202",
             severity=Severity.HIGH,
             alert_type=AlertType.SECRET_EXPOSURE,
