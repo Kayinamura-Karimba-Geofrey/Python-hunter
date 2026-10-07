@@ -70,7 +70,7 @@ def run_diagnostics_command(args: list[str]) -> int:
     for file_path in files_to_scan:
         uri = path_to_uri(file_path)
         try:
-            with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+            with open(file_path, encoding="utf-8", errors="replace") as f:
                 content = f.read()
         except Exception:
             continue
