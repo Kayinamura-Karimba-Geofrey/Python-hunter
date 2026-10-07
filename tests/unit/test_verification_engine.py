@@ -1,27 +1,25 @@
 """Unit tests for Step 39 — Security Testing & Safe Exploitability Verification."""
 
+import tempfile
 import unittest
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime
 
+from python_hunter.application.services.security_app_service import SecurityApplicationService
 from python_hunter.domain.common.enums import (
     TestSafetyLevel,
     VerificationConfidence,
     VerificationMode,
     VerificationStatus,
 )
+from python_hunter.domain.verification.engine import (
+    VerificationEngine,
+)
 from python_hunter.domain.verification.models import (
-    SecurityTest,
     VerificationAuthorization,
-    VerificationResult,
 )
 from python_hunter.domain.verification.payloads import SafePayloadRegistry
-from python_hunter.domain.verification.planner import SafetyValidator, VerificationPlanner
-from python_hunter.domain.verification.engine import (
-    PassiveVerifier,
-    VerificationEngine,
-    VerificationSandbox,
-)
-from python_hunter.application.services.security_app_service import SecurityApplicationService
+from python_hunter.domain.verification.planner import SafetyValidator
+from python_hunter.infrastructure.storage.scan_store import ScanResultStore
 
 
 class TestSecurityVerificationEngine(unittest.TestCase):
@@ -29,7 +27,35 @@ class TestSecurityVerificationEngine(unittest.TestCase):
 
     def setUp(self) -> None:
         self.engine = VerificationEngine()
-        self.app_service = SecurityApplicationService()
+        self._data_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self._data_dir.cleanup)
+        self.app_service = SecurityApplicationService(store=ScanResultStore(self._data_dir.name))
+
+    def _record_scan_with_finding(self, finding_id: str) -> None:
+        self.app_service.store.save_scan(
+            {
+                "scan_id": "scan-verify-1",
+                "target": ".",
+                "status": "COMPLETED",
+                "created_at": datetime.now(UTC).isoformat(),
+                "completed_at": datetime.now(UTC).isoformat(),
+                "findings": [
+                    {
+                        "id": finding_id,
+                        "fingerprint": "fp-1",
+                        "rule_id": "PYH-AST-001",
+                        "title": "SQL Injection in User Endpoint",
+                        "severity": "HIGH",
+                        "status": "OPEN",
+                        "file_path": "src/api/users.py",
+                        "confidence": "HIGH",
+                        "reachability": "REACHABLE",
+                        "source": "request.args.get('id')",
+                        "sink": "cursor.execute()",
+                    }
+                ],
+            }
+        )
 
     def test_passive_verification_evidence_upgrade(self) -> None:
         """Verifies static evidence upgrades confidence without target execution."""
@@ -100,6 +126,8 @@ class TestSecurityVerificationEngine(unittest.TestCase):
 
     def test_application_service_verification_flow(self) -> None:
         """Verifies SecurityApplicationService integration for passive and active verification."""
+        self._record_scan_with_finding("f-sqli-01")
+
         # Passive Service Verification
         res_p = self.app_service.verify_finding("f-sqli-01", active=False)
         self.assertIn(res_p["verification_status"], ("LIKELY_EXPLOITABLE", "VERIFIED", "NOT_VERIFIED"))
@@ -108,6 +136,11 @@ class TestSecurityVerificationEngine(unittest.TestCase):
         self.app_service.authorize_verification_target("http://127.0.0.1:8080")
         res_a = self.app_service.verify_finding("f-sqli-01", active=True, target="http://127.0.0.1:8080", dry_run=True)
         self.assertEqual(res_a["test_method"], "DRY_RUN")
+
+    def test_application_service_verification_unknown_finding(self) -> None:
+        """Verification refuses findings that no recorded scan produced."""
+        with self.assertRaises(LookupError):
+            self.app_service.verify_finding("does-not-exist")
 
     def test_payload_redaction(self) -> None:
         """Verifies secret redactor strips sensitive keys from payloads."""
