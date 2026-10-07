@@ -3,17 +3,14 @@
 import ipaddress
 import re
 import urllib.parse
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from python_hunter.domain.common.enums import (
-    VerificationConfidence,
     VerificationMode,
-    VerificationStatus,
 )
 from python_hunter.domain.verification.models import (
     SecurityTest,
     VerificationAuthorization,
-    VerificationResult,
 )
 from python_hunter.domain.verification.payloads import SafePayloadRegistry
 
