@@ -28,7 +28,7 @@ class BulkheadManager:
     }
 
     def __init__(self) -> None:
-        self._active_workers: dict[WorkerPoolType, int] = {pool: 0 for pool in WorkerPoolType}
+        self._active_workers: dict[WorkerPoolType, int] = dict.fromkeys(WorkerPoolType, 0)
         self._lock = threading.Lock()
 
     def acquire_slot(self, pool: WorkerPoolType) -> bool:
