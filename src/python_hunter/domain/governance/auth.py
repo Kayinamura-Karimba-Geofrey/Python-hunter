@@ -6,7 +6,6 @@ import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any
 
 
 class UserStatus(str, Enum):
@@ -62,25 +61,3 @@ class Session:
     @property
     def is_valid(self) -> bool:
         return not self.revoked and datetime.now(timezone.utc) < self.expires_at
-
-
-@dataclass
-class ApiToken:
-    """Scoped API Token record."""
-
-    token_id: str
-    user_id: str
-    name: str
-    token_hash: str
-    scopes: list[str] = field(default_factory=list)
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    expires_at: datetime | None = None
-    last_used_at: datetime | None = None
-    revoked: bool = False
-
-    @staticmethod
-    def generate_token_pair() -> tuple[str, str]:
-        """Generate raw token string and its SHA-256 hash for storage."""
-        raw_token = f"pyh_pat_{secrets.token_urlsafe(32)}"
-        token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
-        return raw_token, token_hash
