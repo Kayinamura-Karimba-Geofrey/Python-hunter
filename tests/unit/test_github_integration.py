@@ -6,13 +6,11 @@ import json
 import unittest
 
 from python_hunter.domain.github.github_app import GitHubAppIntegration
-from python_hunter.domain.github.github_checks_service import GitHubChecksService, GitHubCommentService
+from python_hunter.domain.github.github_checks_service import GitHubChecksService
 from python_hunter.domain.github.github_models import PolicyResultStatus
 from python_hunter.domain.github.pr_security_engine import PullRequestSecurityEngine, SecretRedactor
 from python_hunter.domain.github.repo_config import RepoConfigParser
 from python_hunter.domain.github.webhook_handler import GitHubWebhookHandler, WebhookValidationError
-from python_hunter.domain.github.webhook_queue import GitHubWebhookEventQueue
-from python_hunter.infrastructure.github.isolated_checkout import IsolatedCheckoutService
 
 
 class TestGitHubIntegration(unittest.TestCase):
@@ -28,11 +26,11 @@ class TestGitHubIntegration(unittest.TestCase):
     def test_webhook_signature_validation(self):
         handler = GitHubWebhookHandler(secret="test_secret_123")
         payload = json.dumps({"action": "opened", "number": 1}).encode("utf-8")
-        
+
         # Valid signature
         mac = hmac.new(b"test_secret_123", msg=payload, digestmod=hashlib.sha256)
         valid_sig = f"sha256={mac.hexdigest()}"
-        
+
         self.assertTrue(handler.validate_signature(payload, valid_sig))
 
         # Invalid signature
@@ -82,7 +80,7 @@ class TestGitHubIntegration(unittest.TestCase):
 
     def test_pr_security_delta_calculation(self):
         engine = PullRequestSecurityEngine()
-        
+
         base_findings = [
             {"id": "f1", "title": "SQLi", "severity": "CRITICAL", "risk_score": 9.0, "file_path": "db.py"},
             {"id": "f2", "title": "XSS", "severity": "MEDIUM", "risk_score": 5.0, "file_path": "app.py"},
