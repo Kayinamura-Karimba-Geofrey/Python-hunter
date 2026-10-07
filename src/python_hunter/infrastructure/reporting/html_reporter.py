@@ -69,7 +69,7 @@ class HtmlReporter(BaseReporter):
             </tr>
             """
 
-        html_doc = f"""<!DOCTYPE html>
+        return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -173,7 +173,6 @@ class HtmlReporter(BaseReporter):
 </body>
 </html>
 """
-        return html_doc
 
 
 ReporterRegistry.register("html", HtmlReporter)
