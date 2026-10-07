@@ -3,15 +3,10 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.intelligence.alias_graph import VulnerabilityAliasGraph
 from python_hunter.domain.intelligence.impact import ImpactNode, IntelligenceImpactGraph
 from python_hunter.domain.intelligence.knowledge_base import SecurityKnowledgeBase
 from python_hunter.domain.intelligence.models import (
-    ConflictRecord,
-    FactOrigin,
-    IntelligenceFreshnessState,
-    SourceTrustLevel,
     VulnerabilityHistoryEntry,
     VulnerabilityRecord,
 )
