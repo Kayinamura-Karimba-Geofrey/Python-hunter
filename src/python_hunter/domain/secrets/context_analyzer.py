@@ -1,8 +1,7 @@
 """Secret Context Analyzer and Test/Placeholder Classification Engine."""
 
-import os
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Tuple
 
 from python_hunter.domain.common.enums import Confidence
 from python_hunter.domain.secrets.models import SecretEnvironment, SecretPrivilege, SecretType
