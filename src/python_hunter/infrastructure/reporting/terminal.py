@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.reporting.models import SecurityReport
 from python_hunter.infrastructure.reporting.base import BaseReporter, ReporterRegistry
 from python_hunter.infrastructure.reporting.redaction import SecretRedactor
@@ -40,7 +39,7 @@ class TerminalReporter(BaseReporter):
         lines.append(f"Risk Score     : {report.risk_metrics.project_risk_score}/100")
         lines.append(f"Gate Status    : {'PASSED' if report.posture.policy_passed else 'FAILED'}")
         lines.append("──────────────────────────────────────────────────────────")
-        lines.append(f"Findings       :")
+        lines.append("Findings       :")
         lines.append(f"  CRITICAL     : {report.statistics.critical_count}")
         lines.append(f"  HIGH         : {report.statistics.high_count}")
         lines.append(f"  MEDIUM       : {report.statistics.medium_count}")
