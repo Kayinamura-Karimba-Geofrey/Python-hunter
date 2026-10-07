@@ -1,7 +1,6 @@
 """Secret Detection Pipeline Orchestrator."""
 
 import os
-from typing import Any
 
 from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.common.enums import Category, Confidence, Severity
@@ -10,10 +9,7 @@ from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.secrets.context_analyzer import SecretContextAnalyzer
 from python_hunter.domain.secrets.entropy import EntropyCalculator
 from python_hunter.domain.secrets.models import (
-    ExposureType,
     SecretCandidate,
-    SecretDetector,
-    SecretExposure,
     compute_secret_fingerprint,
 )
 from python_hunter.domain.secrets.placeholders import PlaceholderFilter
@@ -90,7 +86,6 @@ class SecretDetectionEngine:
             return []
 
         findings: list[Finding] = []
-        seen_fingerprints: set[str] = set()
 
         for cand in raw_candidates:
             raw_secret_str = cand.value
