@@ -1,9 +1,9 @@
 """Security Scheduler for periodic scans, intelligence refresh, and posture tracking."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Callable
+from typing import Any
 
 
 class MonitoringMode(str, Enum):
