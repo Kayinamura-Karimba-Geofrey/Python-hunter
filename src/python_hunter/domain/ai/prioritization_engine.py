@@ -1,6 +1,5 @@
 """Intelligent Risk Prioritization Engine using contextual organizational evidence."""
 
-from typing import List
 from python_hunter.domain.ai.models import (
     AIConfidence, AssetCriticality, EnvironmentType, InternetExposure, RiskAssessment, SecurityContext
 )
