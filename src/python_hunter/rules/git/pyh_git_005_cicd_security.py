@@ -4,7 +4,7 @@ import re
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.findings.finding import Finding
-from python_hunter.domain.git.models import GitCommit, GitFileChange
+from python_hunter.domain.git.models import GitCommit
 
 
 class PYHGit005CICDSecurity:
