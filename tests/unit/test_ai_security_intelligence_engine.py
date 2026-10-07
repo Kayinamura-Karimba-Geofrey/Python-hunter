@@ -2,10 +2,9 @@
 
 import unittest
 from python_hunter.domain.ai import (
-    AISecurityIntelligenceEngine, AIProviderRegistry, LocalAIProvider, ExternalAIProvider,
-    AIProviderConfig, PrivacyMode, DataRedactor, PromptGuard, OutputValidator, SecurityContextEngine,
-    FindingCorrelationEngine, IntelligentPrioritizationEngine, RemediationIntelligenceEngine,
-    AIToolCallManager, SecurityAssistant, AIEvaluator, AIQueryRequest, AssetCriticality, EnvironmentType, InternetExposure
+    AISecurityIntelligenceEngine, AIProviderRegistry, DataRedactor, PromptGuard, OutputValidator, SecurityContextEngine,
+    IntelligentPrioritizationEngine, RemediationIntelligenceEngine,
+    AIToolCallManager, SecurityAssistant, AIEvaluator, AIQueryRequest, EnvironmentType, InternetExposure
 )
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.common.enums import Severity, Confidence, Category
