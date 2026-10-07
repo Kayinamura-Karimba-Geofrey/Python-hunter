@@ -133,7 +133,7 @@ class CycloneDXGenerator:
         # Build CycloneDX dependencies relationship array
         dependencies_graph.append({
             "ref": root_bom_ref,
-            "dependsOn": sorted(list(set(root_depends_on))),
+            "dependsOn": sorted(set(root_depends_on)),
         })
 
         for dep in inventory.dependencies:
@@ -156,7 +156,7 @@ class CycloneDXGenerator:
             if child_refs:
                 dependencies_graph.append({
                     "ref": bom_ref,
-                    "dependsOn": sorted(list(set(child_refs))),
+                    "dependsOn": sorted(set(child_refs)),
                 })
 
         bom_doc: dict[str, Any] = {
