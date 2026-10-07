@@ -3,7 +3,6 @@
 import unittest
 from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.common.enums import Severity
-from python_hunter.domain.secrets.context_analyzer import SecretContextAnalyzer
 from python_hunter.domain.secrets.engine import SecretDetectionEngine
 from python_hunter.domain.secrets.models import (
     SecretCandidate,
