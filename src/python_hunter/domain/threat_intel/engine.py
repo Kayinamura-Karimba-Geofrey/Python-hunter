@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.threat_intel.models import (
-    ExploitationStatus, IntelligenceSource, ThreatActor, ThreatCampaign, ThreatPriority, TrustLevel, VulnerabilityIntelligence
+    ExploitationStatus, ThreatPriority, VulnerabilityIntelligence
 )
 from python_hunter.domain.threat_intel.sources import IntelligenceSourceRegistry
 
