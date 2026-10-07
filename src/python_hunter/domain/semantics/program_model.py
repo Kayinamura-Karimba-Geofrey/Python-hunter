@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set
 from python_hunter.domain.ir.models import IRLocation
 from python_hunter.domain.language.models import Language
 
