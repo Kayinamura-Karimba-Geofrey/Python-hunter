@@ -1,6 +1,5 @@
 """Lightweight Dependency Injection Container."""
 
-from typing import Any
 from python_hunter.domain.analysis.base import Analyzer
 from python_hunter.infrastructure.config.settings import Settings
 from python_hunter.infrastructure.observability.logging import Logger, get_logger
