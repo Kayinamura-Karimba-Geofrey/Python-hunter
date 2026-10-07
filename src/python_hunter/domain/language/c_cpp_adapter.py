@@ -55,7 +55,7 @@ class CLanguageAdapter(LanguageAdapter):
 
     def parse(self, file_path: str) -> Dict[str, Any]:
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             return ParserProvider.parse_generic_structural(content, file_path, "c").ast
         except Exception:
@@ -73,7 +73,7 @@ class CLanguageAdapter(LanguageAdapter):
     def _analyze_file(self, file_path: str) -> List[Dict[str, Any]]:
         findings = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             lines = content.splitlines()
 
@@ -173,7 +173,7 @@ class CPPLanguageAdapter(LanguageAdapter):
 
     def parse(self, file_path: str) -> Dict[str, Any]:
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             return ParserProvider.parse_generic_structural(content, file_path, "cpp").ast
         except Exception:
@@ -191,7 +191,7 @@ class CPPLanguageAdapter(LanguageAdapter):
     def _analyze_file(self, file_path: str) -> List[Dict[str, Any]]:
         findings = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             lines = content.splitlines()
 
