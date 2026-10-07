@@ -5,41 +5,28 @@ import shutil
 import tempfile
 import unittest
 
-from python_hunter.domain.ir.models import IRLocation
 from python_hunter.domain.language.models import Language
 from python_hunter.domain.semantics.cache_engine import AnalysisCacheEngine, AnalysisLimits
 from python_hunter.domain.semantics.call_graph_2 import CallEdge, CallGraph2, CallKind
-from python_hunter.domain.semantics.interprocedural_engine import (
-    DataflowGraph,
-    FlowStep,
-    InterproceduralEngine,
-    TaintFlowEvidence,
-)
 from python_hunter.domain.semantics.program_model import (
-    ProgramCall,
     ProgramFunction,
     ProgramModel,
     ProgramModule,
     TypeInfo,
 )
 from python_hunter.domain.semantics.rule_dsl import DeclarativeSecurityRule
-from python_hunter.domain.semantics.rule_engine_2 import ConfidenceEngine, RuleEngine2
+from python_hunter.domain.semantics.rule_engine_2 import ConfidenceEngine
 from python_hunter.domain.semantics.security_context import (
     RoleLevel,
     SecurityContext,
     SecurityContextEngine,
-    TrustBoundary,
 )
-from python_hunter.domain.semantics.symbol_table import NameResolver, ScopeKind, Symbol, SymbolKind, SymbolTable
+from python_hunter.domain.semantics.symbol_table import NameResolver, Symbol, SymbolKind, SymbolTable
 from python_hunter.domain.semantics.taint_registries import (
     SanitizerContext,
-    SanitizerDef,
     SanitizerRegistry,
     SinkCategory,
-    SourceCategory,
-    TaintSinkDef,
     TaintSinkRegistry,
-    TaintSourceDef,
     TaintSourceRegistry,
 )
 
@@ -164,7 +151,6 @@ class TestInterproceduralEngine(unittest.TestCase):
         with open(file_path, "w") as f:
             f.write("def foo(): pass\n")
 
-        hash1 = cache.get_workspace_hash(self.temp_dir)
         cache.store_cached_analysis(self.temp_dir, {"rule": "1.0"}, {"model": "data"})
 
         cached = cache.get_cached_analysis(self.temp_dir, {"rule": "1.0"})
