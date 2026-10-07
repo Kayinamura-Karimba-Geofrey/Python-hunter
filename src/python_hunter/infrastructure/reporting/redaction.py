@@ -1,7 +1,6 @@
 """Secret Redaction Subsystem for Security Reports."""
 
 import re
-from typing import Any
 
 from python_hunter.domain.common.enums import Category
 from python_hunter.domain.findings.finding import Finding
@@ -40,7 +39,7 @@ class SecretRedactor:
         if finding.category != Category.SECRET and not finding.evidence:
             return finding
 
-        f_copy = Finding(
+        return Finding(
             rule_id=finding.rule_id,
             severity=finding.severity,
             confidence=finding.confidence,
@@ -64,7 +63,6 @@ class SecretRedactor:
             secondary_evidence=[cls.redact_text(s) for s in finding.secondary_evidence],
             metadata=dict(finding.metadata),
         )
-        return f_copy
 
     @classmethod
     def redact_findings(cls, findings: list[Finding], enabled: bool = True) -> list[Finding]:
