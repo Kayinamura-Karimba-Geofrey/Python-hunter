@@ -3,7 +3,6 @@
 import ast
 from typing import Any
 from python_hunter.domain.ast.models import ASTDocument
-from python_hunter.domain.common.enums import Confidence
 from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.concurrency.analyzers.base import BaseConcurrencyAnalyzer
 from python_hunter.domain.concurrency.models import ConcurrencyContext, ExecutionModel
