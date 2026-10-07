@@ -1,10 +1,10 @@
 """IntegrationRegistry, CircuitBreaker, SyncEngine, and IntegrationEngine."""
 
 import time
-from typing import Any, Callable
+from typing import Any
 
 from python_hunter.domain.integrations.credentials import CredentialManager
-from python_hunter.domain.integrations.models import ExternalReference, Integration, IntegrationProviderType, IntegrationStatus
+from python_hunter.domain.integrations.models import Integration, IntegrationProviderType, IntegrationStatus
 from python_hunter.domain.integrations.providers import GitHubProvider, IntegrationProvider, JiraProvider, SIEMProvider, SlackProvider, WebhookProvider
 
 
