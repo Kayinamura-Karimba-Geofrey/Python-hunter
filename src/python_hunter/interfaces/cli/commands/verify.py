@@ -2,6 +2,7 @@
 
 import argparse
 import sys
+
 from python_hunter.application.services.security_app_service import SecurityApplicationService
 
 
@@ -27,12 +28,16 @@ def handle_verify_command(args: argparse.Namespace) -> int:
     if args.authorized_target:
         service.authorize_verification_target(target=args.authorized_target, authorized_by="cli_operator")
 
-    res = service.verify_finding(
-        finding_id=args.finding_id,
-        active=args.active,
-        target=args.authorized_target,
-        dry_run=args.dry_run,
-    )
+    try:
+        res = service.verify_finding(
+            finding_id=args.finding_id,
+            active=args.active,
+            target=args.authorized_target,
+            dry_run=args.dry_run,
+        )
+    except LookupError as e:
+        sys.stderr.write(f"Error: {e} Run 'python-hunter scan' first.\n")
+        return 1
 
     if args.format == "json":
         import json
