@@ -29,7 +29,6 @@ class PYHSecret015DatabaseConnectionURL(SecretDetector):
         for line_num, line in enumerate(content.splitlines(), start=1):
             for match in self.PATTERN.finditer(line):
                 full_url = match.group(0)
-                password = match.group(3)
                 col = match.start(0)
                 candidates.append(
                     SecretCandidate(
