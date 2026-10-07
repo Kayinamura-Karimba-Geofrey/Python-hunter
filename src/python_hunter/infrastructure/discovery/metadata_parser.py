@@ -2,7 +2,6 @@
 
 import re
 from typing import Any
-from python_hunter.domain.exceptions.base import ProjectError
 
 try:
     import tomllib
