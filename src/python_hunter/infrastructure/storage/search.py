@@ -1,7 +1,7 @@
 """Scalable Search & Cursor Pagination Abstraction."""
 
-from dataclasses import dataclass, field
-from typing import Any, Sequence
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
