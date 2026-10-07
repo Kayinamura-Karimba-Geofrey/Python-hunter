@@ -3,7 +3,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any
 
 from python_hunter.domain.common.enums import Severity
 
