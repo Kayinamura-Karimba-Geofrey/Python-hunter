@@ -31,7 +31,6 @@ class JWTSessionAnalyzer(BaseWebSecurityAnalyzer):
                     if func_name == "decode":
                         # Check keyword arguments
                         options_kw = next((kw for kw in node.keywords if kw.arg == "options"), None)
-                        algos_kw = next((kw for kw in node.keywords if kw.arg == "algorithms"), None)
 
                         verifies_sig = True
                         accepts_none = False
