@@ -18,23 +18,19 @@ class IntelligenceSource(ABC):
     @abstractmethod
     def name(self) -> str:
         """Name of the intelligence source (e.g. NVD, GHSA, OSV, EPSS)."""
-        pass
 
     @property
     @abstractmethod
     def trust_level(self) -> SourceTrustLevel:
         """Source trust priority level."""
-        pass
 
     @abstractmethod
     def fetch_records(self, ecosystem: str | None = None) -> list[VulnerabilityRecord]:
         """Fetch or load vulnerability records from source."""
-        pass
 
     @abstractmethod
     def get_freshness(self) -> IntelligenceFreshness:
         """Check freshness metadata for this source."""
-        pass
 
 
 class IntelligenceSourceRegistry:
