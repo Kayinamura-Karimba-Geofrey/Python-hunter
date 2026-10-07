@@ -1,7 +1,6 @@
 """LanguagePlugin interface and isolation sandbox contract."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional
 from python_hunter.domain.language.adapter import LanguageAdapter
 from python_hunter.domain.language.models import LanguageMetadata
 
@@ -27,7 +26,6 @@ class LanguagePlugin(ABC):
     @abstractmethod
     def create_adapter(self) -> LanguageAdapter:
         """Instantiate and return the language adapter."""
-        pass
 
     def is_sandbox_compliant(self) -> bool:
         """Verify that plugin enforces zero untrusted code execution sandbox rules."""
