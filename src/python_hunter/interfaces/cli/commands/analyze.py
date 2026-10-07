@@ -2,7 +2,6 @@
 
 import argparse
 import sys
-from typing import Any
 
 from python_hunter.application.use_cases.generate_report import GenerateReportUseCase
 
