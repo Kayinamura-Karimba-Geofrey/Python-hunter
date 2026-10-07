@@ -43,7 +43,7 @@ class AnalyzeSecretsUseCase:
                 continue
 
             try:
-                with open(abs_path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(abs_path, encoding="utf-8", errors="ignore") as f:
                     content = f.read()
 
                 scanned_files += 1
