@@ -1,7 +1,7 @@
 """Data Redaction and Sensitive Data Scrubber for AI Requests."""
 
 import re
-from typing import Dict, List, Tuple
+from typing import List, Tuple
 
 
 class DataRedactor:
