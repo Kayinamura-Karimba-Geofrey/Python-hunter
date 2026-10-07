@@ -5,7 +5,6 @@ from datetime import datetime, timezone
 from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.policy.policy_models import (
-    ComplianceControl,
     GateResult,
     PolicyAction,
     PolicyException,
