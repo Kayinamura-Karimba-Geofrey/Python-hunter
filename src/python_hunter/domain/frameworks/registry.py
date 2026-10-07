@@ -1,7 +1,6 @@
 """Framework Adapter Registry."""
 
 import threading
-from typing import Type
 
 from python_hunter.domain.frameworks.adapter import BaseFrameworkAdapter
 from python_hunter.domain.frameworks.models import FrameworkType
