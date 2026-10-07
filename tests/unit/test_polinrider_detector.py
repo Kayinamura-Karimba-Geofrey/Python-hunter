@@ -202,18 +202,18 @@ class TestPolinRiderDetectorAndCleaner(unittest.TestCase):
         self.assertFalse(os.path.exists(trojan_font))
 
         # Verify legitimate task is retained in tasks.json
-        with open(tasks_path, "r", encoding="utf-8") as f:
+        with open(tasks_path, encoding="utf-8") as f:
             disinfected_tasks = json.load(f)
         self.assertEqual(len(disinfected_tasks["tasks"]), 1)
         self.assertEqual(disinfected_tasks["tasks"][0]["label"], "Legitimate Test Runner")
 
         # Verify settings.json was sanitized
-        with open(settings_path, "r", encoding="utf-8") as f:
+        with open(settings_path, encoding="utf-8") as f:
             disinfected_settings = json.load(f)
         self.assertFalse(disinfected_settings.get("task.allowAutomaticTasks"))
 
         # Verify .gitignore had dropper rules stripped
-        with open(gitignore_path, "r", encoding="utf-8") as f:
+        with open(gitignore_path, encoding="utf-8") as f:
             gitignore_content = f.read()
         self.assertNotIn("temp_auto_push.bat", gitignore_content)
         self.assertIn("node_modules/", gitignore_content)
