@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, List, Dict, Optional, Set
+from typing import Any
 
 from python_hunter.domain.dependencies.normalization import normalize_package_name
 
