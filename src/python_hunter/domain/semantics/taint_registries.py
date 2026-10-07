@@ -1,8 +1,8 @@
 """Centralized Taint Source, Sink, and Context-Aware Sanitizer Registries."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Set
 
 
 class SourceCategory(str, Enum):
