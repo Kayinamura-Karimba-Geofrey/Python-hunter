@@ -4,9 +4,6 @@ import unittest
 from python_hunter.domain.dependencies.models import (
     Dependency,
     DependencyGraph,
-    DependencyInventory,
-    DependencySource,
-    SourceType,
 )
 from python_hunter.domain.dependencies.normalization import normalize_package_name
 from python_hunter.domain.dependencies.version import VersionSpec
