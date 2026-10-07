@@ -1,6 +1,5 @@
 """Analyze Knowledge Graph Application Use Case Implementation."""
 
-from typing import Any
 
 from python_hunter.application.use_cases.analyze_ast import AnalyzeASTUseCase
 from python_hunter.domain.graph.engine import SecurityKnowledgeGraphEngine
