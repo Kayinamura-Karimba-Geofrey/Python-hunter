@@ -79,7 +79,7 @@ class SARIFExporter:
             }
             results.append(res)
 
-        sarif_doc = {
+        return {
             "$schema": "https://json.schemastore.org/sarif-2.1.0.json",
             "version": "2.1.0",
             "runs": [
@@ -96,7 +96,6 @@ class SARIFExporter:
                 }
             ],
         }
-        return sarif_doc
 
     @classmethod
     def export_json(cls, findings: list[Finding], indent: int = 2) -> str:
