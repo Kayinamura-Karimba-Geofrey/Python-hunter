@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Set, Optional
+from typing import List, Set
 
 
 class Language(str, Enum):
