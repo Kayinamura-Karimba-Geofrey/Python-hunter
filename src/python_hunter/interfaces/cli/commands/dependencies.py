@@ -1,7 +1,6 @@
 """CLI Command Handler for Dependency & Supply-Chain Analysis."""
 
 import json
-import sys
 from python_hunter.application.use_cases.analyze_dependencies import AnalyzeDependenciesUseCase
 from python_hunter.domain.dependencies.models import DependencyInventory
 from python_hunter.domain.findings.finding import Finding
