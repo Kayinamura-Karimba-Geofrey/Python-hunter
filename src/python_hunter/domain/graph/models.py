@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from python_hunter.domain.common.enums import Confidence, Severity, TrustBoundary, PrivilegeLevel, AssetCriticality, DataSensitivity
+from python_hunter.domain.common.enums import Confidence, Severity, AssetCriticality, DataSensitivity
 from python_hunter.domain.common.value_objects import Location
 
 
