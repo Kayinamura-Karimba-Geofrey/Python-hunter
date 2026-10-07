@@ -1,7 +1,5 @@
 """Dashboard Services and Data Contracts for Security Reporting."""
 
-import os
-from typing import Any
 
 from python_hunter.domain.common.enums import Category, Confidence, FindingLifecycleState, Severity
 from python_hunter.domain.correlation.models import AttackPath, SecurityPosture
@@ -176,25 +174,23 @@ class SecurityMetricsService:
         """Produce executive summary text."""
         risk_level = "CRITICAL" if posture.project_risk_score >= 80 else ("HIGH" if posture.project_risk_score >= 60 else ("MEDIUM" if posture.project_risk_score >= 30 else "LOW"))
         status_text = "FAILED" if not posture.policy_passed else "PASSED"
-        summary = (
+        return (
             f"The Python Hunter scan identified {stats.total_findings} security findings across the target project. "
             f"Overall project risk level is evaluated as {risk_level} with a score of {posture.project_risk_score}/100. "
             f"The scan detected {stats.critical_count} critical and {stats.high_count} high severity issues. "
             f"Security policy evaluation status is {status_text}."
         )
-        return summary
 
     @staticmethod
     def generate_developer_summary(findings: list[Finding], attack_paths: list[AttackPath]) -> str:
         """Produce developer technical summary text."""
         affected_files = len({f.file_path for f in findings})
         rules_triggered = len({f.rule_id for f in findings})
-        summary = (
+        return (
             f"Found {len(findings)} unique findings affecting {affected_files} files across {rules_triggered} security rules. "
             f"Correlated {len(attack_paths)} multi-step attack paths reaching vulnerable sinks. "
             f"Immediate focus should be directed toward top-risk entry points."
         )
-        return summary
 
 
 class SecurityReportService:
