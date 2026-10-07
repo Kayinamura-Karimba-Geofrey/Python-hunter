@@ -1,7 +1,7 @@
 """Distributed Tracing and Correlation Context Propagation."""
 
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
