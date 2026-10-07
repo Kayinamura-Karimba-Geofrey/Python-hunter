@@ -6,7 +6,6 @@ from python_hunter.domain.dependencies.models import (
     Dependency,
     DependencyGraph,
     DependencyInventory,
-    DependencyType,
     PackageManager,
     SourceType,
 )
@@ -53,7 +52,7 @@ class AnalyzeDependenciesUseCase:
             for parser in self.parsers:
                 if parser.can_parse(file_path):
                     try:
-                        with open(file_path, "r", encoding="utf-8", errors="replace") as f:
+                        with open(file_path, encoding="utf-8", errors="replace") as f:
                             content = f.read()
                         deps = parser.parse(rel_path, content)
                         discovered_deps.extend(deps)
