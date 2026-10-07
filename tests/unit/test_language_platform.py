@@ -6,20 +6,16 @@ import tempfile
 import unittest
 
 from python_hunter.domain.dependencies.polyglot_dependency_adapter import PolyglotDependencyAdapter
-from python_hunter.domain.frameworks.framework_registry import FrameworkRegistry
-from python_hunter.domain.language.c_cpp_adapter import CLanguageAdapter, CPPLanguageAdapter
+from python_hunter.domain.language.c_cpp_adapter import CLanguageAdapter
 from python_hunter.domain.language.detector import LanguageDetector
 from python_hunter.domain.language.go_adapter import GoLanguageAdapter
 from python_hunter.domain.language.java_adapter import JavaLanguageAdapter
-from python_hunter.domain.language.javascript_adapter import JavaScriptLanguageAdapter, TypeScriptLanguageAdapter
 from python_hunter.domain.language.models import AnalyzerCapability, Language
 from python_hunter.domain.language.parser_provider import ParserProvider
 from python_hunter.domain.language.php_adapter import PHPLanguageAdapter
-from python_hunter.domain.language.python_adapter import PythonLanguageAdapter
 from python_hunter.domain.language.registry import LanguageRegistry
 from python_hunter.domain.language.ruby_adapter import RubyLanguageAdapter
 from python_hunter.domain.language.rust_adapter import RustLanguageAdapter
-from python_hunter.domain.rules.polyglot_rule_registry import PolyglotRuleRegistry
 
 
 class TestMultiLanguagePlatform(unittest.TestCase):
