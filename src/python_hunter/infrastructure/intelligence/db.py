@@ -3,8 +3,6 @@
 import json
 import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any
 
 from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.intelligence.models import (
