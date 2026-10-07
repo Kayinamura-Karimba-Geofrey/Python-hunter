@@ -3,7 +3,6 @@
 import os
 import re
 import subprocess
-from typing import Any
 
 from python_hunter.domain.git.interfaces import GitRepository
 from python_hunter.domain.git.models import (
@@ -19,7 +18,7 @@ from python_hunter.domain.git.models import (
 
 class SubprocessGitRepository(GitRepository):
     """Production implementation of GitRepository using safe subprocess argument arrays.
-    
+
     GUARANTEE: Strictly read-only operations. Never executes mutating Git commands.
     """
 
@@ -208,8 +207,7 @@ class SubprocessGitRepository(GitRepository):
             return None
         rel_path = os.path.relpath(file_path, root) if os.path.isabs(file_path) else file_path
         # Use git cat-file -p commit:path
-        output = self._run_git(["cat-file", "-p", f"{commit_hash}:{rel_path}"], cwd=root)
-        return output
+        return self._run_git(["cat-file", "-p", f"{commit_hash}:{rel_path}"], cwd=root)
 
     def get_diff(self, commit_hash: str) -> str:
         root = self.get_repository_root()
@@ -265,7 +263,7 @@ class SubprocessGitRepository(GitRepository):
                 is_active = os.access(hook_path, os.X_OK)
                 suspicious_reasons: list[str] = []
                 try:
-                    with open(hook_path, "r", encoding="utf-8", errors="ignore") as f:
+                    with open(hook_path, encoding="utf-8", errors="ignore") as f:
                         content = f.read()
                     for kw in suspicious_keywords:
                         if kw in content:
