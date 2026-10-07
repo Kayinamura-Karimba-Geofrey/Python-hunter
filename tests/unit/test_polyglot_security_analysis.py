@@ -4,8 +4,8 @@ import os
 import tempfile
 import unittest
 from python_hunter.domain.analysis.ast_nodes import ASTNode, ASTNodeType, DataFlowEngine
-from python_hunter.domain.analysis.monorepo import CrossLanguageCorrelationEngine, MonorepoDiscoveryEngine
-from python_hunter.domain.language import Language, LanguageRegistry, PolyglotSecurityAnalysisEngine
+from python_hunter.domain.analysis.monorepo import MonorepoDiscoveryEngine
+from python_hunter.domain.language import Language, PolyglotSecurityAnalysisEngine
 from python_hunter.domain.language.detector import LanguageDetector
 
 
