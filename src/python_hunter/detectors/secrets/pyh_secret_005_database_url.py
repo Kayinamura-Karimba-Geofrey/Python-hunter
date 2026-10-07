@@ -28,7 +28,6 @@ class PYHSecret005DatabaseURL(SecretDetector):
         candidates: list[SecretCandidate] = []
         for line_num, line in enumerate(content.splitlines(), start=1):
             for match in self.DB_URI_PATTERN.finditer(line):
-                full_match = match.group(0)
                 password = match.group(2)
                 col = match.start(2)
                 candidates.append(
