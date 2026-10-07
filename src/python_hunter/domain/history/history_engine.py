@@ -1,11 +1,8 @@
 """History Store and Snapshot Comparator Engine."""
 
-from datetime import datetime
 import hashlib
-from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.history.history_models import (
-    FindingLifecycle,
     RegressionType,
     SecurityRegression,
     SecuritySnapshot,
