@@ -1,7 +1,7 @@
 """Ecosystem-aware SemVer engine for version matching and conflict detection."""
 
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 from python_hunter.domain.dependencies.models import Ecosystem
 
 
@@ -98,13 +98,13 @@ class SemVerEngine:
             by_name.setdefault(dep.normalized_name, []).append(dep)
 
         for norm_name, dep_list in by_name.items():
-            versions = set(d.version for d in dep_list if d.version)
+            versions = {d.version for d in dep_list if d.version}
             if len(versions) > 1:
                 conflicts.append({
                     "package_name": norm_name,
-                    "versions_found": sorted(list(versions)),
+                    "versions_found": sorted(versions),
                     "count": len(dep_list),
-                    "details": f"Multiple conflicting versions found for package {norm_name}: {sorted(list(versions))}",
+                    "details": f"Multiple conflicting versions found for package {norm_name}: {sorted(versions)}",
                 })
 
         return conflicts
