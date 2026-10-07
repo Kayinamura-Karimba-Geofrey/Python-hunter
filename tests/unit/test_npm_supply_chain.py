@@ -3,7 +3,6 @@ import os
 import tempfile
 import unittest
 from python_hunter.application.orchestrator.scan_orchestrator import ScanOrchestrator
-from python_hunter.domain.dependencies.models import PackageManager
 from python_hunter.domain.dependencies.npm_analyzer import NPMAnalyzer
 from python_hunter.domain.dependencies.npm_reachability import NPMReachabilityAnalyzer
 from python_hunter.domain.dependencies.npm_supply_chain import NPMSupplyChainAnalyzer
@@ -36,7 +35,7 @@ class TestNPMSupplyChainSecurity(unittest.TestCase):
         inventory = self.npm_analyzer.analyze(".")
         ir = SecurityIR(language=Language.JAVASCRIPT)
         ir.calls.append(IRCall(caller="app.js", callee="express.listen", location=IRLocation("app.js", 1)))
-        
+
         reachability_map = self.reachability.analyze_reachability(ir, inventory)
         self.assertIsInstance(reachability_map, dict)
 
