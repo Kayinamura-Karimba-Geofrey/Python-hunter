@@ -1,8 +1,6 @@
 """CLI Command handler for Security Rules management."""
 
-import json
 import sys
-from typing import Any
 from python_hunter.rules.ast import get_default_registry
 
 
