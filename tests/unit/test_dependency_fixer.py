@@ -87,14 +87,14 @@ class TestFixDependenciesUseCase(unittest.TestCase):
             dry_res = use_case.execute(temp_dir, dry_run=True)
             self.assertTrue(dry_res["dry_run"])
             self.assertGreaterEqual(dry_res["fixes_count"], 2)
-            with open(req_path, "r", encoding="utf-8") as f:
+            with open(req_path, encoding="utf-8") as f:
                 self.assertIn("requests>=2.0.0", f.read())
 
             # 2. Test Live Fix (files must be modified)
             live_res = use_case.execute(temp_dir, dry_run=False)
             self.assertFalse(live_res["dry_run"])
             self.assertGreaterEqual(live_res["fixes_count"], 2)
-            with open(req_path, "r", encoding="utf-8") as f:
+            with open(req_path, encoding="utf-8") as f:
                 fixed_content = f.read()
             self.assertIn("requests==2.31.0", fixed_content)
             self.assertIn("flask==3.0.0", fixed_content)
@@ -111,7 +111,7 @@ class TestFixDependenciesUseCase(unittest.TestCase):
             code = run_cli(["fix", temp_dir])
             self.assertEqual(code, 0)
 
-            with open(req_path, "r", encoding="utf-8") as f:
+            with open(req_path, encoding="utf-8") as f:
                 self.assertIn("requests==2.31.0", f.read())
 
 
