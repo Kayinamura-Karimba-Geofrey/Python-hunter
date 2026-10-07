@@ -76,8 +76,6 @@ jobs:
   typecheck:
     name: Type check
     runs-on: ubuntu-latest
-    # Report-only until the strict module list in [tool.mypy] is confirmed clean.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
