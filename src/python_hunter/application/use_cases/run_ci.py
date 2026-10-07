@@ -5,7 +5,6 @@ import sys
 from typing import Any
 
 from python_hunter.application.use_cases.generate_report import GenerateReportUseCase
-from python_hunter.domain.baseline.engine import BaselineEngine
 
 
 class RunCIUseCase:
@@ -22,7 +21,7 @@ class RunCIUseCase:
         options: dict[str, Any] | None = None,
     ) -> int:
         """Execute CI pipeline flow.
-        
+
         Exit codes:
           0 = Policy PASSED
           1 = Policy FAILED / Violations
