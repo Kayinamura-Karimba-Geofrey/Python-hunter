@@ -2,10 +2,9 @@
 
 import uuid
 from typing import List, Optional
-from python_hunter.domain.ai.models import AIAuditLog, AIConfidence, FindingExplanation, PrivacyMode
+from python_hunter.domain.ai.models import AIAuditLog, AIConfidence, FindingExplanation
 from python_hunter.domain.ai.output_validator import OutputValidator
 from python_hunter.domain.ai.prompt_guard import PromptGuard
-from python_hunter.domain.ai.provider import AIProvider
 from python_hunter.domain.ai.redaction import DataRedactor
 from python_hunter.domain.ai.registry import AIProviderRegistry
 from python_hunter.domain.findings.finding import Finding
