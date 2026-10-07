@@ -1,7 +1,6 @@
 """Notification Registry, Providers, Secret Redaction, and Digest Routing."""
 
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
