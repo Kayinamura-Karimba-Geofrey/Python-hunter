@@ -5,8 +5,6 @@ from python_hunter.domain.git.models import (
     ChangeType,
     GitCommit,
     GitFileChange,
-    GitHookInfo,
-    GitRemoteInfo,
     GitRepositoryMetadata,
     HistoryCompleteness,
     SecretLifecycleRecord,
