@@ -5,13 +5,11 @@ import unittest
 from python_hunter.domain.ast.models import ASTLocation
 from python_hunter.domain.taint.config import TaintConfig
 from python_hunter.domain.taint.models import (
-    FunctionSummary,
     SanitizationContext,
     TaintFlow,
     TaintNode,
     TaintSinkCategory,
     TaintSourceCategory,
-    TaintStateEnum,
 )
 
 
