@@ -1,12 +1,9 @@
 """Risk Scoring and Security Posture Engine."""
 
 import logging
-from typing import Any
 
 from python_hunter.domain.common.enums import (
-    AssetCriticality,
     Category,
-    Confidence,
     ExposureType,
     FindingLifecycleState,
     ReachabilityType,
