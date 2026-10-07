@@ -37,49 +37,6 @@ class PolicyResultStatus(str, Enum):
 
 
 @dataclass
-class GitHubInstallation:
-    """Represents a GitHub App installation for an organization or user account."""
-
-    installation_id: str
-    organization: str
-    repositories: List[str] = field(default_factory=list)
-    permissions: List[GitHubPermission] = field(default_factory=list)
-    status: GitHubInstallationStatus = GitHubInstallationStatus.ACTIVE
-    installed_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-
-
-@dataclass
-class GitHubRepository:
-    """Represents a repository monitored by Python Hunter."""
-
-    id: str
-    full_name: str
-    installation_id: str
-    default_branch: str = "main"
-    is_private: bool = True
-    html_url: str = ""
-    clone_url: str = ""
-
-
-@dataclass
-class GitHubPullRequest:
-    """Represents a GitHub Pull Request being analyzed."""
-
-    pr_id: str
-    number: int
-    title: str
-    author: str
-    repository: str
-    base_branch: str
-    base_sha: str
-    head_branch: str
-    head_sha: str
-    status: PullRequestStatus = PullRequestStatus.OPEN
-    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-
-
-@dataclass
 class GitHubAnnotation:
     """Inline code annotation for a GitHub Check Run."""
 
