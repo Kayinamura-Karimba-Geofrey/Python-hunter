@@ -6,10 +6,8 @@ from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.projects.project import Project
 from python_hunter.infrastructure.ast.parser import StandardASTParser
 from python_hunter.rules.ast.pyh_ast_001_eval import PYHAST001Eval
-from python_hunter.rules.ast.pyh_ast_004_os_system import PYHAST004OsSystem
 from python_hunter.rules.ast.pyh_ast_005_subprocess_shell import PYHAST005SubprocessShell
 from python_hunter.rules.ast.pyh_ast_006_pickle import PYHAST006Pickle
-from python_hunter.rules.ast.pyh_ast_009_hardcoded_credentials import PYHAST009HardcodedCredentials
 
 RULES_FIXTURES_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "fixtures", "security_rules"))
 
