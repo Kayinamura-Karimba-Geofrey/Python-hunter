@@ -1,7 +1,7 @@
 """Strong Centralized Secret Redaction Engine with Leak Prevention Guarantees."""
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 
 class Redactor:
