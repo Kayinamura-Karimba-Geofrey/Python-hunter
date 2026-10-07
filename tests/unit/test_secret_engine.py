@@ -4,14 +4,11 @@ import unittest
 
 from python_hunter.detectors.secrets import create_default_secret_registry
 from python_hunter.domain.analysis.context import AnalysisContext
+from python_hunter.domain.projects.project import Project
 from python_hunter.domain.secrets.engine import SecretDetectionEngine
 from python_hunter.domain.secrets.entropy import EntropyCalculator
 from python_hunter.domain.secrets.placeholders import PlaceholderFilter
 from python_hunter.domain.secrets.redaction import Redactor
-from python_hunter.domain.secrets.registry import SecretDetectorRegistry
-
-
-from python_hunter.domain.projects.project import Project
 
 
 class TestSecretEngineAndUtilities(unittest.TestCase):
@@ -37,6 +34,9 @@ class TestSecretEngineAndUtilities(unittest.TestCase):
         self.assertTrue(PlaceholderFilter.is_placeholder("replace_me"))
         self.assertTrue(PlaceholderFilter.is_placeholder("changeme"))
         self.assertTrue(PlaceholderFilter.is_placeholder("xxxxxxxxxxxxxxxx"))
+        self.assertTrue(PlaceholderFilter.is_placeholder("ghp_yourTokenHere"))
+        self.assertTrue(PlaceholderFilter.is_placeholder("ghp_yourPersonalAccessTokenOrAppToken"))
+        self.assertFalse(PlaceholderFilter.is_placeholder("ghp_9f8Kq2LmN4pR7sT1vW3xY5zA6bC8dE0fG2hJ"))
         self.assertFalse(PlaceholderFilter.is_placeholder("ak_mock_99887766554433221100aabb"))
 
     def test_secret_registry(self) -> None:
