@@ -4,9 +4,7 @@ Provides real-time in-editor security diagnostics, CodeActions, and workspace co
 over standard input/output (stdio) or TCP sockets for VS Code, JetBrains, Neovim, and Sublime Text.
 """
 
-import json
 import logging
-import os
 import socket
 import sys
 import threading
