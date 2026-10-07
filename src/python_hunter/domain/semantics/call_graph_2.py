@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Set
 from python_hunter.domain.ir.models import IRLocation
-from python_hunter.domain.semantics.program_model import ProgramCall, ProgramFunction, ProgramModel
+from python_hunter.domain.semantics.program_model import ProgramModel
 from python_hunter.domain.semantics.symbol_table import NameResolver
 
 
@@ -109,41 +109,3 @@ class CallGraph2:
 
         dfs(source, [source], 0)
         return paths
-
-
-class CallbackAnalyzer:
-    """Analyzes and registers event handlers, callbacks, and promise chains."""
-
-    def __init__(self, call_graph: CallGraph2) -> None:
-        self.call_graph = call_graph
-        self.callbacks: Dict[str, List[str]] = {}  # trigger_event -> handler_functions
-
-    def register_callback(self, trigger_event: str, handler_qualified_name: str) -> None:
-        self.callbacks.setdefault(trigger_event, []).append(handler_qualified_name)
-        # Inject call graph edge for framework callback dispatch
-        self.call_graph._add_edge(CallEdge(
-            caller=f"event:{trigger_event}",
-            callee=handler_qualified_name,
-            kind=CallKind.CALLBACK,
-            is_conservative=False,
-            possible_targets=[handler_qualified_name],
-        ))
-
-
-class AsyncFlowAnalyzer:
-    """Handles async/await, promise chains, futures, goroutines, and event loop flows."""
-
-    def __init__(self, call_graph: CallGraph2) -> None:
-        self.call_graph = call_graph
-        self.async_edges: List[CallEdge] = []
-
-    def register_async_spawn(self, caller: str, async_func: str) -> None:
-        edge = CallEdge(
-            caller=caller,
-            callee=async_func,
-            kind=CallKind.ASYNC,
-            is_conservative=False,
-            possible_targets=[async_func],
-        )
-        self.async_edges.append(edge)
-        self.call_graph._add_edge(edge)
