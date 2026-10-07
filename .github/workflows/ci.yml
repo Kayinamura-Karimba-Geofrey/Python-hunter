@@ -45,7 +45,7 @@ jobs:
         run: pytest tests/benchmarks -o addopts="" -q
 
   lint:
-    name: Lint (changed files)
+    name: Lint (ratchet)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -57,9 +57,9 @@ jobs:
           cache: pip
       - name: Install
         run: pip install -e ".[dev]"
-      # The existing codebase has a large lint backlog. Every Python file a push or PR
-      # touches must be clean, so the backlog shrinks with each change instead of blocking CI.
-      - name: Ruff
+      # The existing codebase has a large lint backlog. A changed file may not gain ruff
+      # violations, and a new file must be clean, so the backlog only ever shrinks.
+      - name: Ruff (no new violations)
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
@@ -67,11 +67,20 @@ jobs:
             BASE_SHA=$(git rev-parse HEAD~1)
           fi
           files=$(git diff --name-only --diff-filter=ACMR "$BASE_SHA" HEAD -- '*.py' | grep -v '^tests/fixtures/' || true)
-          if [ -z "$files" ]; then
-            echo "No Python files changed."
-          else
-            ruff check $files
-          fi
+          fail=0
+          for f in $files; do
+            new=$(ruff check --output-format concise "$f" 2>/dev/null | grep -c "^$f:" || true)
+            old=0
+            if git cat-file -e "$BASE_SHA:$f" 2>/dev/null; then
+              old=$(git show "$BASE_SHA:$f" | ruff check --output-format concise --stdin-filename "$f" - 2>/dev/null | grep -c "^$f:" || true)
+            fi
+            if [ "$new" -gt "$old" ]; then
+              echo "::error file=$f::ruff violations increased from $old to $new"
+              ruff check --output-format concise "$f" || true
+              fail=1
+            fi
+          done
+          exit $fail
 
   typecheck:
     name: Type check
