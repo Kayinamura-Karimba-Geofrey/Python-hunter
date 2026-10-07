@@ -2,7 +2,6 @@
 
 import logging
 import queue
-import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
