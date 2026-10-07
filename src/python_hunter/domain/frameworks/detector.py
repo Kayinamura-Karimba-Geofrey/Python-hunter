@@ -5,9 +5,7 @@ from typing import Any
 from python_hunter.domain.ast.models import ASTDocument
 from python_hunter.domain.common.enums import Confidence
 from python_hunter.domain.frameworks.models import (
-    FrameworkEvidence,
     FrameworkProfile,
-    FrameworkType,
 )
 from python_hunter.domain.frameworks.registry import FrameworkRegistry
 
