@@ -96,10 +96,6 @@ class ApiConfig:
                 {"cors_origins": self.cors_origins},
             )
 
-    @property
-    def auth_configured(self) -> bool:
-        return bool(self.username and self.password_hash)
-
 
 @dataclass
 class Settings:
