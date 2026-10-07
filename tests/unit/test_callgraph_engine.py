@@ -4,7 +4,7 @@ import unittest
 
 from python_hunter.domain.ast.models import ASTDocument, FunctionInfo, CallInfo, DecoratorInfo
 from python_hunter.domain.callgraph.engine import CallGraphEngine
-from python_hunter.domain.callgraph.models import CallEdge, EntryPointType, SymbolType
+from python_hunter.domain.callgraph.models import CallEdge, EntryPointType
 
 
 class TestCallGraphEngine(unittest.TestCase):
