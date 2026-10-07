@@ -1,6 +1,6 @@
 """Remediation Intelligence Engine for patch suggestions, test/scan validation, and fix verification."""
 
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 from python_hunter.domain.ai.models import AIConfidence, RemediationRecommendation
 from python_hunter.domain.findings.finding import Finding
 
