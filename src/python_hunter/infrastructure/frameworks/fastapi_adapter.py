@@ -1,6 +1,5 @@
 """FastAPI Framework Adapter Implementation."""
 
-import ast
 from typing import Any
 
 from python_hunter.domain.ast.models import ASTDocument
