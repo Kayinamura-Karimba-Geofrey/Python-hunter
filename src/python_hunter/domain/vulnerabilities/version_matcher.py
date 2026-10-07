@@ -57,7 +57,7 @@ class VersionMatcher:
                 parsed_ver = Version(installed_ver)
                 is_affected = self._is_version_affected(parsed_ver, vulnerability.affected_ranges)
                 status = VulnerabilityStatus.AFFECTED if is_affected else VulnerabilityStatus.NOT_AFFECTED
-                
+
                 fix, compatible = self._calculate_remediation(parsed_ver, constraint_str, vulnerability.fixed_versions)
 
                 return VulnerabilityMatch(
@@ -134,7 +134,7 @@ class VersionMatcher:
                     test_points.append(introduced_ver)
                 if fixed_ver:
                     test_points.append(fixed_ver)
-                
+
                 # If constraint accepts any introduced/affected test points, there is an overlap
                 for point in test_points:
                     if point in spec:
