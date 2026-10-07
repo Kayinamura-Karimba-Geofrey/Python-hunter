@@ -2,16 +2,12 @@
 
 from dataclasses import dataclass, field
 import uuid
-from typing import Any
 
 from python_hunter.domain.common.enums import (
     AttackPathType,
     Confidence,
     FindingRelationType,
-    FindingStatus,
-    Severity,
 )
-from python_hunter.domain.findings.finding import Finding
 
 
 @dataclass
