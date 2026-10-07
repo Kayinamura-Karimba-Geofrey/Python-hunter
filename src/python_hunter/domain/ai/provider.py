@@ -1,7 +1,6 @@
 """AI Provider abstraction for Local and External AI models."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
 from python_hunter.domain.ai.models import AIProviderConfig, PrivacyMode
 
 
@@ -22,7 +21,6 @@ class AIProvider(ABC):
     @abstractmethod
     def generate(self, prompt: str, system_prompt: str = "") -> str:
         """Generates a text completion given a prompt."""
-        pass
 
 
 class LocalAIProvider(AIProvider):
