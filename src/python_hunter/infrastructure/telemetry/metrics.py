@@ -1,7 +1,7 @@
 """Platform Metrics Collector for Telemetry and Observability."""
 
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 
 @dataclass
