@@ -1,6 +1,6 @@
 """Infrastructure security rules engine for Docker, Kubernetes, Terraform, and CI/CD."""
 
-from typing import Any, Dict, List
+from typing import List
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.infrastructure.models import (
