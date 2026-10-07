@@ -2,7 +2,7 @@
 
 import os
 from typing import Any, Dict, List
-from python_hunter.domain.ir.models import IRFunction, IRLocation, SecurityIR
+from python_hunter.domain.ir.models import SecurityIR
 from python_hunter.domain.language.adapter import LanguageAdapter
 from python_hunter.domain.language.models import AnalyzerCapability, Language, LanguageCapabilities, LanguageMetadata
 from python_hunter.domain.language.parser_provider import ParserProvider
@@ -59,7 +59,7 @@ class PythonLanguageAdapter(LanguageAdapter):
 
     def parse(self, file_path: str) -> Dict[str, Any]:
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 code = f.read()
             res = ParserProvider.parse_python(code, file_path)
             return {"file_path": file_path, "ast": res.ast, "is_partial": res.is_partial}
@@ -78,7 +78,7 @@ class PythonLanguageAdapter(LanguageAdapter):
     def _analyze_file(self, file_path: str) -> List[Dict[str, Any]]:
         findings = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             lines = content.splitlines()
 
