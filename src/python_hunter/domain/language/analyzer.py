@@ -1,7 +1,6 @@
 """LanguageAnalyzer base plugin interface and AnalyzerRegistry for multi-language execution."""
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 from python_hunter.domain.findings.finding import Finding
 
