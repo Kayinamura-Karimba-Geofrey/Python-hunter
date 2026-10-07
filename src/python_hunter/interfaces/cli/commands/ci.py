@@ -1,7 +1,6 @@
 """CLI Subcommand: ci."""
 
 import argparse
-import sys
 
 from python_hunter.application.use_cases.run_ci import RunCIUseCase
 
