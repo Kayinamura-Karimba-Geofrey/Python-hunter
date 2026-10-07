@@ -1,3 +1,4 @@
+
 """Unit tests for Python Hunter Language Server Protocol (LSP) and Diagnostics Engine."""
 
 import io
