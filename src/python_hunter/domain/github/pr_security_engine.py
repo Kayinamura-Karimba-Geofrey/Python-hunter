@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List
 
 from python_hunter.domain.github.github_models import (
     PolicyResultStatus,
