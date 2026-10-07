@@ -72,7 +72,7 @@ class CachedVulnerabilityProvider(VulnerabilityProvider):
         if not os.path.exists(self._cache_file):
             return
         try:
-            with open(self._cache_file, "r", encoding="utf-8") as f:
+            with open(self._cache_file, encoding="utf-8") as f:
                 data = json.load(f)
                 for key, val in data.items():
                     self._memory_cache[key] = [self._dict_to_vuln(v) for v in val]
