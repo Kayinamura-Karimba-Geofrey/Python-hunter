@@ -1,12 +1,12 @@
 """Offline Vulnerability Database Manager with Freshness Tracking, Atomic Updates, and Rollback."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 import os
 import shutil
 import tempfile
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from python_hunter.domain.dependencies.models import Ecosystem
 from python_hunter.domain.dependencies.vulnerability_intel import Advisory, VulnerabilityProvider
 
@@ -178,7 +178,7 @@ class AdvisoryDatabase(VulnerabilityProvider):
 
     def _load_database(self) -> None:
         try:
-            with open(self.meta_path, "r", encoding="utf-8") as f:
+            with open(self.meta_path, encoding="utf-8") as f:
                 meta = json.load(f)
                 self.metadata = DatabaseMetadata(
                     database_version=meta.get("database_version", "1.0.0"),
@@ -186,7 +186,7 @@ class AdvisoryDatabase(VulnerabilityProvider):
                     source=meta.get("source", "Local Cache"),
                     total_advisories=meta.get("total_advisories", 0),
                 )
-            with open(self.data_path, "r", encoding="utf-8") as f:
+            with open(self.data_path, encoding="utf-8") as f:
                 raw_data = json.load(f)
                 self.advisories = {}
                 for item in raw_data:
