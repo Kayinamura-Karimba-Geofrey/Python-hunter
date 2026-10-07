@@ -2,8 +2,6 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-import time
-from typing import Any
 
 from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.ast.models import ASTAnalysisSummary
