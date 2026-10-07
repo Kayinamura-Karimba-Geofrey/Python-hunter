@@ -86,7 +86,7 @@ class TestReportGenerator(unittest.TestCase):
             ])
             self.assertEqual(code, 0)
             self.assertTrue(os.path.exists(html_out))
-            with open(html_out, "r", encoding="utf-8") as f:
+            with open(html_out, encoding="utf-8") as f:
                 content = f.read()
             self.assertIn("FinTech Core Corp", content)
 
@@ -109,7 +109,7 @@ class TestReportGenerator(unittest.TestCase):
             ])
             self.assertEqual(code, 0)
             self.assertTrue(os.path.exists(json_out))
-            with open(json_out, "r", encoding="utf-8") as f:
+            with open(json_out, encoding="utf-8") as f:
                 parsed = json.load(f)
             self.assertIn("risk_score", parsed)
 
