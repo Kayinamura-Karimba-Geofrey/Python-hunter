@@ -24,7 +24,6 @@ from python_hunter.domain.correlation.risk_engine import RiskEngine
 from python_hunter.domain.frameworks.detector import FrameworkDetector
 from python_hunter.domain.frameworks.registry import FrameworkRegistry
 from python_hunter.domain.policy.engine import SecurityPolicyEngine
-import python_hunter.infrastructure.frameworks  # Ensures default framework adapters are registered
 
 
 class AnalyzeSecurityUseCase:
