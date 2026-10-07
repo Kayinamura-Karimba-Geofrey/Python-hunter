@@ -1,7 +1,6 @@
 """Remediation Engine for safe dependency upgrades and breaking-change evaluation."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
 from python_hunter.domain.dependencies.models import Dependency
 from python_hunter.domain.dependencies.semver_engine import SemVerEngine
 from python_hunter.domain.dependencies.vulnerability_intel import Advisory
