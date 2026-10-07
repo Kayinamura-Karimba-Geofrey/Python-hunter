@@ -1,7 +1,7 @@
 """Deterministic Safe Payload Registry and Secret Redactor."""
 
 import re
-from typing import Dict, List
+from typing import Dict
 from python_hunter.domain.verification.models import SecurityTest, TestSafetyLevel
 
 
@@ -75,9 +75,8 @@ class SafePayloadRegistry:
         """Redacts sensitive values or keys from verification logs/reports."""
         if not text:
             return ""
-        redacted = re.sub(
+        return re.sub(
             r"(?i)(api[_-]?key|secret|password|token|auth)\s*=\s*['\"]([^'\"]+)['\"]",
             r"\1='[REDACTED_VERIFICATION_PAYLOAD]'",
             text,
         )
-        return redacted
