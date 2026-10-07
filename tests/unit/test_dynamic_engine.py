@@ -5,12 +5,10 @@ import unittest
 
 from python_hunter.application.use_cases.analyze_ast import AnalyzeASTUseCase
 from python_hunter.application.use_cases.analyze_dynamic import AnalyzeDynamicUseCase
-from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.dynamic.engine import DynamicBehaviorEngine
-from python_hunter.domain.dynamic.models import DynamicBehaviorType, ResolutionState
+from python_hunter.domain.dynamic.models import DynamicBehaviorType
 from python_hunter.rules.dynamic.pyh_dynamic_001_eval_exec import PYHDynamic001EvalExec
 from python_hunter.rules.dynamic.pyh_dynamic_002_unsafe_pickle import PYHDynamic002UnsafePickle
-from python_hunter.rules.dynamic.pyh_dynamic_003_unsafe_yaml import PYHDynamic003UnsafeYAML
 
 
 class TestDynamicBehaviorEngine(unittest.TestCase):
@@ -26,7 +24,7 @@ class TestDynamicBehaviorEngine(unittest.TestCase):
     def test_reflection_analysis(self) -> None:
         fixture_path = os.path.join(self.fixtures_dir, "reflection", "app.py")
         behaviors, summary = self.dynamic_use_case.execute(fixture_path)
-        
+
         self.assertGreater(summary.reflection_count, 0)
         types = [b.behavior_type for b in behaviors]
         self.assertIn(DynamicBehaviorType.REFLECTION, types)
@@ -78,7 +76,6 @@ class TestDynamicBehaviorEngine(unittest.TestCase):
     def test_dynamic_rules_evaluation(self) -> None:
         rule001 = PYHDynamic001EvalExec()
         rule002 = PYHDynamic002UnsafePickle()
-        rule003 = PYHDynamic003UnsafeYAML()
 
         fixture_eval = os.path.join(self.fixtures_dir, "eval_exec", "app.py")
         ast_summary = self.ast_use_case.execute(fixture_eval)
