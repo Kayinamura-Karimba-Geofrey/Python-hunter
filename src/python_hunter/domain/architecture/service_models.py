@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any
 from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.language.models import Language
 
@@ -60,14 +59,3 @@ class Service:
     api_calls: list[ApiClientCall] = field(default_factory=list)
     databases: list[DatabaseAsset] = field(default_factory=list)
     external_services: list[ExternalService] = field(default_factory=list)
-
-
-@dataclass
-class InterServiceDataFlow:
-    """Dataflow trace edge connecting an API client call in Service A to an endpoint in Service B."""
-
-    source_service: str
-    target_service: str
-    target_endpoint: str
-    http_method: str
-    confidence: float = 0.85
