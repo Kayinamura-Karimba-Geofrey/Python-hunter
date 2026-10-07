@@ -2,7 +2,7 @@
 
 from typing import Dict, List, Optional
 from python_hunter.domain.compliance.models import (
-    ComplianceControlModel, ComplianceFrameworkModel, ControlCategory, ControlState
+    ComplianceControlModel, ComplianceFrameworkModel, ControlCategory
 )
 
 
