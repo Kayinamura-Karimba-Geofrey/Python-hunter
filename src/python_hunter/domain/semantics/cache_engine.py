@@ -1,10 +1,10 @@
 """Analysis Cache Engine with incremental invalidation and bounded execution limits."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import hashlib
 import os
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, Optional
 
 
 @dataclass
@@ -14,15 +14,6 @@ class AnalysisLimits:
     max_paths: int = 100
     max_analysis_time_seconds: float = 30.0
     max_memory_mb: int = 512
-
-
-@dataclass
-class LimitationReport:
-    reached_timeout: bool = False
-    reached_max_depth: bool = False
-    reached_max_paths: bool = False
-    skipped_nodes_count: int = 0
-    warnings: List[str] = field(default_factory=list)
 
 
 @dataclass
