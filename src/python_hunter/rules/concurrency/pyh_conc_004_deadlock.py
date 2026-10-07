@@ -3,7 +3,6 @@
 from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.ast.models import ASTAnalysisSummary
 from python_hunter.domain.common.enums import Category, Confidence, Severity
-from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.rules.models import SecurityRule
 
