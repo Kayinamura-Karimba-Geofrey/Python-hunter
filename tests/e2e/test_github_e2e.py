@@ -3,17 +3,24 @@
 import hashlib
 import hmac
 import json
+import os
+import tempfile
 import unittest
+from unittest import mock
 
 from python_hunter.application.services.security_app_service import SecurityApplicationService
+from python_hunter.infrastructure.storage.scan_store import ScanResultStore
 
 
 class TestGitHubWorkflowE2E(unittest.TestCase):
 
     def test_github_pr_workflow_e2e(self):
-        svc = SecurityApplicationService()
         secret = "pyh_webhook_secret_dev_12345"
-        
+        data_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(data_dir.cleanup)
+        with mock.patch.dict(os.environ, {"PYH_WEBHOOK_SECRET": secret}):
+            svc = SecurityApplicationService(store=ScanResultStore(data_dir.name))
+
         payload_data = {
             "action": "synchronize",
             "number": 42,
@@ -28,6 +35,11 @@ class TestGitHubWorkflowE2E(unittest.TestCase):
             "repository": {
                 "full_name": "kayinamura-karimba-geofrey/python-hunter",
                 "clone_url": "https://github.com/kayinamura-karimba-geofrey/python-hunter.git",
+            },
+            "installation": {
+                "id": 9941,
+                "account": {"login": "kayinamura-karimba-geofrey"},
+                "permissions": {"contents": "read", "pull_requests": "write", "checks": "write"},
             },
         }
 
@@ -56,17 +68,42 @@ class TestGitHubWorkflowE2E(unittest.TestCase):
         target_pr = prs[0]
         self.assertEqual(target_pr["pr_number"], 42)
         self.assertEqual(target_pr["policy_result"], "PASS")
+        self.assertEqual(target_pr["title"], "Add JWT Auth and parameterize SQL query")
+        self.assertEqual(target_pr["author"], "kayinamura-geofrey")
 
-        # 4. Query PR detail
+        # 4. Re-analyze with real BASE/HEAD findings: the SQL injection is fixed on HEAD
+        base_findings = [
+            {
+                "id": "find-1",
+                "title": "SQL Injection in User Lookup Query",
+                "rule_id": "PYH-SQLI-001",
+                "severity": "CRITICAL",
+                "risk_score": 9.2,
+                "file_path": "src/db.py",
+                "line_number": 42,
+            }
+        ]
+        svc.run_pull_request_analysis(
+            "kayinamura-karimba-geofrey/python-hunter",
+            42,
+            "a1b2c3d4e5",
+            "f6g7h8i9j0",
+            base_findings=base_findings,
+            head_findings=[],
+            changed_files=["src/db.py"],
+        )
+
+        # 5. Query PR detail
         detail = svc.get_pull_request_detail(target_pr["pr_id"])
         self.assertIn("security_relevant_files", detail)
-        self.assertIn("timeline", detail)
+        self.assertGreaterEqual(len(detail["timeline"]), 2)
         self.assertGreaterEqual(detail["fixed_vulnerabilities_count"], 1)
 
-        # 5. Query GitHub installations
+        # 6. Query GitHub installations
         inst_data = svc.list_github_installations()
         self.assertGreaterEqual(len(inst_data), 1)
         self.assertEqual(inst_data[0]["status"], "ACTIVE")
+        self.assertIn("kayinamura-karimba-geofrey/python-hunter", inst_data[0]["repositories"])
 
 
 if __name__ == "__main__":
