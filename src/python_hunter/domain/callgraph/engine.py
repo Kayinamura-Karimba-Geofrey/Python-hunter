@@ -1,9 +1,8 @@
 """Call Graph, Control-Flow Graph (CFG), and Symbol Table Analysis Engine."""
 
-import ast
 from typing import Any
 
-from python_hunter.domain.ast.models import ASTDocument, ASTLocation
+from python_hunter.domain.ast.models import ASTDocument
 from python_hunter.domain.callgraph.models import (
     CFGEdge,
     CFGEdgeType,
