@@ -1,7 +1,6 @@
 """Package Provenance and Integrity Metadata Models."""
 
 from dataclasses import dataclass, field
-from typing import Any
 
 
 @dataclass(frozen=True)
