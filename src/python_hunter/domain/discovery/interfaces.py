@@ -1,7 +1,7 @@
 """FileSystem and Project Discovery Interfaces."""
 
 from abc import ABC, abstractmethod
-from typing import Iterator
+from collections.abc import Iterator
 from python_hunter.domain.discovery.manifest import FileMetadata, ProjectManifest
 
 
