@@ -43,7 +43,7 @@ class LocalFileSystem(FileSystem):
         if not self.is_file(norm):
             return ""
         try:
-            with open(norm, "r", encoding="utf-8", errors="replace") as f:
+            with open(norm, encoding="utf-8", errors="replace") as f:
                 return f.read(max_bytes)
         except Exception as e:
             raise ProjectError(f"Failed to read file {path}: {e}", {"path": path}) from e
@@ -78,7 +78,7 @@ class LocalFileSystem(FileSystem):
         """Construct safe FileMetadata for a relative file path under root_path."""
         full_path = os.path.join(root_path, relative_path)
         is_sym = os.path.islink(full_path)
-        
+
         try:
             st = os.lstat(full_path)
             size = st.st_size
