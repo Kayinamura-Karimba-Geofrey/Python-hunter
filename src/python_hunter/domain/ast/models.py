@@ -1,7 +1,6 @@
 """AST Domain Data Models and Structural Extracted Entities."""
 
 from dataclasses import dataclass, field
-from typing import Any
 
 
 @dataclass(frozen=True)
