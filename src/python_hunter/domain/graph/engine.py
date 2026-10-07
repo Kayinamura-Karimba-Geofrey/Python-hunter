@@ -1,14 +1,13 @@
 """Security Knowledge Graph Engine Implementation synthesizing multi-domain findings into unified Attack Paths."""
 
 import logging
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Tuple
 
 from python_hunter.domain.ast.models import ASTDocument
-from python_hunter.domain.common.enums import Confidence, Severity
 from python_hunter.domain.graph.analyzers import WholeProjectGraphBuilder
 from python_hunter.domain.graph.models import AttackPath, SecurityGraph, WholeProjectRisk, SecurityNode, NodeType, SecurityEdge, EdgeType
 from python_hunter.domain.correlation.correlation_engine import CorrelationEngine, FindingCluster
-from python_hunter.domain.correlation.attack_path_engine import AttackPathEngine, WhatIfAnalyzer, AssetInventory
+from python_hunter.domain.correlation.attack_path_engine import AttackPathEngine
 
 logger = logging.getLogger(__name__)
 
