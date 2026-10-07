@@ -5,7 +5,6 @@ import hmac
 import json
 import logging
 import os
-import sys
 from collections import OrderedDict
 from urllib.parse import urlparse
 from typing import Any, Dict, Optional
@@ -22,12 +21,10 @@ MAX_TRACKED_DELIVERIES = 10_000  # Replay-cache bound (memory exhaustion defense
 class WebhookSecretNotConfiguredError(RuntimeError):
     """Raised when webhook signature verification is attempted without a configured secret."""
 
-    pass
 
 
 class WebhookValidationError(Exception):
     """Exception raised when webhook payload or signature is invalid."""
-    pass
 
 
 class GitHubWebhookHandler:
