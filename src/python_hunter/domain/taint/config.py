@@ -1,7 +1,6 @@
 """Taint Sources, Sinks, and Sanitizers Configuration Catalog."""
 
 import os
-from typing import Any
 try:
     import yaml
 except ImportError:
@@ -113,7 +112,7 @@ class TaintConfig:
             return config
 
         try:
-            with open(yaml_path, "r", encoding="utf-8") as f:
+            with open(yaml_path, encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
 
             taint_data = data.get("taint", {})
