@@ -1,9 +1,8 @@
 """Knowledge Graph and Attack Path Engine Integration for Secrets Exposure."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from python_hunter.domain.findings.finding import Finding
-from python_hunter.domain.secrets.models import ExposureType, SecretEnvironment, SecretType
 
 
 @dataclass
