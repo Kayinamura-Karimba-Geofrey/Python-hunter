@@ -3,10 +3,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
 
 from python_hunter.domain.common.enums import Severity
-from python_hunter.domain.intelligence.models import VulnerabilityRecord
 
 
 class RemediationStatus(str, Enum):
