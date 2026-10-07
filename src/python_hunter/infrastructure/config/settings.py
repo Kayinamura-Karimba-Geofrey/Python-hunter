@@ -1,8 +1,8 @@
 """Centralized Configuration System."""
 
-from dataclasses import dataclass, field
 import os
-from typing import Any
+from dataclasses import dataclass, field
+
 from python_hunter.domain.exceptions.base import ConfigurationError
 
 
@@ -68,6 +68,39 @@ class ScanConfig:
             raise ConfigurationError("timeout_seconds must be > 0", {"val": self.timeout_seconds})
 
 
+def _split_csv(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
+@dataclass
+class ApiConfig:
+    """REST API authentication, CORS, and scan-target settings."""
+
+    username: str = ""
+    # PBKDF2 hash produced by python_hunter.application.api.security.hash_password
+    password_hash: str = ""
+    token_ttl_minutes: int = 60
+    cors_origins: list[str] = field(default_factory=lambda: ["http://localhost:5173"])
+    workspace_root: str = ""
+    allow_remote_targets: bool = False
+    max_concurrent_scans: int = 2
+
+    def __post_init__(self) -> None:
+        if self.token_ttl_minutes <= 0:
+            raise ConfigurationError("token_ttl_minutes must be > 0", {"val": self.token_ttl_minutes})
+        if self.max_concurrent_scans <= 0:
+            raise ConfigurationError("max_concurrent_scans must be > 0", {"val": self.max_concurrent_scans})
+        if "*" in self.cors_origins:
+            raise ConfigurationError(
+                "Wildcard CORS origin is not allowed; list explicit origins in PYH_API_CORS_ORIGINS.",
+                {"cors_origins": self.cors_origins},
+            )
+
+    @property
+    def auth_configured(self) -> bool:
+        return bool(self.username and self.password_hash)
+
+
 @dataclass
 class Settings:
     """Master Application Settings Root."""
@@ -75,6 +108,7 @@ class Settings:
     app: AppConfig = field(default_factory=AppConfig)
     log: LogConfig = field(default_factory=LogConfig)
     scan: ScanConfig = field(default_factory=ScanConfig)
+    api: ApiConfig = field(default_factory=ApiConfig)
 
     @classmethod
     def load_from_env(cls, env_override: dict[str, str] | None = None) -> "Settings":
@@ -93,6 +127,8 @@ class Settings:
         try:
             max_size = int(env.get("PYH_MAX_SCAN_FILE_SIZE_MB", "10"))
             timeout = int(env.get("PYH_SCAN_TIMEOUT_SECONDS", "300"))
+            token_ttl = int(env.get("PYH_API_TOKEN_TTL_MINUTES", "60"))
+            max_scans = int(env.get("PYH_API_MAX_CONCURRENT_SCANS", "2"))
         except ValueError as e:
             raise ConfigurationError(f"Failed to parse numeric setting from environment: {e}") from e
 
@@ -105,5 +141,14 @@ class Settings:
                 max_file_size_mb=max_size,
                 timeout_seconds=timeout,
                 min_severity=min_sev,
+            ),
+            api=ApiConfig(
+                username=env.get("PYH_API_USERNAME", ""),
+                password_hash=env.get("PYH_API_PASSWORD_HASH", ""),
+                token_ttl_minutes=token_ttl,
+                cors_origins=_split_csv(env.get("PYH_API_CORS_ORIGINS", "http://localhost:5173")),
+                workspace_root=env.get("PYH_API_WORKSPACE_ROOT", ""),
+                allow_remote_targets=env.get("PYH_API_ALLOW_REMOTE_TARGETS", "false").lower() in ("true", "1", "yes"),
+                max_concurrent_scans=max_scans,
             ),
         )
