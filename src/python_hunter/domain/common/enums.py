@@ -212,14 +212,6 @@ class DataSensitivity(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class SecretStatus(str, Enum):
-    """Secret revocation and exposure state."""
-
-    SECRET_EXPOSED = "SECRET_EXPOSED"
-    SECRET_REVOKED = "SECRET_REVOKED"
-    SECRET_UNKNOWN_STATUS = "SECRET_UNKNOWN_STATUS"
-
-
 class VerificationStatus(str, Enum):
     """Exploitability verification outcome status."""
 
@@ -254,5 +246,3 @@ class TestSafetyLevel(str, Enum):
     PASSIVE_ONLY = "PASSIVE_ONLY"
     SAFE_LOCAL_NON_DESTRUCTIVE = "SAFE_LOCAL_NON_DESTRUCTIVE"
     DESTRUCTIVE_FORBIDDEN = "DESTRUCTIVE_FORBIDDEN"
-
-
