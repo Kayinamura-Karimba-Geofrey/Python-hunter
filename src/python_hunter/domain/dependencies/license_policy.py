@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Optional, Set
 from python_hunter.domain.dependencies.models import Dependency
 
 
@@ -79,28 +79,3 @@ class LicensePolicyEngine:
             action=LicenseAction.REVIEW_REQUIRED,
             reason=f"Unrecognized license '{lic}' for dependency '{dep.name}' requires evaluation.",
         )
-
-
-class TamperDetectionEngine:
-    """Detects suspicious lockfile hash mismatches and unexpected dependency origins."""
-
-    @staticmethod
-    def inspect_dependency(dep: Dependency) -> List[Dict[str, Any]]:
-        warnings = []
-        if dep.source and dep.source.url and "http://" in dep.source.url:
-            warnings.append({
-                "package": dep.name,
-                "type": "UNENCRYPTED_SOURCE",
-                "severity": "HIGH",
-                "message": f"Dependency '{dep.name}' downloaded over unencrypted HTTP protocol ({dep.source.url}).",
-            })
-
-        if dep.integrity_hash and not (dep.integrity_hash.startswith("sha256-") or dep.integrity_hash.startswith("sha512-") or len(dep.integrity_hash) >= 32):
-            warnings.append({
-                "package": dep.name,
-                "type": "SUSPICIOUS_INTEGRITY_HASH",
-                "severity": "MEDIUM",
-                "message": f"Dependency '{dep.name}' has malformed or weak integrity checksum.",
-            })
-
-        return warnings
