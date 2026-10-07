@@ -2,7 +2,7 @@
 
 from typing import Dict, List, Optional
 from python_hunter.domain.ai.models import AIProviderConfig, PrivacyMode
-from python_hunter.domain.ai.provider import AIProvider, LocalAIProvider, ExternalAIProvider
+from python_hunter.domain.ai.provider import AIProvider, LocalAIProvider
 
 
 class AIProviderRegistry:
