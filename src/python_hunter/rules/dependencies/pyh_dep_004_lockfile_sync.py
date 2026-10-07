@@ -2,7 +2,7 @@
 
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
-from python_hunter.domain.dependencies.models import DependencyInventory, ManifestType
+from python_hunter.domain.dependencies.models import DependencyInventory
 from python_hunter.domain.findings.finding import Finding
 
 
