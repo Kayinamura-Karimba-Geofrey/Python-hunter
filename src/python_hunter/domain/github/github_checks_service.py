@@ -1,7 +1,7 @@
 """GitHub Check Run, Annotation, and PR Comment Service."""
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from python_hunter.domain.github.github_models import (
     GitHubAnnotation,
     GitHubCheckRun,
