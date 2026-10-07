@@ -1,7 +1,6 @@
 """Static Framework and Package Layout Detector."""
 
 import os
-from typing import Any
 from python_hunter.domain.discovery.enums import PackageLayout, ProjectType
 
 
@@ -78,7 +77,7 @@ class FrameworkDetector:
             if "import unittest" in sample_lower or "from unittest" in sample_lower:
                 detected_test_frameworks.add("unittest")
 
-        return sorted(list(detected_frameworks)), sorted(list(detected_test_frameworks))
+        return sorted(detected_frameworks), sorted(detected_test_frameworks)
 
     @classmethod
     def detect_package_layout(cls, directories: list[str], py_files: list[str]) -> PackageLayout:
