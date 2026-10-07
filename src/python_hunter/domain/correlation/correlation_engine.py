@@ -4,8 +4,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set
 
-from python_hunter.domain.common.enums import Confidence, Severity, FindingRelationType
-from python_hunter.domain.graph.models import SecurityGraph, NodeType, EdgeType, SecurityNode, SecurityEdge
+from python_hunter.domain.common.enums import Confidence, Severity
+from python_hunter.domain.graph.models import SecurityGraph
 
 
 class CauseCategory(str, Enum):
@@ -45,12 +45,10 @@ class CorrelationEngine:
             return []
 
         clusters: List[FindingCluster] = []
-        visited: Set[str] = set()
 
         # 1. Group duplicate findings (same file + line or same CVE + location)
         dup_groups: Dict[str, List[Dict[str, Any]]] = {}
         for f in findings:
-            fid = f.get("id") or f.get("rule_id", "unknown")
             file_p = f.get("file_path", "")
             line = f.get("line_number") or f.get("line", 0)
             rule = f.get("rule_id", "")
@@ -61,10 +59,10 @@ class CorrelationEngine:
         for key, group in dup_groups.items():
             primary = group[0]
             member_ids = [g.get("id") or f"find-{i}" for i, g in enumerate(group)]
-            
+
             # Determine root cause vs downstream consequence
             root_cause_id = member_ids[0]
-            
+
             severities = [g.get("severity", "MEDIUM") for g in group]
             top_sev = self._highest_severity(severities)
 
@@ -105,7 +103,6 @@ class RootCauseAnalyzer:
     @staticmethod
     def analyze_finding_role(finding: Dict[str, Any], graph: SecurityGraph) -> CauseCategory:
         rule_id = str(finding.get("rule_id", ""))
-        file_path = str(finding.get("file_path", ""))
 
         # IAM, unpinned action, unauthenticated endpoint, exposed secret -> Root Causes
         if any(rc in rule_id for rc in ("IAM", "SECRET", "AUTH", "015", "016", "SQLI", "RCE")):
