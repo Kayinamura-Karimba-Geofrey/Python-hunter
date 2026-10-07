@@ -1,7 +1,6 @@
 """Security Knowledge Base and CWE / SAST Rule Intelligence."""
 
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 from python_hunter.domain.intelligence.models import VulnerabilityRecord
 
