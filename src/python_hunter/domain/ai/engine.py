@@ -1,13 +1,13 @@
 """Modular AI Security Intelligence Engine orchestrating all AI workflows."""
 
-from typing import Any, Dict, List, Optional
+from typing import List
 from python_hunter.domain.ai.assistant import SecurityAssistant
 from python_hunter.domain.ai.context_engine import SecurityContextEngine
 from python_hunter.domain.ai.correlation_engine import FindingCorrelationEngine
 from python_hunter.domain.ai.evaluator import AIEvaluator
 from python_hunter.domain.ai.models import (
-    AIAuditLog, AIConfidence, AIPolicy, AIQueryRequest, AIQueryResponse,
-    FindingExplanation, RemediationRecommendation, RiskAssessment, SecurityContext, SecuritySummary
+    AIAuditLog, AIConfidence, AIQueryRequest, AIQueryResponse,
+    FindingExplanation, RemediationRecommendation, RiskAssessment, SecuritySummary
 )
 from python_hunter.domain.ai.pipeline import AIRequestPipeline
 from python_hunter.domain.ai.prioritization_engine import IntelligentPrioritizationEngine
