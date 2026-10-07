@@ -1,19 +1,15 @@
 """Application Use Case for Git Repository & History Security Analysis."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 import os
 from typing import Any
 
 from python_hunter.detectors.secrets import create_default_secret_registry
 from python_hunter.domain.analysis.context import AnalysisContext
-from python_hunter.domain.common.enums import Category, Severity
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.git.interfaces import GitRepository
 from python_hunter.domain.git.models import (
     ChangeType,
-    GitCommit,
-    GitRepositoryMetadata,
-    HistoryCompleteness,
     SecretLifecycleRecord,
     SecretLifecycleStatus,
 )
@@ -98,7 +94,7 @@ class AnalyzeGitUseCase:
         gitignore_path = os.path.join(root, ".gitignore")
         if os.path.exists(gitignore_path) and os.path.isfile(gitignore_path):
             try:
-                with open(gitignore_path, "r", encoding="utf-8", errors="replace") as gf:
+                with open(gitignore_path, encoding="utf-8", errors="replace") as gf:
                     g_content = gf.read()
                 gi_findings = self.rule_003.evaluate_gitignore(g_content)
                 for f in gi_findings:
