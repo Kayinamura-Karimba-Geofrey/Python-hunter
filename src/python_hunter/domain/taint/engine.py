@@ -1,8 +1,6 @@
 """Static AST Dataflow & Taint Analysis Engine."""
 
 import ast
-import os
-from typing import Any
 
 from python_hunter.domain.ast.models import ASTDocument, ASTLocation
 from python_hunter.domain.common.enums import Confidence, Severity
@@ -74,7 +72,7 @@ class TaintAnalysisEngine:
         # Advanced Dataflow Engine integration
         adv_res = self.advanced_engine.analyze_documents([doc])
         adv_flows = adv_res.get("flows", [])
-        
+
         # Attach proofs to existing flows or append new advanced flows
         for af in adv_flows:
             matched = False
@@ -138,7 +136,7 @@ class ModuleTaintVisitor(ast.NodeVisitor):
                         label=f"{t_name} = ...",
                         location=loc,
                         node_type="assignment",
-                        description=f"Assigned value from tainted expression",
+                        description="Assigned value from tainted expression",
                     )
                     new_path = list(expr_taint.path) + [new_node]
 
