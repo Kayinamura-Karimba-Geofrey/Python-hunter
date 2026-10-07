@@ -40,7 +40,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.12"
 
       - name: Install Python Hunter
         run: |
@@ -82,7 +82,7 @@ stages:
 
 python_hunter_scan:
   stage: security
-  image: python:3.11-slim
+  image: python:3.12-slim
   script:
     - pip install --upgrade pip
     - pip install .
