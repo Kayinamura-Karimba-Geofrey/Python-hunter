@@ -87,7 +87,6 @@ def _output_text(result: dict[str, Any], show_details: bool) -> None:
     inventory = result["inventory"]
     counts = result["status_counts"]
     findings: list[Finding] = result["findings"]
-    matches: list[VulnerabilityMatch] = result["matches"]
 
     print("==========================================================")
     print(" Python Hunter Vulnerability Intelligence Analysis")
