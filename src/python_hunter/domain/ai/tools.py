@@ -1,6 +1,6 @@
 """Controlled AI Tool Call Architecture enforcing tenant isolation, RBAC, and permissions."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 
 class AIToolCallManager:
