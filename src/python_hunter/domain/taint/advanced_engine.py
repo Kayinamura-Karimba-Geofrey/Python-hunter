@@ -14,7 +14,6 @@ from python_hunter.domain.taint.models import (
     ExploitabilityLevel,
     ExploitabilityProof,
     FunctionSummary,
-    SanitizationContext,
     SanitizerRegistry,
     TaintFlow,
     TaintNode,
