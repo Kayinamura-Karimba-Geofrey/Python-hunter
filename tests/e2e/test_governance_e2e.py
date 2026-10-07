@@ -1,16 +1,16 @@
-"""End-to-End Test Suite for Step 42 Enterprise Multi-Tenancy, RBAC & Governance."""
+"""End-to-End Test Suite for Enterprise Multi-Tenancy, RBAC & Governance."""
 
 import unittest
 
 from python_hunter.application.services.security_app_service import SecurityApplicationService
-from python_hunter.domain.common.enums import Severity
-from python_hunter.domain.governance.auth import User
 from python_hunter.domain.governance.engine import ApprovalStatus
 from python_hunter.domain.governance.rbac import OrganizationMembership, SystemRole
-from python_hunter.domain.governance.tenant import AssetCriticality, Environment, Organization, Project
+from python_hunter.domain.governance.tenant import (
+    Organization,
+)
 
 
-class TestStep42GovernanceE2E(unittest.TestCase):
+class TestGovernanceE2E(unittest.TestCase):
     """End-to-end tests validating tenant isolation, RBAC, approvals, and compliance."""
 
     def setUp(self) -> None:
