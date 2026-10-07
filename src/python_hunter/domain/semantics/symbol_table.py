@@ -2,14 +2,11 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set
 from python_hunter.domain.ir.models import IRLocation
 from python_hunter.domain.semantics.program_model import (
-    ProgramClass,
     ProgramFunction,
     ProgramModel,
-    ProgramModule,
-    ProgramVariable,
     SymbolKind,
     TypeInfo,
 )
@@ -89,7 +86,7 @@ class NameResolver:
 
     def resolve_call(self, caller_func: ProgramFunction, callee_name: str) -> List[str]:
         """Resolves a call name to candidate qualified function names.
-        
+
         Returns a list of possible target qualified names. Preserves uncertainty if ambiguous.
         """
         targets: Set[str] = set()
@@ -99,7 +96,7 @@ class NameResolver:
         if mod:
             if callee_name in mod.imported_symbols:
                 targets.add(mod.imported_symbols[callee_name])
-            
+
             local_qual = f"{mod.name}.{callee_name}"
             if local_qual in mod.functions:
                 targets.add(local_qual)
@@ -112,7 +109,7 @@ class NameResolver:
                 method_qual = f"{class_qual}.{callee_name}"
                 if callee_name in cls.methods:
                     targets.add(method_qual)
-                
+
                 # Check inherited superclasses
                 for super_name in cls.superclasses:
                     super_cls = self.program_model.get_class(super_name)
@@ -125,4 +122,4 @@ class NameResolver:
                 if func.name == callee_name:
                     targets.add(func.qualified_name)
 
-        return sorted(list(targets))
+        return sorted(targets)
