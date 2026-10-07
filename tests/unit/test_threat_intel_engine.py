@@ -4,7 +4,7 @@ import unittest
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.threat_intel import (
-    CisaKevAdapter, ExploitationStatus, IntelligenceSourceRegistry, NvdAdapter, ThreatIntelligenceEngine, ThreatPriority
+    ExploitationStatus, ThreatIntelligenceEngine, ThreatPriority
 )
 
 
