@@ -1,7 +1,6 @@
 """CLI Command Handler for Executive Security Report Generation."""
 
 import argparse
-import os
 import sys
 
 from python_hunter.application.use_cases.generate_report import GenerateReportUseCase
