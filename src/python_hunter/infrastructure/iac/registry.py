@@ -1,10 +1,9 @@
 """Base infrastructure adapter interface and registry."""
 
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List
 from python_hunter.domain.infrastructure.models import (
     InfrastructureIR,
-    InfrastructureResource,
 )
 
 
@@ -15,17 +14,14 @@ class InfrastructureAdapter(ABC):
     @abstractmethod
     def adapter_name(self) -> str:
         """Name of the infrastructure adapter."""
-        pass
 
     @abstractmethod
     def detect(self, file_path: str, content: str) -> bool:
         """Determines if this adapter handles the given file."""
-        pass
 
     @abstractmethod
     def parse_and_build_ir(self, file_path: str, content: str, ir: InfrastructureIR) -> None:
         """Parses the file content and populates the unified InfrastructureIR."""
-        pass
 
 
 class InfrastructureRegistry:
@@ -47,7 +43,7 @@ class InfrastructureRegistry:
                 try:
                     adapter.parse_and_build_ir(file_path, content, ir)
                     handled = True
-                except Exception as ex:
+                except Exception:
                     # Isolated failure handling
                     pass
         return handled
