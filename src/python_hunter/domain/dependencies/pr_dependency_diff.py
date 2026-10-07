@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Set
+from typing import Dict, List
 from python_hunter.domain.dependencies.models import Dependency
 from python_hunter.domain.dependencies.semver_engine import SemVerEngine
 from python_hunter.domain.dependencies.vulnerability_intel import Advisory, VulnerabilityIntelligence
