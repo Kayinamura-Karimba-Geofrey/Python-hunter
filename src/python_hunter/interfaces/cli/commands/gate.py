@@ -11,7 +11,7 @@ from python_hunter.domain.policy.engine import SecurityPolicyEngine
 
 def run_gate_command(args: argparse.Namespace) -> int:
     """Execute CI/CD security gate policy check.
-    
+
     Exit codes:
       0 = Pass
       1 = Policy Violation
