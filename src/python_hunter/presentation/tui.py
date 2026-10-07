@@ -5,14 +5,11 @@ attack paths, and remediation advisories with keyboard navigation and non-tty fa
 """
 
 import curses
-import os
 import sys
-from typing import Any
 
 from python_hunter import __version__
 from python_hunter.application.orchestrator.scan_context import ScanResult
 from python_hunter.application.orchestrator.scan_orchestrator import ScanOrchestrator
-from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.findings.finding import Finding
 
 
