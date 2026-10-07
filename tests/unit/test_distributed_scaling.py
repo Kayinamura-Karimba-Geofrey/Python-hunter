@@ -6,7 +6,6 @@ import unittest
 from python_hunter.infrastructure.scaling.bulkhead import BulkheadManager, WorkerPoolType
 from python_hunter.infrastructure.scaling.locks import LockManager
 from python_hunter.infrastructure.scaling.sandboxing import ScannerSandbox
-from python_hunter.infrastructure.storage.cache import CacheAbstraction
 from python_hunter.infrastructure.storage.search import ScalableSearchEngine
 from python_hunter.infrastructure.telemetry.logging import StructuredLogger
 
