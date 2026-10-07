@@ -81,7 +81,7 @@ class FixDependenciesUseCase:
 
                 if fname == "requirements.txt":
                     try:
-                        with open(fpath, "r", encoding="utf-8") as f:
+                        with open(fpath, encoding="utf-8") as f:
                             content = f.read()
                         new_content, applied = DependencyFixEngine.fix_requirements_txt(content, updates)
                         if applied:
@@ -95,7 +95,7 @@ class FixDependenciesUseCase:
 
                 elif fname == "pyproject.toml":
                     try:
-                        with open(fpath, "r", encoding="utf-8") as f:
+                        with open(fpath, encoding="utf-8") as f:
                             content = f.read()
                         new_content, applied = DependencyFixEngine.fix_pyproject_toml(content, updates)
                         if applied:
@@ -109,7 +109,7 @@ class FixDependenciesUseCase:
 
                 elif fname == "package.json":
                     try:
-                        with open(fpath, "r", encoding="utf-8") as f:
+                        with open(fpath, encoding="utf-8") as f:
                             content = f.read()
                         new_content, applied = DependencyFixEngine.fix_package_json(content, updates)
                         if applied:
@@ -130,7 +130,7 @@ class FixDependenciesUseCase:
 
         return {
             "fixes_count": len(all_fixes),
-            "files_modified": sorted(list(set(files_modified))),
+            "files_modified": sorted(set(files_modified)),
             "fixes": [asdict(f) for f in all_fixes],
             "dry_run": dry_run,
             "pr_url": pr_url,
