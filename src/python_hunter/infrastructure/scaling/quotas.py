@@ -1,9 +1,7 @@
 """Resource Quota Manager and Tenant Capacity Enforcement."""
 
 import threading
-import time
-from dataclasses import dataclass, field
-from typing import Any
+from dataclasses import dataclass
 
 
 @dataclass
@@ -39,12 +37,16 @@ class QuotaManager:
 
     def get_quota(self, organization_id: str) -> ResourceQuota:
         with self._lock:
-            return self._quotas.get(organization_id, ResourceQuota(organization_id=organization_id))
+            return self._quota_for(organization_id)
+
+    def _quota_for(self, organization_id: str) -> ResourceQuota:
+        """Caller must hold self._lock (it is not reentrant)."""
+        return self._quotas.get(organization_id, ResourceQuota(organization_id=organization_id))
 
     def reserve_scan_slot(self, organization_id: str) -> bool:
         """Reserve scan slot under quota rules."""
         with self._lock:
-            quota = self.get_quota(organization_id)
+            quota = self._quota_for(organization_id)
             current_active = self._active_scans.get(organization_id, 0)
             current_daily = self._daily_scans.get(organization_id, 0)
 
