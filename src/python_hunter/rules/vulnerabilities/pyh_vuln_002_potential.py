@@ -39,4 +39,13 @@ class PYHVuln002Potential:
             location=loc,
             evidence=f"Package: {dep.name}{dep.version_constraint} | Advisory: {vuln.id}",
             remediation="Pin exact dependency version or update constraint to exclude vulnerable version ranges.",
+            metadata={
+                "package_name": dep.name,
+                "version": dep.version or dep.version_constraint,
+                "ecosystem": dep.ecosystem.value,
+                "advisory_id": vuln.id,
+                "is_direct": dep.is_direct,
+                "is_production": not dep.is_development,
+                "fixed_in_version": match.recommended_fix,
+            },
         )
