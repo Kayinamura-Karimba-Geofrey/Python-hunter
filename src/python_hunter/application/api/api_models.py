@@ -306,14 +306,6 @@ class FrameworkMetadataModel(BaseModel):
     version: str
 
 
-class LanguageProfileModel(BaseModel):
-    total_files: int
-    total_lines: int
-    percentage_by_files: dict[str, float]
-    percentage_by_lines: dict[str, float]
-    detected_manifests: list[str]
-
-
 class PolyglotScanRequest(BaseModel):
     workspace_path: str
     selected_languages: Optional[list[str]] = None
@@ -328,4 +320,3 @@ class PolyglotScanResponse(BaseModel):
     findings: list[dict[str, Any]]
     dependencies_count: int
     dependencies: list[dict[str, Any]]
-
