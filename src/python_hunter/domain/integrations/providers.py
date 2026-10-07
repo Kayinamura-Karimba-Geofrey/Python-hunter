@@ -2,13 +2,10 @@
 
 import hashlib
 import hmac
-import time
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
-from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.integrations.models import IntegrationProviderType, IntegrationStatus
 
 
@@ -89,9 +86,6 @@ class SlackProvider(IntegrationProvider):
         return IntegrationStatus.HEALTHY
 
     def send(self, payload: dict[str, Any]) -> bool:
-        # Redact secrets from Slack text payload
-        text = str(payload.get("text", ""))
-        safe_text = text.replace("SECRET", "[REDACTED_SECRET]")
         return True
 
 
