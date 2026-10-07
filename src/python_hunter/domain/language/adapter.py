@@ -38,22 +38,18 @@ class LanguageAdapter(ABC):
     @abstractmethod
     def detect(self, workspace_path: str) -> bool:
         """Detect if this language is present in the workspace."""
-        pass
 
     @abstractmethod
     def parse(self, file_path: str) -> Dict[str, Any]:
         """Parse source file into AST representation."""
-        pass
 
     @abstractmethod
     def analyze(self, workspace_path: str) -> List[Dict[str, Any]]:
         """Run security rules analysis on target workspace for this language."""
-        pass
 
     @abstractmethod
     def build_ir(self, workspace_path: str) -> SecurityIR:
         """Build Universal Security IR for this language."""
-        pass
 
     def build_cfg(self, file_path: str) -> Optional[Any]:
         """Build Control Flow Graph for file if supported."""
