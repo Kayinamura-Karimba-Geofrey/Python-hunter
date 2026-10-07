@@ -1,10 +1,9 @@
 """Static PyPI Supply-Chain Security & Setup.py Malicious Hook Analyzer."""
 
 import ast
-import json
 import os
 import re
-from typing import Any, List, Optional, Set, Tuple
+from typing import List, Set, Tuple
 
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
@@ -97,7 +96,7 @@ class PyPISupplyChainAnalyzer:
         """Inspects setup.py for malicious cmdclass overrides, module-level execution, obfuscation, or exfiltration."""
         findings: list[Finding] = []
         try:
-            with open(setup_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(setup_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
         except Exception:
             return findings
@@ -235,7 +234,7 @@ class PyPISupplyChainAnalyzer:
             p = os.path.join(workspace_path, rf)
             if os.path.exists(p):
                 try:
-                    with open(p, "r", encoding="utf-8", errors="ignore") as f:
+                    with open(p, encoding="utf-8", errors="ignore") as f:
                         for lineno, line in enumerate(f, start=1):
                             line = line.strip()
                             if not line or line.startswith("#") or line.startswith("-"):
@@ -250,7 +249,7 @@ class PyPISupplyChainAnalyzer:
         pyproj_path = os.path.join(workspace_path, "pyproject.toml")
         if os.path.exists(pyproj_path):
             try:
-                with open(pyproj_path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(pyproj_path, encoding="utf-8", errors="ignore") as f:
                     content = f.read()
                     # Simple regex extraction of dependencies list in [project.dependencies] or [tool.poetry.dependencies]
                     for match in re.finditer(r'["\']([a-zA-Z0-9_-]+)(?:[><=~!^].*?)?["\']', content):
@@ -299,7 +298,7 @@ class PyPISupplyChainAnalyzer:
                     init_path = os.path.join(root, file_name)
                     rel_path = os.path.relpath(init_path, workspace_path)
                     try:
-                        with open(init_path, "r", encoding="utf-8", errors="ignore") as f:
+                        with open(init_path, encoding="utf-8", errors="ignore") as f:
                             content = f.read()
 
                         # Check for obfuscated execution patterns
