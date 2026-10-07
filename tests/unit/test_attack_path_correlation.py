@@ -1,11 +1,11 @@
 """Unit tests for Step 38 — Unified Security Correlation & Attack Path Intelligence."""
 
 import unittest
-from python_hunter.domain.common.enums import Confidence, Severity, TrustBoundary, PrivilegeLevel
-from python_hunter.domain.graph.models import SecurityGraph, NodeType, EdgeType, SecurityNode, SecurityEdge, AttackPath
+from python_hunter.domain.common.enums import Severity
+from python_hunter.domain.graph.models import SecurityGraph, NodeType, EdgeType, SecurityNode, SecurityEdge
 from python_hunter.domain.graph.engine import SecurityKnowledgeGraphEngine
-from python_hunter.domain.correlation.correlation_engine import CorrelationEngine, FindingCluster, RootCauseAnalyzer, CauseCategory
-from python_hunter.domain.correlation.attack_path_engine import AttackPathEngine, WhatIfAnalyzer, AssetInventory
+from python_hunter.domain.correlation.correlation_engine import CorrelationEngine, RootCauseAnalyzer, CauseCategory
+from python_hunter.domain.correlation.attack_path_engine import AttackPathEngine, WhatIfAnalyzer
 from python_hunter.application.services.security_app_service import SecurityApplicationService
 
 
