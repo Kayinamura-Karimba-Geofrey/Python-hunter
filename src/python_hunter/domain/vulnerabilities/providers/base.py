@@ -35,7 +35,7 @@ class VulnerabilityProvider(ABC):
     @abstractmethod
     def query(self, package: PackageIdentity, version: str | None = None) -> list[Vulnerability]:
         """Query vulnerability records for a specific package identity and optional version.
-        
+
         Must handle errors gracefully and return an empty list rather than throwing uncaught API errors.
         """
         ...
@@ -44,7 +44,7 @@ class VulnerabilityProvider(ABC):
         self, queries: list[tuple[PackageIdentity, str | None]]
     ) -> dict[str, list[Vulnerability]]:
         """Batch query vulnerability records for multiple packages.
-        
+
         Returns mapping from package.normalized_name -> list of Vulnerability entities.
         Default implementation delegates sequentially to `query()`.
         """
