@@ -43,4 +43,13 @@ class PYHVuln001Confirmed:
             location=loc,
             evidence=f"Package: {dep.name}=={dep.version} | Advisory: {vuln.id} | Path: {path_str}",
             remediation=remediation,
+            metadata={
+                "package_name": dep.name,
+                "version": dep.version,
+                "ecosystem": dep.ecosystem.value,
+                "advisory_id": vuln.id,
+                "is_direct": dep.is_direct,
+                "is_production": not dep.is_development,
+                "fixed_in_version": match.recommended_fix,
+            },
         )
