@@ -59,7 +59,7 @@ class Finding:
             raise ValidationError("file_path cannot be empty")
         if not self.title:
             raise ValidationError("title cannot be empty")
-        
+
         if not self.fingerprint:
             self.fingerprint = self.generate_fingerprint()
 
