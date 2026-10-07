@@ -1,7 +1,7 @@
 """ParserProvider abstraction for static syntax parsing with failure isolation."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import Any, List, Optional
 import ast
 
 
@@ -50,8 +50,6 @@ class ParserProvider:
         diagnostics = []
         lines = code.splitlines()
         nodes = []
-        in_block = False
-        block_name = ""
 
         for idx, line in enumerate(lines, 1):
             trimmed = line.strip()
