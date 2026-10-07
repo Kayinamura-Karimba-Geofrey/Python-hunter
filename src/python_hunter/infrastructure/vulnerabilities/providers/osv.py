@@ -1,6 +1,6 @@
 """OSV REST API Vulnerability Intelligence Provider."""
 
-from datetime import datetime, timezone
+from datetime import datetime
 import json
 import logging
 import urllib.error
