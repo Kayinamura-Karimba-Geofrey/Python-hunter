@@ -78,6 +78,23 @@ source .venv/bin/activate
 pip install -e ".[dev]"
 ```
 
+Or run `make dev`, which does the same and installs the pre-commit hooks. `make test`, `make lint`, `make typecheck`, and `make benchmark` run the same checks as CI.
+
+### REST API and dashboard
+
+The API requires a login. Set a user and a PBKDF2 password hash, then start it:
+
+```bash
+export PYH_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+export PYH_API_USERNAME=analyst
+export PYH_API_PASSWORD_HASH="$(python -c 'from getpass import getpass; from python_hunter.application.api.security import hash_password; print(hash_password(getpass()))')"
+export PYH_API_WORKSPACE_ROOT=/path/to/repos   # API scans are limited to this directory
+make api                                        # http://127.0.0.1:8000
+make dashboard                                  # http://localhost:5173
+```
+
+Scans from the CLI and the API are recorded in `PYH_DATA_DIR` (default `~/.python-hunter`), and the dashboard reports on those recorded scans. See [Configuration](docs/reference/configuration.md) for every setting.
+
 ---
 
 ## CLI Usage & Commands
