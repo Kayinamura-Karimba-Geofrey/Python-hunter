@@ -19,7 +19,6 @@ class ResourceQuota:
 class QuotaExceededError(Exception):
     """Raised when tenant exceeds resource quota limits."""
 
-    pass
 
 
 class QuotaManager:
