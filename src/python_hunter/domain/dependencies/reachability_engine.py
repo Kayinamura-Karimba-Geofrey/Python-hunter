@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
-from python_hunter.domain.dependencies.models import Dependency, DependencyGraph, DependencyInventory
+from typing import List, Optional
+from python_hunter.domain.dependencies.models import Dependency, DependencyGraph
 from python_hunter.domain.dependencies.vulnerability_intel import Advisory
 from python_hunter.domain.semantics.program_model import ProgramFunction, ProgramModel
 
