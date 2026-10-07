@@ -61,7 +61,7 @@ class JavaScriptLanguageAdapter(LanguageAdapter):
 
     def parse(self, file_path: str) -> Dict[str, Any]:
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 code = f.read()
             return ParserProvider.parse_generic_structural(code, file_path, "javascript").ast
         except Exception:
@@ -79,7 +79,7 @@ class JavaScriptLanguageAdapter(LanguageAdapter):
     def _analyze_file(self, file_path: str) -> List[Dict[str, Any]]:
         findings = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             lines = content.splitlines()
 
@@ -123,7 +123,7 @@ class JavaScriptLanguageAdapter(LanguageAdapter):
 
         for file_path in files_to_scan:
             try:
-                with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(file_path, encoding="utf-8", errors="ignore") as f:
                     content = f.read()
                 file_ir = self.converter.convert(file_path, content, Language.JAVASCRIPT)
                 combined_ir.functions.extend(file_ir.functions)
