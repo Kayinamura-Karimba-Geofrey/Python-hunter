@@ -7,7 +7,6 @@ from datetime import datetime, timezone
 import json
 import os
 import platform
-import sys
 import time
 import uuid
 from typing import Any
@@ -16,13 +15,10 @@ from python_hunter import __version__
 from python_hunter.application.orchestrator.scan_context import ScanResult
 from python_hunter.application.orchestrator.scan_orchestrator import ScanOrchestrator
 from python_hunter.application.use_cases.analyze_security import AnalyzeSecurityUseCase
-from python_hunter.domain.common.enums import Severity
 from python_hunter.domain.compliance.assessment import ComplianceAssessmentEngine
-from python_hunter.domain.compliance.models import ComplianceControlModel
 from python_hunter.domain.compliance.registry import ControlRegistry
 from python_hunter.domain.correlation.correlator import FindingCorrelator
 from python_hunter.domain.correlation.risk_engine import RiskEngine
-from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.policy.engine import SecurityPolicyEngine
 from python_hunter.domain.reporting.dashboard_services import (
     FindingQueryService,
@@ -101,7 +97,7 @@ class GenerateReportUseCase:
             correlation_time=round(duration * 0.1, 3),
         )
 
-        report = SecurityReportService.create_report(
+        return SecurityReportService.create_report(
             findings=deduped,
             attack_paths=attack_paths,
             posture=posture,
@@ -110,7 +106,6 @@ class GenerateReportUseCase:
             health=AnalysisHealth(status="complete", complete=True),
             performance=perf,
         )
-        return report
 
     def generate_executive_report(
         self,
@@ -373,7 +368,7 @@ class GenerateReportUseCase:
     .header h1 {{ margin: 0 0 6px 0; font-size: 24px; color: #fff; }}
     .header .meta {{ color: var(--text-muted); font-size: 13px; }}
     .badge-org {{ background: #0284c7; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }}
-    
+
     .grid-kpi {{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
