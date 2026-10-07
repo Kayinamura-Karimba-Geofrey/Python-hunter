@@ -1,12 +1,15 @@
-"""End-to-End Test Suite for Step 43 Enterprise Integrations & Security Ecosystem."""
+"""End-to-End Test Suite for Enterprise Integrations & Security Ecosystem."""
 
 import unittest
 
 from python_hunter.application.services.security_app_service import SecurityApplicationService
-from python_hunter.domain.integrations.models import Integration, IntegrationProviderType, IntegrationStatus
+from python_hunter.domain.integrations.models import (
+    Integration,
+    IntegrationProviderType,
+)
 
 
-class TestStep43IntegrationsE2E(unittest.TestCase):
+class TestIntegrationsE2E(unittest.TestCase):
     """End-to-end tests validating enterprise integrations, credential security, and tenant boundaries."""
 
     def setUp(self) -> None:
