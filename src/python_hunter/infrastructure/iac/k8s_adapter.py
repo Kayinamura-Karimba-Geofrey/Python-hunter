@@ -1,7 +1,7 @@
 """Kubernetes and Helm static manifest adapter."""
 
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 from python_hunter.domain.infrastructure.models import (
     ContainerImage,
     IAMPolicy,
@@ -139,7 +139,6 @@ class KubernetesAdapter(InfrastructureAdapter):
             permissions = []
             is_admin = False
             for rule in rules:
-                api_groups = rule.get("apiGroups", [])
                 verbs = rule.get("verbs", [])
                 resources = rule.get("resources", [])
                 has_wildcard_verb = "*" in verbs
