@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any
 
 from python_hunter.domain.ast.models import ASTLocation
-from python_hunter.domain.common.enums import Category, Confidence, Severity
+from python_hunter.domain.common.enums import Confidence, Severity
 
 
 class TaintStateEnum(str, Enum):
