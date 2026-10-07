@@ -2,10 +2,7 @@
 
 import os
 import re
-from typing import Any, Dict, List, Optional
 from python_hunter.domain.infrastructure.models import (
-    IAMPermission,
-    IAMPolicy,
     InfrastructureIR,
     InfrastructureResource,
     InfrastructureResourceType,
