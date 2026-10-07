@@ -3,11 +3,10 @@
 import unittest
 
 from python_hunter.domain.common.enums import Severity
-from python_hunter.domain.governance.auth import ApiToken, Session, User, UserStatus
+from python_hunter.domain.governance.auth import User
 from python_hunter.domain.governance.compliance import ComplianceEngine, ComplianceStatus
 from python_hunter.domain.governance.engine import ApprovalStatus, GovernanceEngine
-from python_hunter.domain.governance.rbac import OrganizationMembership, RBACEngine, SystemRole, TeamMembership
-from python_hunter.domain.governance.tenant import AssetCriticality, Environment, Organization, Project, TenantContext
+from python_hunter.domain.governance.rbac import OrganizationMembership, RBACEngine, SystemRole
 
 
 class TestGovernanceEngineUnit(unittest.TestCase):
