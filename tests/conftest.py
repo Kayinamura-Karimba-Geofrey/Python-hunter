@@ -1,11 +1,19 @@
 """Pytest Configuration and Fixtures."""
 
+import os
+import tempfile
+
 import pytest
+
 from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.projects.project import Project
 from python_hunter.domain.projects.scan import Scan
 from python_hunter.domain.projects.target_file import TargetFile
 from python_hunter.infrastructure.config.settings import Settings
+
+# Set before test modules are imported so scan records, PR analyses, and audit logs written
+# during the run never land in ~/.python-hunter.
+os.environ["PYH_DATA_DIR"] = tempfile.mkdtemp(prefix="pyh-test-data-")
 
 
 @pytest.fixture
