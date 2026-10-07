@@ -1,10 +1,8 @@
 """Unit and Integration tests for Step 24 JavaScript & TypeScript security engine."""
 
-import os
 import unittest
 from python_hunter.domain.dependencies.models import PackageManager
 from python_hunter.domain.dependencies.npm_analyzer import NPMAnalyzer
-from python_hunter.domain.discovery.language_detector import LanguageDetector
 from python_hunter.domain.language.javascript.parser import JSParser
 from python_hunter.domain.language.javascript_adapter import JavaScriptLanguageAdapter, TypeScriptLanguageAdapter
 from python_hunter.domain.language.models import Language
