@@ -13,10 +13,8 @@ from python_hunter.domain.dependencies.models import (
     Dependency,
     DependencyGraph,
     Ecosystem,
-    ManifestType,
-    PackageManager,
 )
-from python_hunter.domain.dependencies.pr_dependency_diff import DependencyChangeType, PRDependencyDiffEngine
+from python_hunter.domain.dependencies.pr_dependency_diff import PRDependencyDiffEngine
 from python_hunter.domain.dependencies.reachability_engine import ReachabilityConfidence, ReachabilityEngine
 from python_hunter.domain.dependencies.remediation_engine import RemediationEngine
 from python_hunter.domain.dependencies.semver_engine import SemVerEngine
