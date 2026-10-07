@@ -1,8 +1,8 @@
 """Monorepo Project Discovery and Cross-Language Correlation Engine."""
 
 import os
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from typing import Any, Dict, List
 
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.language.models import Language
