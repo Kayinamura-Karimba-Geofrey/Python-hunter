@@ -1,7 +1,6 @@
 """Universal Security Intermediate Representation (SecurityIR) models."""
 
 from dataclasses import dataclass, field
-from typing import Any
 from python_hunter.domain.language.models import Language
 
 
