@@ -1,10 +1,9 @@
 """Cross-layer graph construction and attack path extension for Infrastructure, Container, Cloud, and App Code."""
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from python_hunter.domain.infrastructure.models import (
     InfrastructureGraph,
     InfrastructureIR,
-    InfrastructureResource,
     InfrastructureResourceType,
 )
 
