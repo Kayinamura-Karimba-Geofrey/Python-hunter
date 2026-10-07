@@ -1,13 +1,9 @@
 """Statically discovers services, Docker Compose configs, OpenAPI specs, and outbound API calls."""
 
-import json
 import os
 import re
 from python_hunter.domain.architecture.service_models import (
     ApiClientCall,
-    DatabaseAsset,
-    ExternalService,
-    InterServiceDataFlow,
     Service,
     TrustBoundary,
 )
@@ -52,7 +48,7 @@ class ServiceDiscoveryEngine:
 
         if os.path.exists(compose_path):
             try:
-                with open(compose_path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(compose_path, encoding="utf-8", errors="ignore") as f:
                     content = f.read()
 
                 # Basic regex match for compose service names
@@ -89,7 +85,7 @@ class ServiceDiscoveryEngine:
                 if file.endswith((".py", ".js", ".ts")):
                     full_path = os.path.join(root, file)
                     try:
-                        with open(full_path, "r", encoding="utf-8", errors="ignore") as f:
+                        with open(full_path, encoding="utf-8", errors="ignore") as f:
                             content = f.read()
 
                         lines = content.splitlines()
