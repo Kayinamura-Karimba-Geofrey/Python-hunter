@@ -13,7 +13,6 @@ from python_hunter.domain.vulnerabilities.models import (
     VulnerabilityStatus,
 )
 from python_hunter.domain.vulnerabilities.providers.base import (
-    ProviderStatus,
     VulnerabilityProvider,
 )
 from python_hunter.domain.vulnerabilities.version_matcher import VersionMatcher
