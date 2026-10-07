@@ -9,13 +9,7 @@ from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.reporting.dashboard_services import SecurityReportService
 from python_hunter.domain.reporting.models import AnalysisMetadata, ScanMetadata
 from python_hunter.infrastructure.reporting.base import ReporterRegistry
-from python_hunter.infrastructure.reporting.csv_reporter import CsvReporter
-from python_hunter.infrastructure.reporting.html_reporter import HtmlReporter
-from python_hunter.infrastructure.reporting.json_reporter import JsonReporter
-from python_hunter.infrastructure.reporting.markdown_reporter import MarkdownReporter
 from python_hunter.infrastructure.reporting.redaction import SecretRedactor
-from python_hunter.infrastructure.reporting.sarif_exporter import SarifReporter
-from python_hunter.infrastructure.reporting.terminal import TerminalReporter
 
 
 class TestSecurityReporters(unittest.TestCase):
