@@ -21,7 +21,6 @@ class FindingCorrelationEngine:
         correlated_groups = []
         for cluster_id, group in clusters.items():
             rule_ids = list({f.rule_id for f in group})
-            severities = [f.severity.value for f in group if hasattr(f, 'severity')]
             correlated_groups.append({
                 "cluster_id": cluster_id,
                 "finding_count": len(group),
