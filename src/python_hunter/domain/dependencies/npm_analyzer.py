@@ -2,10 +2,8 @@
 
 import json
 import os
-from typing import Any
 from python_hunter.domain.dependencies.models import (
     Dependency,
-    DependencyGraph,
     DependencyInventory,
     Ecosystem,
     PackageManager,
@@ -23,7 +21,7 @@ class NPMAnalyzer:
             return inventory
 
         try:
-            with open(package_json_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(package_json_path, encoding="utf-8", errors="ignore") as f:
                 data = json.load(f)
 
             inventory.manifests.append("package.json")
@@ -67,7 +65,7 @@ class NPMAnalyzer:
 
             if os.path.exists(lock_path):
                 inventory.manifests.append(os.path.basename(lock_path))
-                with open(lock_path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(lock_path, encoding="utf-8", errors="ignore") as f:
                     lock_data = json.load(f)
 
                 # Support lockfile v2/v3 "packages" map and v1 "dependencies" tree
