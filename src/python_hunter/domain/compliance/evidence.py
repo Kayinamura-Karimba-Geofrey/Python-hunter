@@ -3,7 +3,7 @@
 import os
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 from python_hunter.domain.compliance.models import ComplianceEvidenceModel
 
 
