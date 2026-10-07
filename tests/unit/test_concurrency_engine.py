@@ -5,9 +5,7 @@ import unittest
 
 from python_hunter.application.use_cases.analyze_ast import AnalyzeASTUseCase
 from python_hunter.application.use_cases.analyze_concurrency import AnalyzeConcurrencyUseCase
-from python_hunter.domain.concurrency.engine import ConcurrencyAnalysisEngine
 from python_hunter.domain.concurrency.models import ExecutionModel
-from python_hunter.rules.concurrency import PYHConc001PotentialRace, PYHConc003TOCTOU
 
 
 class TestConcurrencyAnalysisEngine(unittest.TestCase):
