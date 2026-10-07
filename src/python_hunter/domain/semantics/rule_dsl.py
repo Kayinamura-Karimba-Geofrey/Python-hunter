@@ -1,8 +1,7 @@
 """Declarative Rule DSL for defining security rules without modifying Python code."""
 
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
-from python_hunter.domain.semantics.taint_registries import SinkCategory, SourceCategory
+from typing import Any, Dict, List
 
 
 @dataclass
