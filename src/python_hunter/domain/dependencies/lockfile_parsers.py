@@ -3,16 +3,12 @@
 import json
 import os
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import List
 
 from python_hunter.domain.dependencies.models import (
     Dependency,
-    DependencySource,
-    DependencyType,
     Ecosystem,
-    ManifestType,
     PackageManager,
-    SourceType,
 )
 
 
@@ -22,7 +18,7 @@ class UniversalLockfileParser:
     @staticmethod
     def parse_file(file_path: str) -> List[Dependency]:
         filename = os.path.basename(file_path)
-        
+
         if filename == "requirements.txt":
             return UniversalLockfileParser.parse_requirements_txt(file_path)
         elif filename in ("package.json", "package-lock.json"):
@@ -46,7 +42,7 @@ class UniversalLockfileParser:
     def parse_requirements_txt(file_path: str) -> List[Dependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 for line in f:
                     line_str = line.strip()
                     if not line_str or line_str.startswith("#"):
@@ -73,7 +69,7 @@ class UniversalLockfileParser:
     def parse_npm(file_path: str) -> List[Dependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 data = json.load(f)
 
             if "dependencies" in data:
@@ -120,7 +116,7 @@ class UniversalLockfileParser:
     def parse_python_lock(file_path: str) -> List[Dependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             if file_path.endswith(".json") or "Pipfile.lock" in file_path:
@@ -160,7 +156,7 @@ class UniversalLockfileParser:
     def parse_java(file_path: str) -> List[Dependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             # Regex match <groupId>:<artifactId>:<version> or implementation 'group:artifact:version'
             matches = re.findall(r"['\"]([a-zA-Z0-9._-]+):([a-zA-Z0-9._-]+):([a-zA-Z0-9._-]+)['\"]", content)
@@ -181,7 +177,7 @@ class UniversalLockfileParser:
     def parse_go(file_path: str) -> List[Dependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 for line in f:
                     line_str = line.strip()
                     if line_str.startswith("require") or " v" in line_str:
@@ -205,7 +201,7 @@ class UniversalLockfileParser:
     def parse_cargo(file_path: str) -> List[Dependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
 
             for block in content.split("[[package]]"):
@@ -229,7 +225,7 @@ class UniversalLockfileParser:
     def parse_composer(file_path: str) -> List[Dependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 data = json.load(f)
             packages = data.get("packages", []) if "packages" in data else []
             if isinstance(data.get("require"), dict):
@@ -262,7 +258,7 @@ class UniversalLockfileParser:
     def parse_ruby(file_path: str) -> List[Dependency]:
         deps = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 for line in f:
                     line_str = line.strip()
                     if line_str.startswith("gem "):
