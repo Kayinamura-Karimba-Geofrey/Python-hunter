@@ -62,7 +62,7 @@ class ProjectManifest:
     has_docker: bool = False
     has_ci_cd: bool = False
     has_virtual_env: bool = False
-    
+
     files: list[FileMetadata] = field(default_factory=list)
     directories: list[DirectoryMetadata] = field(default_factory=list)
     entry_points: list[str] = field(default_factory=list)
