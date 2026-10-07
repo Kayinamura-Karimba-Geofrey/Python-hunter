@@ -33,9 +33,9 @@ def run_baseline_command(args: argparse.Namespace) -> int:
 def run_diff_command(args: argparse.Namespace) -> int:
     """Compare two scan JSON output files."""
     try:
-        with open(args.old_scan, "r", encoding="utf-8") as f:
+        with open(args.old_scan, encoding="utf-8") as f:
             old_data = json.load(f)
-        with open(args.new_scan, "r", encoding="utf-8") as f:
+        with open(args.new_scan, encoding="utf-8") as f:
             new_data = json.load(f)
     except Exception as e:
         print(f"Error loading scan JSON files: {e}", file=sys.stderr)
