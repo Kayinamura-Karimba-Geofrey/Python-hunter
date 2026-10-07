@@ -3,7 +3,6 @@
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any
 
 from python_hunter.domain.governance.tenant import TenantContext
 
