@@ -5,7 +5,6 @@ import os
 import tempfile
 import unittest
 
-from python_hunter.application.orchestrator.scan_orchestrator import ScanOrchestrator
 from python_hunter.application.use_cases.generate_sbom import GenerateSBOMUseCase
 from python_hunter.domain.common.enums import Category, Confidence, Severity
 from python_hunter.domain.common.value_objects import Location
@@ -14,7 +13,6 @@ from python_hunter.domain.dependencies.models import (
     DependencyGraph,
     DependencyInventory,
     DependencySource,
-    DependencyType,
     Ecosystem,
     PackageManager,
 )
@@ -25,7 +23,6 @@ from python_hunter.domain.dependencies.sbom.spdx import SPDXGenerator
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.interfaces.cli.commands.sbom import run_sbom_command
 from python_hunter.interfaces.cli.main import run_cli
-from python_hunter.presentation.renderer import CycloneDXRenderer, SPDXRenderer
 
 
 class TestPURLHelper(unittest.TestCase):
@@ -260,7 +257,7 @@ class TestSBOMUseCaseAndCLI(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             self.assertTrue(os.path.exists(out_file))
 
-            with open(out_file, "r", encoding="utf-8") as f:
+            with open(out_file, encoding="utf-8") as f:
                 saved_bom = json.load(f)
             self.assertEqual(saved_bom["bomFormat"], "CycloneDX")
             names = [c["name"] for c in saved_bom["components"]]
@@ -271,7 +268,7 @@ class TestSBOMUseCaseAndCLI(unittest.TestCase):
             exit_code = run_sbom_command([temp_dir, "--format", "spdx", "-o", spdx_out])
             self.assertEqual(exit_code, 0)
             self.assertTrue(os.path.exists(spdx_out))
-            with open(spdx_out, "r", encoding="utf-8") as f:
+            with open(spdx_out, encoding="utf-8") as f:
                 saved_spdx = json.load(f)
             self.assertEqual(saved_spdx["spdxVersion"], "SPDX-2.3")
 
@@ -285,7 +282,7 @@ class TestSBOMUseCaseAndCLI(unittest.TestCase):
             code = run_cli(["scan", temp_dir, "--format", "cyclonedx", "-o", out_cdx])
             self.assertEqual(code, 0)
             self.assertTrue(os.path.exists(out_cdx))
-            with open(out_cdx, "r", encoding="utf-8") as f:
+            with open(out_cdx, encoding="utf-8") as f:
                 cdx = json.load(f)
             self.assertEqual(cdx["bomFormat"], "CycloneDX")
 
@@ -293,7 +290,7 @@ class TestSBOMUseCaseAndCLI(unittest.TestCase):
             code = run_cli(["scan", temp_dir, "--format", "spdx", "-o", out_spdx])
             self.assertEqual(code, 0)
             self.assertTrue(os.path.exists(out_spdx))
-            with open(out_spdx, "r", encoding="utf-8") as f:
+            with open(out_spdx, encoding="utf-8") as f:
                 spdx = json.load(f)
             self.assertEqual(spdx["spdxVersion"], "SPDX-2.3")
 
