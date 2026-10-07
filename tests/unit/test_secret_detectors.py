@@ -4,19 +4,14 @@ import unittest
 
 from python_hunter.detectors.secrets import (
     PYHSecret001GenericAPIKey,
-    PYHSecret002GenericAccessToken,
     PYHSecret003PrivateKey,
     PYHSecret004JWT,
     PYHSecret005DatabaseURL,
     PYHSecret006AWSCredentials,
     PYHSecret007GitHubToken,
-    PYHSecret008GenericPassword,
     PYHSecret009Dotenv,
-    PYHSecret010HighEntropy,
 )
 from python_hunter.domain.analysis.context import AnalysisContext
-
-
 from python_hunter.domain.projects.project import Project
 
 
@@ -37,6 +32,14 @@ class TestSecretDetectors(unittest.TestCase):
         detector = PYHSecret003PrivateKey()
         candidates = detector.detect("-----BEGIN PRIVATE KEY-----", "key.pem", self.context)
         self.assertEqual(len(candidates), 1)
+
+    def test_pyh_secret_003_ignores_inline_code_in_docs(self) -> None:
+        detector = PYHSecret003PrivateKey()
+        doc_line = "Detects private key headers (`-----BEGIN RSA PRIVATE KEY-----`)."
+        self.assertEqual(detector.detect(doc_line, "docs/secrets.md", self.context), [])
+        # The same text in source code, or an unquoted header in docs, is still reported.
+        self.assertEqual(len(detector.detect(doc_line, "keys.py", self.context)), 1)
+        self.assertEqual(len(detector.detect("-----BEGIN RSA PRIVATE KEY-----", "docs/key.md", self.context)), 1)
 
     def test_pyh_secret_004_jwt(self) -> None:
         detector = PYHSecret004JWT()
