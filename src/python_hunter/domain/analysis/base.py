@@ -22,6 +22,6 @@ class Analyzer(ABC):
     @abstractmethod
     def analyze(self, context: AnalysisContext) -> AnalysisResult:
         """Execute static security analysis on the provided analysis context.
-        
+
         Must return an AnalysisResult containing findings or caught non-fatal errors.
         """
