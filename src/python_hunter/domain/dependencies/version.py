@@ -1,6 +1,5 @@
 """Version Abstraction and Constraint Specifier Engine."""
 
-from typing import Any
 from packaging.specifiers import InvalidSpecifier, SpecifierSet
 from packaging.version import InvalidVersion, Version
 
