@@ -9,7 +9,6 @@ from python_hunter.domain.semantics.taint_registries import (
     SanitizerContext,
     SanitizerDef,
     SanitizerRegistry,
-    SinkCategory,
     SourceCategory,
     TaintSinkDef,
     TaintSinkRegistry,
