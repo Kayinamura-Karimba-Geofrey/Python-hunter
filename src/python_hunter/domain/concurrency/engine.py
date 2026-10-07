@@ -1,7 +1,6 @@
 """Concurrency Analysis Orchestration Engine Implementation."""
 
 import logging
-from typing import Any
 
 from python_hunter.domain.ast.models import ASTDocument
 from python_hunter.domain.concurrency.analyzers import (
