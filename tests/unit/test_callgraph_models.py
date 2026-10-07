@@ -11,8 +11,6 @@ from python_hunter.domain.callgraph.models import (
     CallEdge,
     CallEdgeType,
     ControlFlowGraph,
-    EntryPoint,
-    EntryPointType,
     Symbol,
     SymbolType,
 )
