@@ -152,8 +152,6 @@ class SecurityApplicationService:
         self.posture_tracker = SecurityPostureTracker()
         self.remediation_queue = RemediationQueueManager()
         self.intel_db = LocalIntelligenceDatabase()
-        # Seed initial intelligence lazily
-        # self.intel_db.save_records(self.intel_engine.ingest_intelligence())
 
         self.event_bus = SecurityEventBus()
         self.job_queue = SecurityJobQueue()
