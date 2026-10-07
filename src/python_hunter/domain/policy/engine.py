@@ -45,16 +45,16 @@ class SecurityPolicyEngine:
         """Load SecurityPolicyEngine from YAML or JSON policy file."""
         if not os.path.exists(file_path):
             return cls()
-        
+
         try:
-            with open(file_path, "r", encoding="utf-8") as f:
+            with open(file_path, encoding="utf-8") as f:
                 content = f.read()
                 # Parse simple JSON or YAML key-values
                 try:
                     data = json.loads(content)
                 except Exception:
                     data = cls._parse_simple_yaml(content)
-            
+
             policy = cls._build_policy(data)
             return cls(policy=policy)
         except Exception as e:
