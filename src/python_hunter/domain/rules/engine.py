@@ -4,7 +4,7 @@ import time
 from python_hunter.domain.analysis.context import AnalysisContext
 from python_hunter.domain.ast.models import ASTAnalysisSummary
 from python_hunter.domain.findings.finding import Finding
-from python_hunter.domain.rules.models import RuleResult, SecurityRule
+from python_hunter.domain.rules.models import RuleResult
 from python_hunter.domain.rules.registry import RuleRegistry
 
 
