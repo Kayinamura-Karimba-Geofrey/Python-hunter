@@ -6,11 +6,9 @@ from typing import Any
 from python_hunter.domain.common.enums import (
     AttackPathType,
     Category,
-    Confidence,
     ExposureType,
     FindingRelationType,
     ReachabilityType,
-    Severity,
 )
 from python_hunter.domain.correlation.models import (
     AttackPath,
