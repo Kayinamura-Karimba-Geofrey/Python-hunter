@@ -4,12 +4,12 @@ Safely updates vulnerable, unpinned, and policy-violating dependency versions
 in requirements.txt, pyproject.toml, and package.json.
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import json
 import re
 from typing import Any
 
-from python_hunter.domain.dependencies.models import Dependency, DependencyInventory
+from python_hunter.domain.dependencies.models import DependencyInventory
 from python_hunter.domain.dependencies.normalization import normalize_package_name
 from python_hunter.domain.dependencies.remediation_engine import RemediationEngine
 from python_hunter.domain.dependencies.vulnerability_intel import Advisory
