@@ -69,7 +69,7 @@ class CSharpLanguageAdapter(LanguageAdapter):
     def _analyze_file(self, file_path: str) -> List[Dict[str, Any]]:
         findings = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 lines = f.readlines()
 
             for idx, line in enumerate(lines, 1):
