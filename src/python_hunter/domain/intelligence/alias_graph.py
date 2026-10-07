@@ -1,9 +1,8 @@
 """Vulnerability Alias Graph & Identifier Deduplication Engine."""
 
 from collections import defaultdict
-from typing import Any
 
-from python_hunter.domain.intelligence.models import VulnerabilityRecord, SourceTrustLevel
+from python_hunter.domain.intelligence.models import VulnerabilityRecord
 
 
 class VulnerabilityAliasGraph:
@@ -104,11 +103,11 @@ class VulnerabilityAliasGraph:
             severity=primary.severity,
             cvss=primary.cvss or (sorted_cluster[1].cvss if len(sorted_cluster) > 1 else None),
             epss=primary.epss or (sorted_cluster[1].epss if len(sorted_cluster) > 1 else None),
-            cwe=sorted(list(cwes)),
-            cpe=sorted(list(cpes)),
+            cwe=sorted(cwes),
+            cpe=sorted(cpes),
             affected_packages=affected_pkgs,
-            fixed_versions=sorted(list(fixed_vers)),
-            references=sorted(list(refs)),
+            fixed_versions=sorted(fixed_vers),
+            references=sorted(refs),
             published_at=primary.published_at,
             modified_at=primary.modified_at,
             lifecycle_state=primary.lifecycle_state,
