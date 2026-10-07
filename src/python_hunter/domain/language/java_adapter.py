@@ -59,7 +59,7 @@ class JavaLanguageAdapter(LanguageAdapter):
 
     def parse(self, file_path: str) -> Dict[str, Any]:
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             return ParserProvider.parse_generic_structural(content, file_path, "java").ast
         except Exception:
@@ -77,7 +77,7 @@ class JavaLanguageAdapter(LanguageAdapter):
     def _analyze_file(self, file_path: str) -> List[Dict[str, Any]]:
         findings = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             lines = content.splitlines()
 
@@ -185,7 +185,7 @@ class JavaLanguageAdapter(LanguageAdapter):
     def extract_endpoints(self, file_path: str) -> List[Dict[str, Any]]:
         endpoints = []
         try:
-            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            with open(file_path, encoding="utf-8", errors="ignore") as f:
                 content = f.read()
             if "@RestController" in content or "@Controller" in content:
                 routes = re.findall(r'@(GetMapping|PostMapping|RequestMapping)\(["\']([^"\']+)["\']\)', content)
