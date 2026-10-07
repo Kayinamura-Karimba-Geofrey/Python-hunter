@@ -1,8 +1,7 @@
 """Robust zero-dependency static YAML parser for IaC files."""
 
-import json
 import re
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 try:
     import yaml
@@ -80,12 +79,12 @@ def safe_yaml_load(content: str) -> Any:
 
             val_unquoted = val_str.strip("\"'")
             is_quoted = (val_str.startswith('"') and val_str.endswith('"')) or (val_str.startswith("'") and val_str.endswith("'"))
-            
+
             if ":" in val_unquoted and not is_quoted and "${{" not in val_unquoted:
                 parts = val_unquoted.split(":", 1)
                 k, v = parts[0].strip(), parts[1].strip()
-                if (k.replace(".", "").replace(":", "").isdigit() or 
-                    re.match(r"^\d+\.\d+\.\d+\.\d+", val_unquoted) or 
+                if (k.replace(".", "").replace(":", "").isdigit() or
+                    re.match(r"^\d+\.\d+\.\d+\.\d+", val_unquoted) or
                     re.match(r"^\d+:\d+", val_unquoted)):
                     target_list.append(_parse_val(val_str))
                 else:
