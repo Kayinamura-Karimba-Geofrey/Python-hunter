@@ -1,4 +1,4 @@
-"""End-to-End Test Suite for Step 44 Distributed Architecture, Scalability & Hardening."""
+"""End-to-End Test Suite for Distributed Architecture, Scalability & Hardening."""
 
 import unittest
 
@@ -7,7 +7,7 @@ from python_hunter.infrastructure.scaling.bulkhead import WorkerPoolType
 from python_hunter.infrastructure.scaling.quotas import QuotaExceededError, ResourceQuota
 
 
-class TestStep44HardeningE2E(unittest.TestCase):
+class TestHardeningE2E(unittest.TestCase):
     """End-to-end integration tests validating distributed queueing, quota limits, sandbox isolation, and health checks."""
 
     def setUp(self) -> None:
