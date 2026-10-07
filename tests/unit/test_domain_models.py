@@ -8,13 +8,11 @@ from python_hunter.domain.common.enums import (
     ScanStatus,
     Severity,
 )
-from python_hunter.domain.common.value_objects import Location, RiskScore
+from python_hunter.domain.common.value_objects import Location
 from python_hunter.domain.exceptions.base import ScanError, ValidationError
 from python_hunter.domain.findings.finding import Finding
 from python_hunter.domain.projects.project import Project
 from python_hunter.domain.projects.scan import Scan
-from python_hunter.domain.projects.target_file import TargetFile
-from python_hunter.domain.rules.rule import Rule
 
 
 class TestDomainModels(unittest.TestCase):
