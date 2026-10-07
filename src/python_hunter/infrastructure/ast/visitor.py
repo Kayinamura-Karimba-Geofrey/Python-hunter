@@ -21,7 +21,7 @@ class ComprehensiveASTVisitor(ast.NodeVisitor, ASTVisitorInterface):
         self.file_path: str = ""
         self.source_lines: list[str] = []
         self.alias_map: dict[str, str] = {}
-        
+
         self.imports: list[ImportInfo] = []
         self.functions: list[FunctionInfo] = []
         self.classes: list[ClassInfo] = []
