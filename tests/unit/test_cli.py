@@ -1,11 +1,10 @@
 """Unit tests for TargetResolver, RepositoryManager, ScanOrchestrator, and CLI Commands."""
 
 import os
-import tempfile
 import unittest
 
 from python_hunter.application.orchestrator import ScanOrchestrator
-from python_hunter.infrastructure.repository import ScanTarget, TargetResolver, TargetType
+from python_hunter.infrastructure.repository import TargetResolver, TargetType
 from python_hunter.presentation import ExitCode, PolicyEngine
 
 
