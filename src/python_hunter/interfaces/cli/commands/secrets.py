@@ -7,10 +7,14 @@ from typing import Any
 from python_hunter.application.use_cases.analyze_secrets import AnalyzeSecretsUseCase
 
 
+def _emit(text: str = "") -> None:
+    sys.stdout.write(text + "\n")
+
+
 def run_secrets_command(args: list[str]) -> int:
     """Handle 'python-hunter secrets <path> [--format text|json]' command."""
     if not args or args[0] in ("-h", "--help"):
-        print("Usage: python-hunter secrets <path> [--format text|json]")
+        _emit("Usage: python-hunter secrets <path> [--format text|json]")
         return 0
 
     target_path = args[0]
@@ -33,25 +37,25 @@ def run_secrets_command(args: list[str]) -> int:
 
 
 def _output_text(result: dict[str, Any]) -> None:
-    print(f"\n=== Python Hunter Secret Detection ===")
-    print(f"Project Name:    {result['project_name']}")
-    print(f"Files Scanned:   {result['files_scanned']}")
-    print(f"Detectors Exec:  {result['detectors_executed']}")
-    print(f"Total Findings:  {result['total_findings']}")
-    print("──────────────────────────────────────────────────")
+    _emit("\n=== Python Hunter Secret Detection ===")
+    _emit(f"Project Name:    {result['project_name']}")
+    _emit(f"Files Scanned:   {result['files_scanned']}")
+    _emit(f"Detectors Exec:  {result['detectors_executed']}")
+    _emit(f"Total Findings:  {result['total_findings']}")
+    _emit("──────────────────────────────────────────────────")
 
     for finding in result["findings"]:
-        print(f"Detector ID: {finding.rule_id}")
-        print(f"Severity:    {finding.severity}")
-        print(f"Title:       {finding.title}")
+        _emit(f"Detector ID: {finding.rule_id}")
+        _emit(f"Severity:    {finding.severity}")
+        _emit(f"Title:       {finding.title}")
         loc_str = f"{finding.file_path}:{finding.location.line_start}" if finding.location else finding.file_path
-        print(f"File:        {loc_str}")
-        print(f"Description: {finding.description}")
-        print(f"Evidence:    {finding.evidence}")
-        print("Remediation:")
+        _emit(f"File:        {loc_str}")
+        _emit(f"Description: {finding.description}")
+        _emit(f"Evidence:    {finding.evidence}")
+        _emit("Remediation:")
         for rem_line in finding.remediation.splitlines():
-            print(f"  {rem_line}")
-        print("──────────────────────────────────────────────────\n")
+            _emit(f"  {rem_line}")
+        _emit("──────────────────────────────────────────────────\n")
 
 
 def _output_json(result: dict[str, Any]) -> None:
@@ -81,4 +85,30 @@ def _output_json(result: dict[str, Any]) -> None:
         "total_findings": result["total_findings"],
         "findings": serializable_findings,
     }
-    print(json.dumps(json_output, indent=2))
+    _emit(json.dumps(json_output, indent=2))
+
+
+def run_workspace_secrets_command(target: str, output_format: str) -> int:
+    """Handle the top-level 'secrets' CLI command: workspace plus Git history exposure scan."""
+    from python_hunter.application.services.workspace_scans import execute_secrets_scan
+
+    scan_res = execute_secrets_scan(target, scan_history=True)
+    if output_format == "json":
+        sys.stdout.write(json.dumps(scan_res, indent=2) + "\n")
+    else:
+        sys.stdout.write("==========================================================\n")
+        sys.stdout.write(" Python Hunter Credential Exposure Intelligence\n")
+        sys.stdout.write("==========================================================\n")
+        sys.stdout.write(f"Target Path            : {scan_res['workspace_path']}\n")
+        sys.stdout.write(f"Active Exposures       : {scan_res['active_secrets_count']}\n")
+        sys.stdout.write(f"Historical Exposures   : {scan_res['historical_secrets_count']}\n")
+        sys.stdout.write("==========================================================\n\n")
+
+        for s in scan_res["active_secrets"]:
+            sys.stdout.write(f"[!] {s['severity']} SECRET DETECTED ({s['rule_id']})\n")
+            sys.stdout.write(f"    Title       : {s['title']}\n")
+            sys.stdout.write(f"    File/Line   : {s['file_path']}:{s['line']}\n")
+            sys.stdout.write(f"    Fingerprint : {s['fingerprint']}\n")
+            sys.stdout.write(f"    Evidence    : {s['evidence']}\n")
+            sys.stdout.write("----------------------------------------------------------\n")
+    return 0 if scan_res["active_secrets_count"] == 0 else 1
