@@ -31,8 +31,7 @@ class StandardASTParser(ASTParserEngine):
         try:
             parsed_tree = ast.parse(content, filename=file_path)
             visitor = ComprehensiveASTVisitor()
-            doc = visitor.visit_tree(parsed_tree, rel_path, lines)
-            return doc
+            return visitor.visit_tree(parsed_tree, rel_path, lines)
         except SyntaxError as se:
             err = ASTParseError(
                 file_path=rel_path,
