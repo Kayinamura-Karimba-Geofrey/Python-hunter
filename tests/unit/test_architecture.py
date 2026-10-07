@@ -24,7 +24,7 @@ class TestArchitectureBoundaries(unittest.TestCase):
         domain_pkg = python_hunter.domain
         for _, module_name, _ in pkgutil.walk_packages(domain_pkg.__path__, prefix="python_hunter.domain."):
             module = importlib.import_module(module_name)
-            with open(module.__file__, "r", encoding="utf-8") as f:
+            with open(module.__file__, encoding="utf-8") as f:
                 code_text = f.read()
 
             for forbidden in self.FORBIDDEN_DOMAIN_IMPORTS:
