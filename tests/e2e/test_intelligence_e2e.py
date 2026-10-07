@@ -1,23 +1,10 @@
-"""End-to-End Test Suite for Step 40 Security Intelligence Platform."""
+"""End-to-End Test Suite for Security Intelligence Platform."""
 
 import unittest
-from datetime import datetime, timezone
 
 from python_hunter.application.services.security_app_service import SecurityApplicationService
 from python_hunter.domain.common.enums import Severity
-from python_hunter.domain.intelligence.alias_graph import VulnerabilityAliasGraph
-from python_hunter.domain.intelligence.engine import SecurityIntelligenceEngine
-from python_hunter.domain.intelligence.models import (
-    CVSSData,
-    EPSSData,
-    FactOrigin,
-    PackageIdentity,
-    SourceTrustLevel,
-    VulnerabilityRecord,
-)
 from python_hunter.domain.intelligence.remediation import RemediationItem
-from python_hunter.domain.intelligence.version_range import VersionRangeEngine
-from python_hunter.infrastructure.intelligence.db import LocalIntelligenceDatabase, OSVIntelligenceSource
 
 
 class TestSecurityIntelligencePlatformE2E(unittest.TestCase):
@@ -47,6 +34,8 @@ class TestSecurityIntelligencePlatformE2E(unittest.TestCase):
 
     def test_e2e_reassessment_on_intelligence_change(self) -> None:
         """Test automatic reassessment when a vulnerability record changes."""
+        self.app_service.intel_engine.ingest_intelligence()
+
         # Initial scan correlation
         active_repos = {
             "my-microservice": [{"name": "requests", "version": "2.28.0", "ecosystem": "PyPI"}]
