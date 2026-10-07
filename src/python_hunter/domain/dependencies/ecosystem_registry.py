@@ -1,6 +1,6 @@
 """Central Dependency Ecosystem Registry."""
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional
 from python_hunter.domain.dependencies.models import Ecosystem, ManifestType, PackageManager
 
