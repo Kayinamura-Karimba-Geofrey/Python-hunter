@@ -2,8 +2,7 @@
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
-from python_hunter.domain.common.enums import Severity, Confidence
+from typing import Any, Dict, List, Optional
 
 
 class InfrastructureResourceType(str, Enum):
